@@ -198,6 +198,59 @@ vector<int> majorityElement(vector<int> &nums)
 
     return res;
 }
+
+//Max Chunks To Make Sorted
+/*
+Approach: 
+It will form a chunk if max till now from left is equal to i
+which means that everything smaller than it lies to its left so it can form a chunk
+*/
+int maxChunksToSorted(vector<int> &arr)
+{
+    int n = arr.size();
+    int maxTillNow = 0, count = 0;
+
+    for (int i = 0; i < arr.size(); i++)
+    {
+        maxTillNow = max(arr[i], maxTillNow);
+        if (maxTillNow == i)
+            count++;
+    }
+
+    return count;
+}
+
+// 768. Max Chunks To Make Sorted II
+/*
+Approach:
+For each index check:
+max till now from left(i) <= min from right(i+1)
+So, we are checking if everything till now is less than the numbers on my right
+then it will form a chunk
+*/
+int maxChunksToSorted(vector<int> &arr)
+{
+    int n = arr.size();
+
+    vector<int> leftMax(n);
+    vector<int> rightMin(n);
+
+    leftMax[0] = arr[0];
+    for (int i = 1; i < n; i++)
+        leftMax[i] = max(leftMax[i - 1], arr[i]);
+
+    rightMin[n - 1] = arr[n - 1];
+    for (int i = n - 2; i >= 0; i--)
+        rightMin[i] = min(rightMin[i + 1], arr[i]);
+
+    int chunks = 1;
+    for (int i = 0; i < n - 1; i++)
+        if (leftMax[i] <= rightMin[i + 1])
+            chunks++;
+
+    return chunks;
+}
+
 int main()
 {
     return 0;
