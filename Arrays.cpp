@@ -235,20 +235,71 @@ int maxChunksToSorted(vector<int> &arr)
     vector<int> leftMax(n);
     vector<int> rightMin(n);
 
+    //left max array
     leftMax[0] = arr[0];
     for (int i = 1; i < n; i++)
         leftMax[i] = max(leftMax[i - 1], arr[i]);
 
+    //right min array
     rightMin[n - 1] = arr[n - 1];
     for (int i = n - 2; i >= 0; i--)
         rightMin[i] = min(rightMin[i + 1], arr[i]);
 
+    //last element will always form a chunk so 1 for that and check till second last
     int chunks = 1;
     for (int i = 0; i < n - 1; i++)
         if (leftMax[i] <= rightMin[i + 1])
             chunks++;
 
     return chunks;
+}
+
+// 795. Number of Subarrays with Bounded Maximum
+/*
+Time : O(n), Space : O(1)
+Eg: 0 3 1 4 11 1 5 4 6
+L = 3, R = 6
+
+For element at index 3, i.e. 4, we have valid arrays:
+{4}, {1 4}, {3 1 4}, {0 3 1 4}
+For index 6, i.e. 5, we have valid arrays:
+{5}, {1 5}
+
+For each element, if it is 
+1. a[i]<L : then it can be a part of all valid subarrays before it until the last valid index
+   So, ans = ans + count for last element
+
+2. a[i] in range: then this element will form 1 subarray alone,
+and can be added to every valid subarray before it till last valid index
+So, ans: (i - last valid index) + 1
+here, i - last valid index gives the count of valid subarrays before it
+
+3. a[i] > R : then we will reset the valid count to 0 as no element after it can be a part of any subarray before it
+and we change the last  valid idx to current idx + 1, as this index will be invalid and we start from its right
+
+*/
+int numSubarrayBoundedMax(vector<int> &A, int L, int R)
+{
+    int n = A.size();
+    int count = 0, dp = 0, lastIdx = 0; //count = total ans, dp = last valid count, lastIdx = last valid index
+
+    for (int i = 0; i < n; i++)
+    {
+        if (A[i] < L)
+            count += dp;
+        else if (A[i] >= L && A[i] <= R)
+        {
+            dp = i - lastIdx + 1;
+            count += dp;
+        }
+        else
+        {
+            dp = 0;
+            lastIdx = i + 1;
+        }
+    }
+
+    return count;
 }
 
 int main()
