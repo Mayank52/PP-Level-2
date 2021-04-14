@@ -302,6 +302,36 @@ int numSubarrayBoundedMax(vector<int> &A, int L, int R)
     return count;
 }
 
+// 238. Product of Array Except Self
+/*
+Time: O(n), Space: O(1)
+*/
+vector<int> productExceptSelf(vector<int> &nums)
+{
+    int n = nums.size();
+    vector<int> res(n);
+
+    //store left products in the res array itself
+    int leftProduct = nums[0];
+    for (int i = 1; i < nums.size(); i++)
+    {
+        res[i] = leftProduct;
+        leftProduct *= nums[i];
+    }
+
+    //multiply those leftProducts with the rightProduct
+    int rightProduct = nums[n - 1];
+    for (int i = n - 2; i > 0; i--)
+    {
+        res[i] = res[i] * rightProduct;
+        rightProduct *= nums[i];
+    }
+
+    res[0] = rightProduct;
+
+    return res;
+}
+
 int main()
 {
     return 0;
