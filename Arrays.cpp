@@ -371,6 +371,73 @@ string reverseVowels(string s)
 
     return s;
 }
+
+// 41. First Missing Positive
+int firstMissingPositive(vector<int> &nums)
+{
+    int n = nums.size();
+
+    for (int i = 0; i < n; i++)
+    {
+        while (nums[i] > 0 && nums[i] < n + 1 && nums[nums[i] - 1] != nums[i])
+            swap(nums[i], nums[nums[i] - 1]);
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (nums[i] != i + 1)
+            return i + 1;
+    }
+
+    return n + 1;
+}
+
+// 849. Maximize Distance to Closest Person
+int maxDistToClosest(vector<int> &seats)
+{
+    // int n = seats.size();
+
+    // int maxGap = 0, gap = 0, firstFilledSeat = -1, lastFilledSeat, startIdx = 0, ostart;
+    // for (int i = 0; i < n; i++)
+    // {
+    //     if (firstFilledSeat == -1 && seats[i] == 1)
+    //         firstFilledSeat = i;
+    //     if (seats[i] == 1)
+    //         lastFilledSeat = i;
+
+    //     if (seats[i] == 0)
+    //         gap++;
+    //     else
+    //     {
+    //         gap = 0;
+    //         startIdx = i + 1;
+    //     }
+
+    //     if (gap > maxGap)
+    //     {
+    //         maxGap = gap;
+    //         ostart = startIdx;
+    //     }
+    // }
+
+    // int startGap = firstFilledSeat;
+    // int endGap = n - lastFilledSeat - 1;
+    // int midGap = (maxGap - 1) / 2;
+
+    // int maxDist = max(midGap, max(startGap, endGap));
+
+    // cout << maxDist << " " << ostart << " " << firstFilledSeat << " " << lastFilledSeat << " " << maxGap;
+
+    // if (maxDist == 0)
+    //     return 1;
+    // if (startGap == maxDist)
+    //     return startGap;
+    // if (endGap == maxDist)
+    //     return endGap;
+    // else
+    //     return ostart + midGap;
+}
+
 int main()
 {
     return 0;
