@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 // 925. Long Pressed Name
@@ -332,6 +333,44 @@ vector<int> productExceptSelf(vector<int> &nums)
     return res;
 }
 
+// 508. Wiggle Sort (LintCode)
+void wiggleSort(vector<int> &nums)
+{
+    if (nums.size() <= 1)
+        return;
+
+    for (int i = 0; i < nums.size() - 1; i++)
+    {
+        if (i % 2 == 0 && nums[i] > nums[i + 1])
+            swap(nums[i], nums[i + 1]);
+        if (i % 2 != 0 && nums[i] < nums[i + 1])
+            swap(nums[i], nums[i + 1]);
+    }
+}
+
+// 345. Reverse Vowels of a String
+string reverseVowels(string s)
+{
+    int n = s.size();
+    if (n == 0)
+        return s;
+
+    vector<char> vowels{'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U'};
+    int i = 0, j = n - 1;
+    while (i < j)
+    {
+        while (i < j && find(vowels.begin(), vowels.end(), s[i]) == vowels.end())
+            i++;
+        while (j > i && find(vowels.begin(), vowels.end(), s[j]) == vowels.end())
+            j--;
+
+        swap(s[i], s[j]);
+        i++;
+        j--;
+    }
+
+    return s;
+}
 int main()
 {
     return 0;
