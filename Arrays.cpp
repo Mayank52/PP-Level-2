@@ -395,12 +395,45 @@ int firstMissingPositive(vector<int> &nums)
 // 849. Maximize Distance to Closest Person
 int maxDistToClosest(vector<int> &seats)
 {
-    
 }
 
 // 903 · Range Addition (Lintcode)
-vector<int> getModifiedArray(int length, vector<vector<int>> &updates) {
-    
+/*
+Approach 1: Brute Force O(n*k)
+Approach 2: Time: O(n + k), Space: O(n)(for the result array)
+We can use the concept of prefix sum here.
+In Prefix sum, we have can find sum of a range in O(1) after making the prefix array.
+Here we are given the sum (sort of), and we have to update the array
+So, this is reverse of prefix sum.
+
+For every query, we have a {lb, ub, inc}
+We will do res[lb] += inc and res[ub] -= inc
+This way we can add the inc to every element in range {lb, ub}
+We will do prefix sum. Now, every element after lb will get the inc,
+and at ub+1, we did a -inc, so it will get cancelled out and not contribute outside of its range.
+*/
+vector<int> getModifiedArray(int length, vector<vector<int>> &updates)
+{
+    int n = length;
+    vector<int> res(n, 0);
+
+    //For each query, update lb, ub+1 in res, O(k)
+    for (int i = 0; i < updates.size(); i++)
+    {
+        int lb = updates[i][0];
+        int ub = updates[i][1];
+        int inc = updates[i][2];
+
+        res[lb] += inc;
+        if (ub + 1 < n)
+            res[ub + 1] -= inc;
+    }
+
+    //Do Prefix sum on res, O(n)
+    for (int i = 1; i < n; i++)
+        res[i] += res[i - 1];
+
+    return res;
 }
 
 int main()
