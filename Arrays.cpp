@@ -200,7 +200,74 @@ vector<int> majorityElement(vector<int> &nums)
     return res;
 }
 
-//Max Chunks To Make Sorted
+// 556. Next Greater Element III
+/*
+Approach:
+For the number, start from ones digit, and go left until num[i-1]>num[i]
+i.e. until digit to my left is greater than me
+When num[i-1]<num[i], then start from i and go right to find the just greater number than num[i-1]
+now swap these
+Then sort the numbers i to ones place in increasing order to minimise that to get just greater element.
+
+If the whole number is in decreasing order then, next greater is not possible
+
+Eg: 8 7 3 9 4 8 7 5 3 2
+Start from ones digit i.e. 2 and go left until 4 < 8
+Then find just greater than 4 in 8 to 2 which is 5
+So, it becomes 8 7 3 9 5 8 7 4 3 2
+Now, we have to minimize the number to right of 5 to get the just greater
+sort(8...2) in increasing order 
+
+*/
+int nextGreaterElement(int n)
+{
+    string num = to_string(n);
+
+    //Find the first dereasing number
+    int i = num.size() - 1;
+    while (i > 0 && num[i - 1] >= num[i])
+        i--;
+
+    if (i == 0)
+        return -1;
+
+    //find the just greater on its right
+    long idx1 = i - 1, idx2 = i;
+    for (; i < num.size(); i++)
+    {
+        if (num[i] > num[idx1] && num[i] < num[idx2])
+            idx2 = i;
+    }
+
+    // swap the two places
+    swap(num[idx1], num[idx2]);
+
+    //sort the number on right
+    sort(num.begin() + idx1 + 1, num.end());
+
+    //convert string to num, stol(string to long)
+    long res = stol(num);
+
+    //if number does not fit in 32 bit i.e. its greater than INT_MAX return -1
+    return res > INT_MAX ? -1 : res;
+}
+
+// 628. Maximum Product of Three Numbers
+/*
+Sort the array
+Max will be:
+1. Last 3 (All positive)
+2. First Two(-ve * -ve) * Last(+ve)
+*/
+int maximumProduct(vector<int> &nums)
+{
+    if (nums.size() == 0)
+        return 0;
+    sort(nums.begin(), nums.end());
+    return max(nums[nums.size() - 1] * nums[nums.size() - 2] * nums[nums.size() - 3], nums[0] * nums[1] * nums[nums.size() - 1]);
+}
+
+// Max Chunks To Make Sorted
 /*
 Approach: 
 It will form a chunk if max till now from left is equal to i
@@ -504,6 +571,54 @@ void sortColors(vector<int> &nums)
         else
             idx++;
     }
+}
+
+// 670. Maximum Swap
+/*
+Approach 1: O(n), O(n)
+For eg: 9988853427
+Find a suffix max array.
+For every digit from left if it is not equal to its suffix max, swap it with it.
+In this case, 5 will be the first digit from left not equal to its suffix max.
+So, swap it and that is ans.
+
+Approach 2: O(n), O(1)
+*/
+// Approach 1:
+int maximumSwap(int num)
+{
+    //Convert int to string
+    string str = to_string(num);
+    int n = str.size();
+
+    vector<char> suffixMax(n); //store index, not elements
+
+    //Find the suffixMax
+    suffixMax[n - 1] = n - 1;
+    for (int i = str.size() - 2; i >= 0; i--)
+    {
+        if (str[i] > str[suffixMax[i + 1]])
+            suffixMax[i] = i;
+        else
+            suffixMax[i] = suffixMax[i + 1];
+    }
+
+    //For the first element < its suffixMax, swap it with suffix max and return
+    for (int i = 0; i < n; i++)
+    {
+        if (str[i] < str[suffixMax[i]])
+        {
+            swap(str[i], str[suffixMax[i]]);
+            return stoi(str);
+        }
+    }
+
+    return num;
+}
+
+// 462. Minimum Moves to Equal Array Elements II
+int minMoves2(vector<int> &nums)
+{
 }
 
 int main()
