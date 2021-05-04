@@ -425,7 +425,7 @@ vector<int> getModifiedArray(int length, vector<vector<int>> &updates)
         int inc = updates[i][2];
 
         res[lb] += inc;
-        if (ub + 1 < n)
+        if (ub + 1 < n) // ub + 1 < arr.size
             res[ub + 1] -= inc;
     }
 
@@ -434,6 +434,54 @@ vector<int> getModifiedArray(int length, vector<vector<int>> &updates)
         res[i] += res[i - 1];
 
     return res;
+}
+
+// 912 · Best Meeting Point (Lintcode)
+/*
+Approach: O(n*m)
+Find median of all 1s in matrix
+Median in a 1D array {x1, x2, x3, x4, x5} is x3, for even there are two 1D.
+
+For 2D, find median of all x coords and median of y coords seperately.
+This will be the meeting point.
+Then find the distance using that meeting point.
+
+To find median you need the xcoords and ycoords to be sorted.
+So, use seperate loops for x(row wise) and y(col wise) coords to get them in increasing order
+*/
+int minTotalDistance(vector<vector<int>> &grid)
+{
+    vector<int> xcoords, ycoords;
+
+    //Find the xcoords of all 1s
+    for (int i = 0; i < grid.size(); i++)
+    {
+        for (int j = 0; j < grid[0].size(); j++)
+            if (grid[i][j] == 1)
+                xcoords.push_back(i);
+    }
+    //Find the ycoords of all 1s
+    for (int j = 0; j < grid[0].size(); j++)
+    {
+        for (int i = 0; i < grid.size(); i++)
+            if (grid[i][j] == 1)
+                ycoords.push_back(j);
+    }
+
+    //Find median
+    int medianX = xcoords[xcoords.size() / 2];
+    int medianY = ycoords[ycoords.size() / 2];
+
+    //Find total minimum distance
+    int minDist = 0;
+    for (int i = 0; i < grid.size(); i++)
+    {
+        for (int j = 0; j < grid[0].size(); j++)
+            if (grid[i][j] == 1)
+                minDist += abs(medianX - i) + abs(medianY - j);
+    }
+
+    return minDist;
 }
 
 int main()
