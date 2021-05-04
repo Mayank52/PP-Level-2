@@ -484,6 +484,28 @@ int minTotalDistance(vector<vector<int>> &grid)
     return minDist;
 }
 
+// 75. Sort Colors
+void sortColors(vector<int> &nums)
+{
+    int i = 0, idx = 0, j = nums.size() - 1;
+    while (idx <= j)
+    {
+        if (nums[idx] < 1)
+        {
+            swap(nums[idx], nums[i]);
+            i++;
+            idx++;
+        }
+        else if (nums[idx] > 1)
+        {
+            swap(nums[idx], nums[j]);
+            j--;
+        }
+        else
+            idx++;
+    }
+}
+
 int main()
 {
     return 0;
