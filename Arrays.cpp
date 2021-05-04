@@ -395,47 +395,12 @@ int firstMissingPositive(vector<int> &nums)
 // 849. Maximize Distance to Closest Person
 int maxDistToClosest(vector<int> &seats)
 {
-    // int n = seats.size();
+    
+}
 
-    // int maxGap = 0, gap = 0, firstFilledSeat = -1, lastFilledSeat, startIdx = 0, ostart;
-    // for (int i = 0; i < n; i++)
-    // {
-    //     if (firstFilledSeat == -1 && seats[i] == 1)
-    //         firstFilledSeat = i;
-    //     if (seats[i] == 1)
-    //         lastFilledSeat = i;
-
-    //     if (seats[i] == 0)
-    //         gap++;
-    //     else
-    //     {
-    //         gap = 0;
-    //         startIdx = i + 1;
-    //     }
-
-    //     if (gap > maxGap)
-    //     {
-    //         maxGap = gap;
-    //         ostart = startIdx;
-    //     }
-    // }
-
-    // int startGap = firstFilledSeat;
-    // int endGap = n - lastFilledSeat - 1;
-    // int midGap = (maxGap - 1) / 2;
-
-    // int maxDist = max(midGap, max(startGap, endGap));
-
-    // cout << maxDist << " " << ostart << " " << firstFilledSeat << " " << lastFilledSeat << " " << maxGap;
-
-    // if (maxDist == 0)
-    //     return 1;
-    // if (startGap == maxDist)
-    //     return startGap;
-    // if (endGap == maxDist)
-    //     return endGap;
-    // else
-    //     return ostart + midGap;
+// 903 · Range Addition (Lintcode)
+vector<int> getModifiedArray(int length, vector<vector<int>> &updates) {
+    
 }
 
 int main()
