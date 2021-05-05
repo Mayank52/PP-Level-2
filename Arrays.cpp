@@ -677,11 +677,11 @@ vector<int> sieveOfEratosthenes(int n)
     for (int i = 2; i * i <= n; i++)
     {
         //if this has not been marked, then mark its multiple
-        //also it is a prime number 
+        //also it is a prime number
         if (!nums[i])
         {
             //start from its next multiple after itself
-            for (int j = 2*i; j <= n; j += i)
+            for (int j = 2 * i; j <= n; j += i)
                 nums[j] = true;
         }
     }
@@ -694,6 +694,42 @@ vector<int> sieveOfEratosthenes(int n)
     return primes;
 }
 
+// 763. Partition Labels
+/*
+Approach: Time: O(n), Space: O(26)=O(1)
+Two keep every character in at most one string, if we include it into a string
+then will include till its last occurence into same string
+
+So, make an array of last occurences of all letters.
+Now iterate through string again and keep updating the current last occurence it needs to go to.
+Whenever you reach that occurence include into res
+Similar to Max Sorted Chunks
+*/
+vector<int> partitionLabels(string S)
+{
+    //Make the last idx array of all letters
+    vector<int> lastIdx(26, 0);
+    for (int i = 0; i < S.size(); i++)
+        lastIdx[S[i] - 'a'] = i;
+
+    vector<int> res;
+    int currLastIdx = 0, si = -1;
+    for (int i = 0; i < S.size(); i++)
+    {
+        //update the current last idx we need to go to
+        currLastIdx = max(currLastIdx, lastIdx[S[i] - 'a']);
+
+        //if this idx is last then push into result the length of current string
+        if (i == currLastIdx)
+        {
+            //current idx - starting idx(here si is the start idx - 1)
+            res.push_back(i - si);
+            si = i;
+        }
+    }
+
+    return res;
+}
 
 int main()
 {
