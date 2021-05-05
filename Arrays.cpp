@@ -713,7 +713,7 @@ vector<int> partitionLabels(string S)
         lastIdx[S[i] - 'a'] = i;
 
     vector<int> res;
-    int currLastIdx = 0, si = -1;
+    int currLastIdx = 0, si = -1; //start idx of current string
     for (int i = 0; i < S.size(); i++)
     {
         //update the current last idx we need to go to
@@ -722,7 +722,6 @@ vector<int> partitionLabels(string S)
         //if this idx is last then push into result the length of current string
         if (i == currLastIdx)
         {
-            //current idx - starting idx(here si is the start idx - 1)
             res.push_back(i - si);
             si = i;
         }
@@ -731,6 +730,116 @@ vector<int> partitionLabels(string S)
     return res;
 }
 
+// 915. Partition Array into Disjoint Intervals
+/*
+Keep a left Max element (max from 0 till now),
+and a right Min element (min from now till n-1)
+
+At each index check if my leftMax <= rightMin of element to my right
+then that is the answer
+*/
+int partitionDisjoint(vector<int> &A)
+{
+    int n = A.size();
+    vector<int> rightMin(n);
+
+    rightMin[n - 1] = A[n - 1];
+    for (int i = n - 2; i >= 0; i--)
+    {
+        rightMin[i] = min(rightMin[i + 1], A[i]);
+    }
+
+    int leftMax = A[0];
+    for (int i = 0; i < n - 1; i++)
+    {
+        leftMax = max(leftMax, A[i]);
+        if (leftMax <= rightMin[i + 1])
+            return i + 1;
+    }
+
+    return -1;
+}
+
+// https://www.codechef.com/SNCKPE19/problems/BUDDYNIM
+/*
+Cases: 
+1. If total stones in A != total stones in B
+    Alice Wins
+2. If total stones in A == total stones in B
+    If the number of piles is the same and the structure of all the piles are same
+        Bob Wins
+    Else
+        Alice wins
+
+The piles also include 0 values, so we have to remove them before comparing the structures
+*/
+void sol()
+{
+    int t;
+    cin >> t;
+    while (t-- > 0)
+    {
+        int n, m;
+        cin >> n >> m;
+
+        vector<int> a, b;
+
+        //dont include 0s into the array
+        for (int i = 0; i < n; i++)
+        {
+            int x;
+            cin >> x;
+            if (x != 0)
+                a.push_back(x);
+        }
+        for (int i = 0; i < m; i++)
+        {
+            int x;
+            cin >> x;
+            if (x != 0)
+                b.push_back(x);
+        }
+
+        //update the size for the non zero arrays
+        n = a.size();
+        m = b.size();
+
+        int atotal = 0, btotal = 0;
+
+        for (int i = 0; i < n; i++)
+            atotal += a[i];
+        for (int i = 0; i < m; i++)
+            btotal += b[i];
+
+        //if total is unequal or (total is same but number of piles is unequal)
+        //Alice wins
+        if (atotal != btotal || (atotal == btotal && n != m))
+        {
+            cout << "Alice" << endl;
+            continue;
+        }
+
+        int flag = 0;
+        //sort to compare the structures
+        sort(a.begin(), a.end());
+        sort(b.begin(), b.end());
+        for (int i = 0; i < n; i++)
+        {
+            //structure is different -> Alice Wins
+            if (a[i] != b[i])
+            {
+                cout << "Alice" << endl;
+                flag = 1;
+                break;
+            }
+        }
+
+        if (flag == 1)
+            continue;
+        else
+            cout << "Bob" << endl;
+    }
+}
 int main()
 {
     return 0;
