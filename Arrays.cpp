@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits.h>
 #include <vector>
 #include <algorithm>
 
@@ -208,6 +209,7 @@ i.e. until digit to my left is greater than me
 When num[i-1]<num[i], then start from i and go right to find the just greater number than num[i-1]
 now swap these
 Then sort the numbers i to ones place in increasing order to minimise that to get just greater element.
+We dont need to sort, we can reverse them, as they are already in decreasing order
 
 If the whole number is in decreasing order then, next greater is not possible
 
@@ -216,7 +218,11 @@ Start from ones digit i.e. 2 and go left until 4 < 8
 Then find just greater than 4 in 8 to 2 which is 5
 So, it becomes 8 7 3 9 5 8 7 4 3 2
 Now, we have to minimize the number to right of 5 to get the just greater
-sort(8...2) in increasing order 
+Reverse(8...2) to get increasing order
+
+Eg: 12222333
+We need to find the rightmost just greater, like in this we will swap 2 with 3 on ones place
+Then only the reverse will give increasing order
 
 */
 int nextGreaterElement(int n)
@@ -235,20 +241,19 @@ int nextGreaterElement(int n)
     long idx1 = i - 1, idx2 = i;
     for (; i < num.size(); i++)
     {
-        if (num[i] > num[idx1] && num[i] < num[idx2])
+        //we have to find the right most just greater, so use <=
+        if (num[i] > num[idx1] && num[i] <= num[idx2])
             idx2 = i;
     }
 
     // swap the two places
     swap(num[idx1], num[idx2]);
 
-    //sort the number on right
-    sort(num.begin() + idx1 + 1, num.end());
+    //reverse the number on right
+    reverse(num.begin() + idx1 + 1, num.end());
 
-    //convert string to num, stol(string to long)
     long res = stol(num);
 
-    //if number does not fit in 32 bit i.e. its greater than INT_MAX return -1
     return res > INT_MAX ? -1 : res;
 }
 
@@ -616,10 +621,79 @@ int maximumSwap(int num)
     return num;
 }
 
-// 462. Minimum Moves to Equal Array Elements II
-int minMoves2(vector<int> &nums)
+// https://www.geeksforgeeks.org/minimum-number-platforms-required-railwaybus-station/
+/*
+Approach: O(n), O(1)
+Similar to Merge two sorted arrays
+*/
+int findPlatform(int arr[], int dep[], int n)
 {
+    sort(arr, arr + n);
+    sort(dep, dep + n);
+
+    int i = 0, j = 0, currPlatforms = 0, maxPlatforms = INT_MIN;
+    while (i < n)
+    {
+        //Train arrives, <= as, if arrival and departure of two trains are same, we need seperate platforms
+        if (arr[i] <= dep[j])
+        {
+            currPlatforms++;
+            i++;
+        }
+        //Train departs
+        else
+        {
+            currPlatforms--;
+            j++;
+        }
+
+        maxPlatforms = max(maxPlatforms, currPlatforms);
+    }
+
+    return maxPlatforms;
 }
+
+// Sieve of Eratosthenes (Standard Algo)
+/*
+To Find Prime numbers till n
+Time: O(n*log(logn)) which is nearly O(n)
+Space: O(n)
+
+Time Complexity:
+= N/2 + N/3 + N/5 + .......
+= N(1/2 + 1/3 1/5 + ......)
+= N(loglogn)
+
+It is only valid for n<=10^8
+Because we cannot make an array greater than 10^8.
+So, loglog(10^8) = log(26) = 6
+So, O(Nloglogn) = O(6N)
+So, it is nearly linear
+*/
+vector<int> sieveOfEratosthenes(int n)
+{
+    vector<bool> nums(n + 1, false); //false: prime, true: non prime
+    //for numbers 2 to sqrt(n)
+    for (int i = 2; i * i <= n; i++)
+    {
+        //if this has not been marked, then mark its multiple
+        //also it is a prime number 
+        if (!nums[i])
+        {
+            //start from its next multiple after itself
+            for (int j = 2*i; j <= n; j += i)
+                nums[j] = true;
+        }
+    }
+
+    vector<int> primes;
+    for (int i = 2; i <= n; i++)
+        if (!nums[i])
+            primes.push_back(i);
+
+    return primes;
+}
+
 
 int main()
 {
