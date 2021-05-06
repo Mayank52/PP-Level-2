@@ -1020,6 +1020,98 @@ void sol()
             cout << "Bob" << endl;
     }
 }
+
+// 881. Boats to Save People
+/*
+Approach: O(nlogn + n)
+If the heaviest person can share a boat with the lightest person, then do so. 
+Otherwise, the heaviest person can't pair with anyone, so they get their own boat.
+*/
+int numRescueBoats(vector<int> &people, int limit)
+{
+    int n = people.size();
+
+    sort(people.begin(), people.end());
+
+    //if the heaviest person is above limit,
+    //not possible to fit them all
+    if (people[n - 1] > limit)
+        return -1;
+
+    int i = 0, j = n - 1, count = 0;
+    while (i < j)
+    {
+        //heavy and light together
+        if (people[j] + people[i] <= limit)
+        {
+            count++;
+            i++;
+            j--;
+        }
+        //heavy alone
+        else
+        {
+            j--;
+            count++;
+        }
+    }
+
+    if (i == j)
+        count++;
+
+    return count;
+}
+
+// 462. Minimum Moves to Equal Array Elements II
+/*
+Approach: O(nlogn + n)
+Find the median
+Median is the element in the middle of a sorted array
+Get all elements to the median
+*/
+int minMoves2(vector<int> &nums)
+{
+    int n = nums.size();
+
+    sort(nums.begin(), nums.end());
+
+    int median = nums[n / 2];
+
+    int moves = 0;
+    for (int ele : nums)
+        moves += abs(median - ele);
+
+    return moves;
+}
+
+// 905. Sort Array By Parity
+/*
+Approach: O(n), Two Pointer
+start from begin and end
+When odd swap with end => end--
+When even => begin++
+
+We cant begin++ after swap as we may get odd after swap
+Eg: [3,4,2,1]
+*/
+vector<int> sortArrayByParity(vector<int> &A)
+{
+    int n = A.size();
+    int i = 0, j = n - 1;
+    while (i < j)
+    {
+        if (A[i] % 2 == 1)
+        {
+            swap(A[i], A[j]);
+            j--;
+        }
+        else
+            i++;
+    }
+
+    return A;
+}
+
 int main()
 {
     return 0;
