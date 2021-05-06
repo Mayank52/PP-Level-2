@@ -1,6 +1,7 @@
 #include <iostream>
 #include <limits.h>
 #include <vector>
+#include <math.h>
 #include <algorithm>
 
 using namespace std;
@@ -587,7 +588,19 @@ For every digit from left if it is not equal to its suffix max, swap it with it.
 In this case, 5 will be the first digit from left not equal to its suffix max.
 So, swap it and that is ans.
 
-Approach 2: O(n), O(1)
+Approach 2: O(10*n) = O(n), O(10) = O(1)
+Store all last occurences of each number in an array (first occurence from right)
+So, make 10 size array for digits 0-9
+number:     9 9 8 8 8 5 3 4 2 7
+lastt idx:  0 1 2 3 4 5 6 7 8 9
+
+Last occurence array :
+Idx(Number):  0  1  2 3 4 5  6 7 8 9
+last idx:    -1 -1  8 6 7 5 -1 9 4 1
+
+Now, for each number from left check if any number greater than it has occured on its right
+Swap those two
+
 */
 // Approach 1:
 int maximumSwap(int num)
@@ -619,6 +632,43 @@ int maximumSwap(int num)
     }
 
     return num;
+}
+//Approach 2:
+int maximumSwap(int num)
+{
+    string str = to_string(num);
+
+    vector<int> lastIdx(10, -1);
+
+    //make the lastIdx array
+    for (int i = str.size() - 1; i >= 0; i--)
+    {
+        int n = str[i] - '0';
+        if (lastIdx[n] == -1)
+            lastIdx[n] = i;
+    }
+
+    //start from leftmost number
+    for (int i = 0; i < str.size(); i++)
+    {
+        int n = str[i] - '0';
+        //find the largest number on its right
+        for (int j = 9; j > n; j--)
+        {
+            if (lastIdx[j] > i)
+            {
+                swap(str[i], str[lastIdx[j]]);
+                return stoi(str);
+            }
+        }
+    }
+
+    return num;
+}
+
+// 754. Reach a Number
+int reachNumber(int target)
+{
 }
 
 // https://www.geeksforgeeks.org/minimum-number-platforms-required-railwaybus-station/
@@ -692,6 +742,28 @@ vector<int> sieveOfEratosthenes(int n)
             primes.push_back(i);
 
     return primes;
+}
+
+//Segmented Sieve
+vector<int> segmentedSieve(int m, int n)
+{
+    vector<int> primestillRootN = sieveOfEratosthenes(n);
+    vector<bool> nums(n - m + 1, true); //true: non-prime, false: prime
+    for (int i = 0; i < primestillRootN.size(); i++)
+    {
+        int num = primestillRootN[i];
+        for (int j = ceil(m / num) * num; j <= n; j += num)
+        {
+            nums[j - m] = false;
+        }
+    }
+
+    vector<int> res;
+    for (int i = 0; i < nums.size(); i++)
+        if (!nums[i])
+            res.push_back(i + m);
+
+    return res;
 }
 
 // 763. Partition Labels
