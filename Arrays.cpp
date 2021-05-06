@@ -376,6 +376,46 @@ int numSubarrayBoundedMax(vector<int> &A, int L, int R)
     return count;
 }
 
+// 747. Largest Number At Least Twice of Others
+/*
+Find max and second max element
+Check if max1 >= 2*max2
+*/
+int dominantIndex(vector<int> &nums)
+{
+    //if size is 1 than it is trivially greater than all other
+    if (nums.size() == 1)
+        return 0;
+
+    //initialise the max1 and max2
+    int maxIdx1, maxIdx2;
+    if (nums[0] > nums[1])
+    {
+        maxIdx1 = 0;
+        maxIdx2 = 1;
+    }
+    else
+    {
+        maxIdx1 = 1;
+        maxIdx2 = 0;
+    }
+
+    for (int i = 2; i < nums.size(); i++)
+    {
+        //new max1, put old value in max2
+        if (nums[i] > nums[maxIdx1])
+        {
+            maxIdx2 = maxIdx1;
+            maxIdx1 = i;
+        }
+        //else just update max2, as in [0,0,3,2]
+        else if (nums[i] > nums[maxIdx2])
+            maxIdx2 = i;
+    }
+
+    return nums[maxIdx1] >= 2 * nums[maxIdx2] ? maxIdx1 : -1;
+}
+
 // 238. Product of Array Except Self
 /*
 Time: O(n), Space: O(1)
@@ -685,6 +725,11 @@ Then we have to go back 4 steps
 So, if we flip +2 to -2, we can do that
 As that will decrease 2*2 = 4 steps (2 -> 0 -> -2)
 If difference was 6, we can flip to 3 to -3 (3 -> 0 -> -3)
+
+Time: 
+n(n+1)/2 = target
+=> n^2 = target
+=> n = sqrt(target)
 
 For eg: reach 17
 1 + 2 + 3 + 4 + 5 + 6 = 21
