@@ -667,8 +667,71 @@ int maximumSwap(int num)
 }
 
 // 754. Reach a Number
+/*
+Approach: O(sqrt(target))
+Keep going towards the number until you reach it or cross it
+If you cross it, find the difference between the number and current position.
+If difference is:
+- Even -> This is the ans
+- Odd-> Take another step
+    - If Difference is even -> ans
+    - Odd -> take another step
+        - Now it will definately be even, so got the ans
+
+Whenever the difference between target and your position is even,
+The target can be reached by making a step till now negative
+Like if we have to reach 17 , and we reach 21 by: 1 + 2 + 3 + 4 + 5 + 6
+Then we have to go back 4 steps
+So, if we flip +2 to -2, we can do that
+As that will decrease 2*2 = 4 steps (2 -> 0 -> -2)
+If difference was 6, we can flip to 3 to -3 (3 -> 0 -> -3)
+
+For eg: reach 17
+1 + 2 + 3 + 4 + 5 + 6 = 21
+21 - 17 = 4 , so ans is 6 steps
+If we have to reach 14
+1 + 2 + 3 + 4 + 5 = 15
+15-14 = 1 (Odd)
+Take another step -> 15+ 6 = 21
+21-14 = 7 (Odd)
+Take another step -> 21 + 7 = 28
+28-14 = 14 (Even)
+
+Ans is 7 steps
+
+Within 3 you will always get even as
+If you got odd first time, then 2nd it will be
+even(number) + odd(added) = odd(number)
+3rd Time
+odd(number) + even(added) = even(number)
+*/
 int reachNumber(int target)
 {
+    //convert the negative numbers into positive
+    target = abs(target);
+
+    int i = 1, sum = 0;
+    //reach or cross the target
+    while (sum < target)
+    {
+        sum += i;
+        i++;
+    }
+
+    //even
+    if ((sum - target) % 2 == 0)
+        return i - 1;
+    //odd
+    else
+    {
+        sum += i;
+        //2nd even
+        if ((sum - target) % 2 == 0)
+            return i;
+        //3rd time it will be even
+        else
+            return i + 1;
+    }
 }
 
 // https://www.geeksforgeeks.org/minimum-number-platforms-required-railwaybus-station/
