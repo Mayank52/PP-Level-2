@@ -853,23 +853,70 @@ vector<int> sieveOfEratosthenes(int n)
 }
 
 //Segmented Sieve
+/*
+Approach:
+Since the maximum allowed size of array is 10^8, for inputs greater than that we can use segmented sieve
+In this,
+1. Calculate all primes till root(n) using Sieve of Erastothenes
+2. Using those primes calculate the primes is range [m,n].
+   Make an array of size n-m+1, then using the primes till root(n) find all primes in that range using sieve algo.
+We only need to check for numbers in range n, m
+So for each prime, we start marking false from ceil(m / num) * num,
+Eg: In [21, 50], 
+We get primes till root(50) = [2,3,5,7]
+For these primes,we use sieve algo and mark al their multiples
+For table of 2 we will start checking from
+ceil(21 / 2) * 2 = 11*2 = 22
+
+Eg: input is m = 10^6, n = 10^9
+Now we find primes till root(10^9) i.e 10^(4.5) using normal Sieve
+Then using those we find the primes in range given
+
+Also, in case m is less than root n, we will have to include the req primes in result as well
+Like m = 4, n = 50
+
+*/
 vector<int> segmentedSieve(int m, int n)
 {
-    vector<int> primestillRootN = sieveOfEratosthenes(n);
-    vector<bool> nums(n - m + 1, true); //true: non-prime, false: prime
+    //get primes till root(n)
+    vector<int> primestillRootN = sieveOfEratosthenes(sqrt(n));
+
+    //make nums array of size n-m+1
+    vector<bool> nums(n - m + 1, false); //true: non-prime, false: prime
+
+    //for all primes found, run the sieve algo
+    //To map the numbers in range m,n to 0 indexing for array, use [j-m]
     for (int i = 0; i < primestillRootN.size(); i++)
     {
-        int num = primestillRootN[i];
+        double num = primestillRootN[i];
         for (int j = ceil(m / num) * num; j <= n; j += num)
         {
-            nums[j - m] = false;
+            if (j - m >= 0)
+                nums[j - m] = true;
         }
     }
 
     vector<int> res;
-    for (int i = 0; i < nums.size(); i++)
-        if (!nums[i])
-            res.push_back(i + m);
+    //if m < root(n)
+    if (m <= sqrt(n))
+    {
+        //include all till root(n) that are in range
+        for (int ele : primestillRootN)
+            if (ele >= m)
+                res.push_back(ele);
+        //now from our array start from the first number after root(n)
+        //Eg: In [4, 50], we included 5,7 already, so we start from 8
+        for (int i = sqrt(n) - m + 1; i < nums.size(); i++)
+            if (!nums[i])
+                res.push_back(i + m);
+    }
+    //else just include all marked prime
+    else
+    {
+        for (int i = 0; i < nums.size(); i++)
+            if (!nums[i])
+                res.push_back(i + m);
+    }
 
     return res;
 }
