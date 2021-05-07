@@ -1086,7 +1086,8 @@ int minMoves2(vector<int> &nums)
 
 // 905. Sort Array By Parity
 /*
-Approach: O(n), Two Pointer
+Approach: O(n), 
+Two Pointer:
 start from begin and end
 When odd swap with end => end--
 When even => begin++
