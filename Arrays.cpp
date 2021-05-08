@@ -506,8 +506,98 @@ int firstMissingPositive(vector<int> &nums)
 }
 
 // 849. Maximize Distance to Closest Person
+/*
+Approach 1: O(n), O(n)
+Let left[i] be the distance from seat i to the closest person sitting to the left of i.
+Similarly, let right[i] be the distance to the closest person sitting to the right of i. 
+This is motivated by the idea that the closest person in seat i sits a distance min(left[i], right[i]) away.
+Then find the position with max distance from both sides.
+
+Approach 2: O(n), O(1)
+For each group of K empty seats between two people, we can take into account the candidate answer (K+1) / 2.
+For groups of empty seats between the edge of the row and one other person, the answer is K,
+and we should take into account those answers too.
+*/
+//Approach 1:
 int maxDistToClosest(vector<int> &seats)
 {
+    int n = seats.size();
+
+    //distance to closest person on left
+    vector<int> leftClosest(n, 0);
+    leftClosest[0] = seats[0] == 0 ? 1 : 0;
+    for (int i = 1; i < n; i++)
+    {
+        if (seats[i] != 1)
+            leftClosest[i] = leftClosest[i - 1] + 1;
+    }
+
+    //distance to closest person on right
+    vector<int> rightClosest(n, 0);
+    rightClosest[n - 1] = seats[n - 1] == 0 ? 1 : 0;
+    for (int i = n - 2; i >= 0; i--)
+    {
+        if (seats[i] != 1)
+            rightClosest[i] = rightClosest[i + 1] + 1;
+    }
+
+    int maxDist = -1;
+    //update the maxDist for 0 and n-1 index
+    if (seats[0] == 0)
+        maxDist = rightClosest[0];
+    if (seats[n - 1] == 0)
+        maxDist = max(maxDist, leftClosest[n - 1]);
+    for (int i = 1; i < n - 1; i++)
+    {
+        //update the maxDist for each index
+        int currClosest = min(leftClosest[i], rightClosest[i]);
+        if (seats[i] == 0)
+        {
+            maxDist = max(maxDist, currClosest);
+        }
+    }
+
+    return maxDist;
+}
+//Approach 2:
+int maxDistToClosest(vector<int> &seats)
+{
+    int n = seats.size();
+    int dist = 0, res = 0;
+
+    //dist for seats in between
+    for (int i = 0; i < n; i++)
+    {
+        if (seats[i] == 1)
+            dist = 0;
+        else
+        {
+            dist++;
+            res = max(res, (dist + 1) / 2);
+        }
+    }
+
+    //dist from 0
+    for (int i = 0; i < n; i++)
+    {
+        if (seats[i] == 1)
+        {
+            res = max(res, i);
+            break;
+        }
+    }
+
+    //dist from n-1
+    for (int i = n - 1; i >= 0; i--)
+    {
+        if (seats[i] == 1)
+        {
+            res = max(res, n - 1 - i);
+            break;
+        }
+    }
+
+    return res;
 }
 
 // 903 · Range Addition (Lintcode)
