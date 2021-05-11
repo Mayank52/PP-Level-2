@@ -48,17 +48,18 @@ int countVowelStrings_(int n, int lastChar, vector<vector<int>> &dp)
 
     return dp[n][lastChar] = res;
 }
-int countVowelStrings_dp(int N, int lastChar, vector<vector<int>> &dp)
+int countVowelStrings_dp(int N)
 {
+    vector<vector<int>> dp(N + 1, vector<int>(5, -1));
     for (int n = 0; n <= N; n++)
     {
         //start adding from end at each row, so at each n,i we will get the required sum
-        for (int i = 4; i >=0; i--)
+        for (int i = 4; i >= 0; i--)
         {
             if (n == 0)
                 dp[n][i] = 1;
             else
-                dp[n][i] = dp[n][i+1] + dp[n - 1][i];
+                dp[n][i] = dp[n][i + 1] + dp[n - 1][i];
         }
     }
 
@@ -67,10 +68,9 @@ int countVowelStrings_dp(int N, int lastChar, vector<vector<int>> &dp)
 int countVowelStrings(int n)
 {
     vector<vector<int>> dp(n + 1, vector<int>(5, -1));
-    return countVowelStrings_(n, 0, dp);
+    // return countVowelStrings_(n, 0, dp);
+    return countVowelStrings_dp(n);
 }
-
-
 
 int main()
 {

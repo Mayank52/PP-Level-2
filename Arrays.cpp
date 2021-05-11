@@ -1250,6 +1250,98 @@ vector<int> sortArrayByParity(vector<int> &A)
     return A;
 }
 
+// 920 · Meeting Rooms (Lintcode)
+class Interval
+{
+public:
+    int start, end;
+    Interval(int start, int end)
+    {
+        this->start = start;
+        this->end = end;
+    }
+};
+bool canAttendMeetings(vector<Interval> &intervals)
+{
+    //sort using custom comparator, here we use a lambda expression
+    sort(intervals.begin(), intervals.end(), [](const Interval &lhs, const Interval &rhs) {
+        return lhs.start < rhs.start;
+    });
+
+    //if any interval start is less than previous interval end, return false
+    for (int i = 1; i < intervals.size(); i++)
+    {
+        if (intervals[i].start < intervals[i - 1].end)
+            return false;
+    }
+
+    return true;
+}
+
+// 43. Multiply Strings
+/*
+Approach:
+Things to note:
+Eg: a=123, b=56
+1.Given two strings a, b, the max size of the product string will be a.size() + b.size()
+So, in eg: size of ans will be max 3 + 2 = 5
+2.To find the index of the product in answer, we use idx1 = i + j, idx2= i+ j + 1
+Eg:
+num1: 1 2 3 (i=0,1,2)
+num2:   5 6 (j= 0,1)
+ans: _ _ _ _ _  (idx = 0,1,2,3,4)
+
+So when we multiply 3*6 = 18
+so 18 in ans array will be at idx1 = i + j = 2 + 1 = 3 and idx2 = 2 + 1 + 1 = 4
+Meaning 1 at index 3, and 8 at index 4
+
+So, to the res, we multiply two digits, add them to the idx2 and store the remainder(18%10) at idx2, carry(18/10) at idx1
+Then when we have  multiplied 123*6
+Then we have to multiply by 5, and add the two
+So, we will add simultaneously instead of storing them all.
+*/
+string multiply(string num1, string num2)
+{
+    int n = num1.size();
+    int m = num2.size();
+    vector<int> res(n + m, 0);
+
+    for (int i = n - 1; i >= 0; i--)
+    {
+        for (int j = m - 1; j >= 0; j--)
+        {
+            int idx1 = i + j;
+            int idx2 = i + j + 1;
+
+            int val = (num1[i] - '0') * (num2[j] - '0') + res[idx2];
+
+            res[idx2] = val % 10;
+            res[idx1] += val / 10;
+        }
+    }
+
+    string product = "";
+    int i = 0;
+    //to remove prefix zeroes
+    while (i < res.size() && res[i] == 0)
+        i++;
+    while (i < res.size())
+    {
+        char c = res[i] + '0';
+        product += c;
+        i++;
+    }
+
+    //if product is 0
+    if (product.size() == 0)
+        return "0";
+
+    return product;
+}
+
+// 1031. Maximum Sum of Two Non-Overlapping Subarrays
+
+
 int main()
 {
     return 0;
