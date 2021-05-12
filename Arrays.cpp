@@ -3,6 +3,7 @@
 #include <vector>
 #include <math.h>
 #include <algorithm>
+#include <queue>
 
 using namespace std;
 // 925. Long Pressed Name
@@ -1340,7 +1341,208 @@ string multiply(string num1, string num2)
 }
 
 // 1031. Maximum Sum of Two Non-Overlapping Subarrays
+/*
+Wrong Approach 1: Greedy Approach
+Pick L size max array first, then pick M size max array
+Then Pick M size max first and then L Size max
+Then return the max of these two
 
+Eg: 2 2 7 8 9 9 7 2, L=3, M=2
+Here pick L size array : 8 9 9
+M size : 2 7
+Gives 35
+Then M size first: 9 9
+L size: 2 7 8
+Gives 35
+
+But the max ans will be (7 8 9 9 7) = 42
+Using this approach we will not get the ans 
+As while picking the L or M size max sum subarray first we pick it form inbetween the actual ans
+So, We will never be able to pick the remaining.
+
+Wrong Approach 2: Greedy Approach
+Take max of: Max L then Max M, Max M then Max L, Max L+M size at once
+Eg: 7 10 3 18 5 7
+1. L = 10 3 18, M = 2 cant find
+2. M = 18 5 , L = 7 10 3
+3. L+M = 7 10 3 18 5
+
+But actual ans is 7 10, 18 5 7
+
+So, only way is to check all possible L,M size subarrays
+Correct Approach : O(n)
+Make a prefixMax, suufixMax where each element is the max window sum of size min(L, M) ending at that index
+Then for each window of size max(L, M) , add the max of the max(prefixSum on left, suffixSum on right)
+Update overall max for each index
+*/
+int maxSumTwoNoOverlap(vector<int> &A, int L, int M)
+{
+    int n = A.size();
+    vector<int> prefixMax(n), suffixMax(n);
+
+    int m = min(L, M);
+    int l = max(L, M);
+
+    //Prefix Max for window of size min(L, M)
+    int sum = 0;
+    for (int i = 0; i < n; i++)
+    {
+        if (i - m >= 0)
+            sum = sum + A[i] - A[i - m];
+        else
+            sum = sum + A[i];
+
+        if (i > m - 1)
+            prefixMax[i] = max(prefixMax[i - 1], sum);
+        //first window from left
+        else if (i == m - 1)
+            prefixMax[i] = sum;
+    }
+
+    //Suffix Max for window of size min(L, M)
+    sum = 0;
+    for (int i = n - 1; i >= 0; i--)
+    {
+        if (i + m < n)
+            sum = sum + A[i] - A[i + m];
+        else
+            sum = sum + A[i];
+
+        if (n - i > m)
+            suffixMax[i] = max(suffixMax[i + 1], sum);
+        //first window from right
+        else if (n - i == m)
+            suffixMax[i] = sum;
+    }
+
+    sum = 0;
+    int res = 0;
+    for (int i = 0; i < n; i++)
+    {
+        //get sum of current window
+        if (i - l >= 0)
+            sum = sum + A[i] - A[i - l];
+        else
+            sum = sum + A[i];
+
+        //update the res
+        if (i > l - 1 && i + 1 < n)
+            res = max(res, sum + max(prefixMax[i - l], suffixMax[i + 1]));
+        //for first window, check with only suffixMax
+        else if (i == l - 1)
+            res = sum + suffixMax[i + 1];
+        //for last window check only prefix max
+        else if (i == n - 1)
+            res = max(res, sum + prefixMax[i - l]);
+    }
+
+    return res;
+}
+
+// 42. Trapping Rain Water
+//Approach 1 : Time: O(3n), Time: O(2n)
+int trap(vector<int> &height)
+{
+    if (height.size() == 0)
+        return 0;
+
+    int n = height.size();
+    vector<int> prefixMax(n), suffixMax(n);
+
+    prefixMax[0] = height[0];
+    for (int i = 1; i < n; i++)
+        prefixMax[i] = max(height[i], prefixMax[i - 1]);
+
+    suffixMax[n - 1] = height[n - 1];
+    for (int i = n - 2; i >= 0; i--)
+        suffixMax[i] = max(height[i], suffixMax[i + 1]);
+
+    int totalWater = 0;
+    for (int i = 1; i < n - 1; i++)
+        totalWater += min(prefixMax[i], suffixMax[i]) - height[i];
+
+    return totalWater;
+}
+//Approach 2: O(n), O(1)
+int trap(vector<int> &height)
+{
+    if (height.size() == 0)
+        return 0;
+
+    int n = height.size();
+    int i = 0, j = n - 1;
+    int leftMax = height[0], rightMax = height[n - 1], totalWater = 0;
+    while (i < j)
+    {
+        leftMax = max(leftMax, height[i]);
+        rightMax = max(rightMax, height[j]);
+
+        if (leftMax < rightMax)
+            totalWater += leftMax - height[i++];
+        else
+            totalWater += rightMax - height[j--];
+    }
+
+    return totalWater;
+}
+
+// 407. Trapping Rain Water II
+int trapRainWater(vector<vector<int>> &heightMap)
+{
+    int n = heightMap.size();
+    int m = heightMap[0].size();
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+    vector<vector<bool>> vis(n, vector<bool>(m, false));
+
+    //push first and last row into priority queue
+    for (int i = 0; i < m; i++)
+    {
+        pq.push({heightMap[0][i], 0, i});
+        pq.push({heightMap[n - 1][i], n - 1, i});
+        vis[0][i] = true;
+        vis[n - 1][i] = true;
+    }
+    //push first and last column into priority queue
+    for (int i = 0; i < n; i++)
+    {
+        pq.push({heightMap[i][0], i, 0});
+        pq.push({heightMap[i][m - 1], i, m - 1});
+        vis[i][0] = true;
+        vis[i][m - 1] = true;
+    }
+
+    int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+    int totalWater = 0, maxTillNow = 0;
+    while (pq.size() != 0)
+    {
+        int h = pq.top()[0];
+        int i = pq.top()[1];
+        int j = pq.top()[2];
+        pq.pop();
+
+        maxTillNow = max(maxTillNow, h);
+
+        for (int d = 0; d < 4; d++)
+        {
+            int x = i + dir[d][0];
+            int y = j + dir[d][1];
+
+            if (x >= 0 && y >= 0 && x < n && y < m && !vis[x][y])
+            {
+                vis[x][y] = true;
+                totalWater += max(0, maxTillNow - heightMap[x][y]);
+                pq.push({heightMap[x][y], x, y});
+            }
+        }
+    }
+
+    return totalWater;
+}
+
+// 239. Sliding Window Maximum
+vector<int> maxSlidingWindow(vector<int> &nums, int k)
+{
+}
 
 int main()
 {
