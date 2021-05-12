@@ -4,6 +4,7 @@
 #include <math.h>
 #include <algorithm>
 #include <queue>
+#include <list>
 
 using namespace std;
 // 925. Long Pressed Name
@@ -1566,7 +1567,76 @@ Using a queue to maintain the max of window
 */
 vector<int> maxSlidingWindow(vector<int> &nums, int k)
 {
+    int n = nums.size();
+    vector<int> prefixMax(n), suffixMax(n);
 
+    //make prefixMax
+    for (int i = 0; i < n; i++)
+    {
+        //for first element and start of windows from left
+        if (i == 0 || i % k == 0)
+            prefixMax[i] = nums[i];
+        //for other elements of window
+        else
+            prefixMax[i] = max(prefixMax[i - 1], nums[i]);
+    }
+
+    //make suffixMax
+    for (int i = n - 1; i >= 0; i--)
+    {
+        //for last element and start of windows from right
+        if (i == n - 1 || (i + 1) % k == 0)
+            suffixMax[i] = nums[i];
+        //for other elements of window
+        else
+            suffixMax[i] = max(suffixMax[i + 1], nums[i]);
+    }
+
+    //find result
+    vector<int> res(n - k + 1);
+    for (int i = 0; i < n - k + 1; i++)
+    {
+        res[i] = max(suffixMax[i], prefixMax[i + k - 1]);
+    }
+
+    return res;
+}
+//Approach 2:
+vector<int> maxSlidingWindow(vector<int> &nums, int k)
+{
+    vector<int> res;
+    list<int> que;
+    int i;
+
+    //add elements of first window
+    for (i = 0; i < k; i++)
+    {
+        //remove all elements from end that are less than current element
+        while (que.size() > 0 && nums[que.back()] < nums[i])
+            que.pop_back();
+        que.push_back(i);
+    }
+
+    res.push_back(nums[que.front()]);
+
+    for (; i < nums.size(); i++)
+    {
+        //remove first element if its index is out of current window
+        if (que.size() > 0 && que.front() <= (i - k))
+            que.pop_front();
+
+        //remove all elements from end that are less than current element
+        while (que.size() > 0 && nums[que.back()] < nums[i])
+            que.pop_back();
+
+        //add the current element
+        que.push_back(i);
+
+        //front of que is max element of window
+        res.push_back(nums[que.front()]);
+    }
+
+    return res;
 }
 
 int main()
