@@ -1639,6 +1639,33 @@ vector<int> maxSlidingWindow(vector<int> &nums, int k)
     return res;
 }
 
+// 56. Merge Intervals
+vector<vector<int>> merge(vector<vector<int>> &intervals)
+{
+    if (intervals.size() == 0)
+        return {};
+
+    vector<vector<int>> res;
+    sort(intervals.begin(), intervals.end());
+    res.push_back(intervals[0]);
+    int j = 0;
+    for (int i = 1; i < intervals.size(); i++)
+    {
+        if (intervals[i][0] <= res[j][1])
+        {
+            res[j][0] = min(res[j][0], intervals[i][0]);
+            res[j][1] = max(res[j][1], intervals[i][1]);
+        }
+        else
+        {
+            res.push_back(intervals[i]);
+            j++;
+        }
+    }
+
+    return res;
+}
+
 int main()
 {
     return 0;
