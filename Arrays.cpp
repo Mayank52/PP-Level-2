@@ -1651,16 +1651,67 @@ vector<vector<int>> merge(vector<vector<int>> &intervals)
     int j = 0;
     for (int i = 1; i < intervals.size(); i++)
     {
+        //if the start point of current interval is less than end point of previous interval, then merge with previous
         if (intervals[i][0] <= res[j][1])
         {
             res[j][0] = min(res[j][0], intervals[i][0]);
             res[j][1] = max(res[j][1], intervals[i][1]);
         }
+        //else push it as a new interval into res
         else
         {
             res.push_back(intervals[i]);
             j++;
         }
+    }
+
+    return res;
+}
+
+// 986. Interval List Intersections
+/*
+Approach: O(n)
+Two Intervals overlap in two cases:
+
+|______|             |_______|      1
+    |______|  OR  |______|          2
+
+They will overlap only when
+start2 <= end1 && start1 <= end2 
+interval: [max(start1, start2), min(end1, end2)]
+
+Because we may get (8,12)  and (13, 15) here start1<end2 but they dont overlap
+
+Algo
+Take two pointers: i=0 , j=0, one for each list
+Check both conditions -> get interval: [max(start1, start2), min(end1, end2)]
+Whichever has smaller end point move that pointer ahead
+*/
+vector<vector<int>> intervalIntersection(vector<vector<int>> &firstList, vector<vector<int>> &secondList)
+{
+    vector<vector<int>> res;
+
+    int n = firstList.size(), m = secondList.size();
+    int i = 0, j = 0;
+
+    while (i < n && j < m)
+    {
+        int start1 = firstList[i][0];
+        int end1 = firstList[i][1];
+        int start2 = secondList[j][0];
+        int end2 = secondList[j][1];
+
+        if (start2 <= end1 && start1 <= end2)
+        {
+            int si = max(start1, start2);
+            int ei = min(end1, end2);
+            res.push_back({si, ei});
+        }
+
+        if (end1 < end2)
+            i++;
+        else
+            j++;
     }
 
     return res;
