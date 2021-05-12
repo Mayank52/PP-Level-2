@@ -1540,8 +1540,33 @@ int trapRainWater(vector<vector<int>> &heightMap)
 }
 
 // 239. Sliding Window Maximum
+/*
+Approach 1: O(3n), O(2n)
+Using Prefix Max and Suffix Max
+To find the prefix and suffix max, we only maintain the max of each window
+For Eg: 1 3 -1 -3 5 3 6 7, K=3
+So prefix max: 1 3 3 -3 5 5 6 7
+suffix max: 3 3 -1 5 5 3 7 7
+Whenever a new window starts, the max of that index is itself
+
+so ans[i] = max(suffixMax[i], prefixMax[i + k - 1])
+suffixMax[i] = suffix max of the first element of window
+prefixMax[i + k - 1] = prefix max of the last element of window
+
+So there will be 2 types of windows
+Eg: (1 3 -1) (-3 5 3) (6 7)
+1. Within 1 complete window like (-3 5 3)
+    In this case prefix max = suffix max
+2. part of two windows like (-1 -3 5)
+    In this case, suffix max gives max of first window, and prefix max gives max of second window
+
+Approach 2: O(n), O(n)
+Using a queue to maintain the max of window
+
+*/
 vector<int> maxSlidingWindow(vector<int> &nums, int k)
 {
+
 }
 
 int main()
