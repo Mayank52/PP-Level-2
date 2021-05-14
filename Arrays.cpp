@@ -1745,6 +1745,116 @@ vector<vector<int>> insert(vector<vector<int>> &intervals, vector<int> &newInter
     return res;
 }
 
+// 134. Gas Station
+/*
+Approach 1: O(n) (Shubesh Sir's Approach)
+Algo: 
+If total gas < total cost 
+    No ans possible.
+Else
+    1. Calculate Delta(Gas-Cost), prefixDelta (Prefix sum of delta)
+    2. Now find the min prefix delta
+    3. Ans is minIdx + 1
+
+Eg:
+10 6 1 3 12 3 9 7 4         Gas
+9 4 2 6 5 8 10 3 7          Cost
+1 2 -1 -3 7 -5 -1 4 -3      Delta
+1 3 2 -1 6 1 0 4 1          PrefixDelta
+
+Min prefix delta is -1 at i=3
+So ans is index 4 i.e. station with gas=12
+
+Approach 2: O(n) (Discuss Section approach)
+If From Station A, you can only reach station B
+Then from any station between A, B, you can never go beyond B
+So, we dont need to check for those
+*/
+//Approach 1:
+int canCompleteCircuit(vector<int> &gas, vector<int> &cost)
+{
+    int n = gas.size();
+    int totalGas = 0, totalCost = 0;
+    for (int i = 0; i < n; i++)
+    {
+        totalCost += cost[i];
+        totalGas += gas[i];
+    }
+
+    if (totalGas < totalCost)
+        return -1;
+
+    int minPrefixDeltaIdx = 0, minPrefixDelta = 10e8, prefixDelta = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        int delta = gas[i] - cost[i];
+        prefixDelta += delta;
+        if (prefixDelta < minPrefixDelta)
+        {
+            minPrefixDeltaIdx = i;
+            minPrefixDelta = prefixDelta;
+        }
+    }
+
+    return (minPrefixDeltaIdx + 1) % n;
+}
+//Approach 2:
+int canCompleteCircuit(vector<int> &gas, vector<int> &cost)
+{
+    int n = gas.size();
+
+    int maxGas = 0, maxCost = 0;
+    for (int i = 0; i < n; i++)
+    {
+        maxGas += gas[i];
+        maxCost += cost[i];
+    }
+
+    if (maxGas < maxCost)
+        return -1;
+
+    int res = -1;
+    for (int i = 0; i < n; i++)
+    {
+        int currStation = i, count = 0, currGas = 0;
+        while (count < n)
+        {
+            //find the gas at current station
+            currGas += (gas[currStation] - cost[currStation]);
+
+            //if gas<0, means could not pay the cost, than break;
+            //gas=0 is fine, as we were able to pay the whole cost and can move to next station
+            if (currGas < 0)
+                break;
+
+            //move to next station
+            currStation = (currStation + 1) % n;
+
+            //increase the count of stations visited
+            count++;
+        }
+
+        //cycle complete -> got our answer
+        if (count == n)
+        {
+            res = i;
+            break;
+        }
+        //make this station the current station, thus ignoring all stations b/w A and B
+        else
+            i = currStation;
+    }
+
+    return res;
+}
+
+// 891. Sum of Subsequence Widths
+int sumSubseqWidths(vector<int> &nums)
+{
+    
+}
+
 int main()
 {
     return 0;
