@@ -1850,11 +1850,81 @@ int canCompleteCircuit(vector<int> &gas, vector<int> &cost)
 }
 
 // 891. Sum of Subsequence Widths
+/*
+Approach: O(nlogn)
+In a subsequence, order matters
+Eg: [5,2,3,1,4]
+Here [5,3,1] is valid, but [5,1,3] is not
+
+But in this question we only need the min and max of subsequence, so order does not matter
+So,we do
+1. Sort the array
+2. For each element, it will be the min element in all subseq that start from it
+   and max element in all subseq that end with it
+   So, ans = ans + Number of subsequence it is max in * num - Number of subseq it is min in * num
+
+Number of subsequence it is max in = Subseq with elements on its left = 2^(i-1)
+Number of subsequence it is min in = Subseq with elements on its right = 2^(n-i-1)
+*/
+//Approach 1:
+int modPow(long x, long n, long M)
+{
+    if (n == 0)
+        return 1;
+    else if (n % 2 == 0) //n is even
+        return modPow((x * x) % M, n / 2, M);
+    else //n is odd
+        return (x * modPow((x * x) % M, (n - 1) / 2, M)) % M;
+}
 int sumSubseqWidths(vector<int> &nums)
 {
-    
-}
+    int n = nums.size();
 
+    sort(nums.begin(), nums.end());
+
+    const long MOD = 1000000007;
+    int ans = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        long long maxSubseqCount = modPow(2, i, MOD);
+        long long minSubseqCount = modPow(2, n - i - 1, MOD);
+
+        ans = (ans % MOD + (maxSubseqCount % MOD * nums[i] % MOD) % MOD) % MOD;
+        ans = (ans % MOD - (minSubseqCount % MOD * nums[i] % MOD) % MOD + MOD) % MOD;
+    }
+
+    return ans;
+}
+//Approach 2: Optimization in Approach 1
+int sumSubseqWidths(vector<int> &nums)
+{
+    int n = nums.size();
+
+    sort(nums.begin(), nums.end());
+
+    const long MOD = 1000000007;
+    int ans = 0;
+
+    //Instead of calculating power of 2 everytime, we can find the power of 2 for all i=0 to n, and store them
+    //Then use this array to get the required powers of 2 for i and n-i-1
+    vector<long> powerOf2(n);
+    powerOf2[0] = 1;
+    for (int i = 1; i < n; i++)
+        powerOf2[i] = (powerOf2[i - 1] * 2) % MOD;
+
+    for (int i = 0; i < n; i++)
+    {
+        long maxSubseqCount = powerOf2[i];
+        long minSubseqCount = powerOf2[n - i - 1];
+
+        // ans = ans + maxSubseqCount * nums[i] - minSubseqCount * nums[i];
+        ans = (ans % MOD + (maxSubseqCount % MOD * nums[i] % MOD) % MOD) % MOD;
+        ans = (ans % MOD - (minSubseqCount % MOD * nums[i] % MOD) % MOD + MOD) % MOD;
+    }
+
+    return ans;
+}
 int main()
 {
     return 0;
