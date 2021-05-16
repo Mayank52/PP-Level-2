@@ -1992,8 +1992,9 @@ smallest answer is increasing order of factors = 267
 */
 string getSmallest(long long N)
 {
-     if(N<=9) return to_string(N);
-    
+    if (N <= 9)
+        return to_string(N);
+
     string res = "";
     int i = 9;
     while (i > 1)
@@ -2164,6 +2165,70 @@ long long pairWithMaxSum(long long arr[], long long N)
         res = max(res, arr[i] + arr[i + 1]);
 
     return res;
+}
+
+// 632. Smallest Range Covering Elements from K Lists
+/*
+Approach : O(nlogm) (n=total elements in all lists, m=number of lists)
+The approach is similar to Merge K Sorted lists
+
+Use a min pq, to store 1 element from each list at a time
+We add the first element of each list into pq
+Then we pop the first element and add next element of that list into pq
+
+When we pop we get the min element, this is the start of range
+When we push into pq, we update the end of range with max
+And each step we, calculate the current range, and update the min range before we push into pq
+
+At a time the pq always contains 1 element from each list.
+So getting the top element gives the min of range, and the overall max has the max of range
+This helps to find the range and update the answer
+*/
+vector<int> smallestRange(vector<vector<int>> &nums)
+{
+    int n = nums.size();
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+
+    int currMax = INT_MIN, range = INT_MAX, ansStart, ansEnd;
+
+    //push the first elements of all lists into pq
+    for (int i = 0; i < n; i++)
+    {
+        //find the max while adding to pq
+        currMax = max(currMax, nums[i][0]);
+        pq.push({nums[i][0], i, 0});
+    }
+
+    while (pq.size() > 0)
+    {
+        //get the min element from pq
+        vector<int> rtop = pq.top();
+        int ele = rtop[0];
+        int i = rtop[1];
+        int j = rtop[2];
+        pq.pop();
+
+        //if the current range is smaller, then update the answer
+        if (currMax - ele + 1 < range)
+        {
+            range = currMax - ele + 1;
+            ansStart = ele;
+            ansEnd = currMax;
+        }
+
+        //push the next element of the list, whose element we got from pq
+        if (j < nums[i].size() - 1)
+        {
+            //before adding to pq, update the current max
+            currMax = max(currMax, nums[i][j + 1]);
+            pq.push({nums[i][j + 1], i, j + 1});
+        }
+        //if list has ended, then break;
+        else
+            break;
+    }
+
+    return {ansStart, ansEnd};
 }
 
 int main()
