@@ -2054,6 +2054,84 @@ vector<long long> printFirstNegativeInteger(long long int A[], long long int n, 
     return res;
 }
 
+// 883 · Max Consecutive Ones II (Lintcode)
+/*
+Approach 1: O(n)
+Take two pointers i=0, j=0;
+Here i = start of consecutive 1s with atmost 1 zero
+j = end of consecutive 1s with atmost 1 zero
+
+Keep a zeroCount
+Keep incresing j until zeroCount<=1
+When zeroCount becomes >1, we have to remove the extra zero, so increase i until you remove a zero
+and ans at each index is given by j-i+1
+
+Worst case this is O(2n)
+
+To get O(n), store the index of last zero encoutered, then while removing zero, jump i directly to that index + 1
+*/
+int findMaxConsecutiveOnes(vector<int> &nums)
+{
+    int n = nums.size();
+    int i = 0, j = 0, zeroCount = 0, ans = 0, onesCount = 0;
+
+    while (j < n)
+    {
+        if (nums[j] == 0)
+            zeroCount++;
+
+        while (zeroCount > 1)
+        {
+            if (nums[i] == 0)
+                zeroCount--;
+            i++;
+        }
+
+        ans = max(ans, j - i + 1);
+        j++;
+    }
+
+    return ans;
+}
+
+// 1004. Max Consecutive Ones III
+/*
+Approach O(n):
+Exactly same as with 1 zero
+Just keep moving i until zeroCount > k
+
+And to use the second approach here we would need extra space
+*/
+int longestOnes(vector<int> &nums, int k)
+{
+    int n = nums.size();
+    int i = 0, j = 0, zeroCount = 0, ans = 0, onesCount = 0;
+
+    while (j < n)
+    {
+        if (nums[j] == 0)
+            zeroCount++;
+
+        while (zeroCount > k)
+        {
+            if (nums[i] == 0)
+                zeroCount--;
+            i++;
+        }
+
+        ans = max(ans, j - i + 1);
+        j++;
+    }
+
+    return ans;
+}
+
+// https://www.geeksforgeeks.org/maximum-sum-of-smallest-and-second-smallest-in-an-array/
+long long pairWithMaxSum(long long arr[], long long N)
+{
+    // Your code goes here
+}
+
 int main()
 {
     return 0;
