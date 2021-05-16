@@ -2077,9 +2077,11 @@ int findMaxConsecutiveOnes(vector<int> &nums)
 
     while (j < n)
     {
+        //inc zeroCount if 0
         if (nums[j] == 0)
             zeroCount++;
 
+        //if zeroCount becomes > 1, then remove a zero
         while (zeroCount > 1)
         {
             if (nums[i] == 0)
@@ -2087,6 +2089,7 @@ int findMaxConsecutiveOnes(vector<int> &nums)
             i++;
         }
 
+        //update ans
         ans = max(ans, j - i + 1);
         j++;
     }
@@ -2127,9 +2130,35 @@ int longestOnes(vector<int> &nums, int k)
 }
 
 // https://www.geeksforgeeks.org/maximum-sum-of-smallest-and-second-smallest-in-an-array/
+/*
+Approach: O(n)
+If we consider all subarrays, we find that the max ans for min + second min you can get is only with 2 size subarrays
+Eg: 5 3 1 4 6
+Here all subarrays starting with 5 are
+5 3 , ans=8
+5 3 1, ans=4
+5 3 1 4, ans=4
+5 3 1 4 6, ans=4
+
+Similarly for arrays starting from other indexes(in subarrays we take consecutive elements)
+
+This is because after first 2 elements there are 3 possibilities for any new element:
+ - Next element > first 2 -> min and 2nd min still is first 2
+ - Next element < first 2 -> min will change and sum will decrease as new min is smaller
+ - Next element between first 2 -> 2nd min will decrease, and so the sum will decrease
+
+
+So, ans = max of sum of 2 consecutive elements
+
+*/
 long long pairWithMaxSum(long long arr[], long long N)
 {
-    // Your code goes here
+    long long res = arr[0] + arr[1];
+
+    for (int i = 1; i < N - 1; i++)
+        res = max(res, arr[i] + arr[i + 1]);
+
+    return res;
 }
 
 int main()
