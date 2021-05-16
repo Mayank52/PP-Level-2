@@ -1967,6 +1967,93 @@ int carFleet(int target, vector<int> &position, vector<int> &speed)
     return fleetCount;
 }
 
+// https://www.geeksforgeeks.org/find-smallest-number-whose-digits-multiply-given-number-n/
+/*
+Approach:
+The answer will always have digits that are all factors of n
+So, we have to form a ans containing factors of n whose product is n
+To, minimize it we need the least number of digits, so greater factors are better
+We can not use factors > 9 as
+If we use 12 as a factor of 24, then in the ans we will have to do 1*2*other factors not 12*other factors
+So, that is the wrong answer
+So, to get the max single digit factors we go 9-0 and whichever is a factor, we divide n by it and do the same for the quotient
+
+Eg: n = 84
+So, starting from 9, first factor is 7 and 84/7=12
+Now find factors of 12
+Also now we can just start from the last factor that is 7, instead of 9 as if they did not divide n
+then they wont divide its factors either
+Now, factor starting from 7 is 6, 12/6=2
+factors of 2 starting from 6, is 2, 2/2 = 1
+
+So factors are = 7,6,2
+smallest answer is increasing order of factors = 267
+
+*/
+string getSmallest(long long N)
+{
+    // code here
+    string res = "";
+    int start = 9;
+    for (int i = start; i > 1; i--)
+    {
+        if (N % i == 0)
+        {
+            res = res + to_string(i);
+            N /= i;
+            start = i;
+        }
+    }
+
+    return res;
+}
+
+// https://www.geeksforgeeks.org/first-negative-integer-every-window-size-k/
+/*
+Approach: O(n)
+start from end
+For each element:
+    - If it is -ve, then it is the ans
+    - else its closest -ve in k size window
+    - else ans is 0
+
+So, start from end and keep updating the closest negative number's index
+*/
+vector<long long> printFirstNegativeInteger(long long int A[], long long int n, long long int k)
+{
+    vector<long long> res(n - k + 1);
+    long long closestNeg = n; //index of closest negative number in window
+
+    for (int i = n - 1; i >= 0; i--)
+    {
+        //for first window from end
+        if (i + k - 1 > n - 1)
+        {
+            if (A[i] < 0)
+                closestNeg = i;
+            continue;
+        }
+
+        //if the current number is -ve, then it is the ans
+        if (A[i] < 0)
+        {
+            res[i] = A[i];
+            closestNeg = i;
+        }
+        else
+        {
+            //else if the closest -ve number is in its window, then that is the ans
+            if (closestNeg <= i + k - 1)
+                res[i] = A[closestNeg];
+            //else ans is 0
+            else
+                res[i] = 0;
+        }
+    }
+
+    return res;
+}
+
 int main()
 {
     return 0;
