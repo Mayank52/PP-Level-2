@@ -1992,18 +1992,23 @@ smallest answer is increasing order of factors = 267
 */
 string getSmallest(long long N)
 {
-    // code here
+     if(N<=9) return to_string(N);
+    
     string res = "";
-    int start = 9;
-    for (int i = start; i > 1; i--)
+    int i = 9;
+    while (i > 1)
     {
         if (N % i == 0)
         {
-            res = res + to_string(i);
+            res = to_string(i) + res;
             N /= i;
-            start = i;
         }
+        else
+            i--;
     }
+
+    if (N != 1)
+        return "-1";
 
     return res;
 }
