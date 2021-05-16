@@ -1925,6 +1925,48 @@ int sumSubseqWidths(vector<int> &nums)
 
     return ans;
 }
+
+// 853. Car Fleet
+/*
+Approach: O(nlogn + n)
+Sort the position and speed in increasing order of position
+Two cars are part of fleet if car i's time to reach target is less than car infront of it
+Then they both move with the lower car's speed
+So, start from end, calculate the time and if time is less than the time for car infront then same fleet
+else new fleet
+*/
+int carFleet(int target, vector<int> &position, vector<int> &speed)
+{
+    int n = position.size();
+
+    if (n <= 1)
+        return n;
+
+    //sort in inc order of position
+    vector<vector<int>> cars(n, vector<int>(2));
+    for (int i = 0; i < n; i++)
+        cars[i] = {position[i], speed[i]};
+    sort(cars.begin(), cars.end());
+
+    //last car is 1 fleet
+    double fleetTime = ((double)target - cars[n - 1][0]) / cars[n - 1][1];
+    int fleetCount = 1;
+
+    //for each car before, find its time
+    for (int i = n - 2; i >= 0; i--)
+    {
+        double currTime = ((float)target - cars[i][0]) / cars[i][1];
+        //if time > fleet time, make it a new fleet and update the fleet time for cars before it
+        if (currTime > fleetTime)
+        {
+            fleetTime = currTime;
+            fleetCount++;
+        }
+    }
+
+    return fleetCount;
+}
+
 int main()
 {
     return 0;
