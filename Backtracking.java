@@ -285,7 +285,6 @@ public class Backtracking {
 
         return true;
     }
-
     public static void nqueens(int qpsf, int tq, int[][] chess) {
         // write your code here
         if (qpsf == tq) {
@@ -315,6 +314,21 @@ public class Backtracking {
         }
     }
 
+    // Permutations - Words - 1
+    public static void generateWords(int cs, int ts, HashMap<Character, Integer> fmap, String asf) {
+        // write your code here
+        if (cs == ts + 1) {
+            System.out.println(asf);
+            return;
+        }
+        for (char ch : fmap.keySet()) {
+          if (fmap.get(ch) > 0) {
+            fmap.put(ch, fmap.get(ch) - 1);
+            generateWords(cs + 1, ts, fmap, asf + ch);
+            fmap.put(ch, fmap.get(ch) + 1);
+          }
+        }
+      }
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         int nboxes = Integer.parseInt(br.readLine());
