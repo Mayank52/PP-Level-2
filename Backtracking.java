@@ -285,6 +285,7 @@ public class Backtracking {
 
         return true;
     }
+
     public static void nqueens(int qpsf, int tq, int[][] chess) {
         // write your code here
         if (qpsf == tq) {
@@ -322,13 +323,79 @@ public class Backtracking {
             return;
         }
         for (char ch : fmap.keySet()) {
-          if (fmap.get(ch) > 0) {
-            fmap.put(ch, fmap.get(ch) - 1);
-            generateWords(cs + 1, ts, fmap, asf + ch);
-            fmap.put(ch, fmap.get(ch) + 1);
-          }
+            if (fmap.get(ch) > 0) {
+                fmap.put(ch, fmap.get(ch) - 1);
+                generateWords(cs + 1, ts, fmap, asf + ch);
+                fmap.put(ch, fmap.get(ch) + 1);
+            }
         }
-      }
+    }
+
+    // Permutations - Words - 2
+    public static void generateWords(int cc, String str, Character[] spots, HashMap<Character, Integer> lastOccurence) {
+        if (cc == str.length()) {
+            for (char ch : spots) {
+                System.out.print(ch);
+            }
+
+            System.out.println();
+            return;
+        }
+
+        char ch = str.charAt(cc);
+        int lastOcc = lastOccurence.get(ch);
+
+        for (int i = lastOcc + 1; i < str.length(); i++) {
+            if (spots[i] == null) {
+                spots[i] = ch;
+                lastOccurence.put(ch, i);
+                generateWords(cc + 1, str, spots, lastOccurence);
+                spots[i] = null;
+                lastOccurence.put(ch, lastOcc);
+            }
+        }
+    }
+
+    // Nknights Combinations - 2d As 1d - Knight Chooses
+    public static boolean IsKnightSafe(boolean[][] chess, int i, int j) {
+        // write your code here
+        int[][] dir = { { -2, -1 }, { -2, 1 }, { 2, -1 }, { 2, 1 }, { -1, -2 }, { -1, 2 }, { 1, 2 }, { 1, -2 } };
+
+        for (int d = 0; d < dir.length; d++) {
+            int x = i + dir[d][0];
+            int y = j + dir[d][1];
+
+            if (x >= 0 && y >= 0 && x < chess.length && y < chess[0].length && chess[x][y])
+                return false;
+        }
+
+        return true;
+    }
+
+    public static void nknights(int kpsf, int tk, boolean[][] chess, int lcno) {
+        if (kpsf == tk) {
+            for (int row = 0; row < chess.length; row++) {
+                for (int col = 0; col < chess.length; col++) {
+                    System.out.print(chess[row][col] ? "k\t" : "-\t");
+                }
+                System.out.println();
+            }
+            System.out.println();
+            return;
+        }
+
+        for (int i = lcno + 1; i < chess.length * chess.length; i++) {
+            int row = i / chess.length;
+            int col = i % chess.length;
+
+            if (chess[row][col] == false && IsKnightSafe(chess, row, col)) {
+                chess[row][col] = true;
+                nknights(kpsf + 1, tk, chess, row * chess.length + col);
+                chess[row][col] = false;
+            }
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         int nboxes = Integer.parseInt(br.readLine());
