@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.*;
 
+//Questions on Pepcoding site
 public class Backtracking {
     // Permutations 1
     public static void permutations(int[] boxes, int ci, int ti) {
@@ -371,7 +372,6 @@ public class Backtracking {
 
         return true;
     }
-
     public static void nknights(int kpsf, int tk, boolean[][] chess, int lcno) {
         if (kpsf == tk) {
             for (int row = 0; row < chess.length; row++) {
