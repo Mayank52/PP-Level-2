@@ -39,6 +39,8 @@ string longestPrefix(string str)
     return res;
 }
 
+//KMP Algo (In Strings.java)
+
 // 214. Shortest Palindrome
 /*
 Approach: O(n), O(n)
@@ -95,6 +97,18 @@ string shortestPalindrome(string s)
 
     //add it to beginning and return
     return res + s;
+}
+
+//Z - Algo
+/*
+Approach: O(n), O(n)
+Make a Z Array: Longest length prefix which is also a substring (starting a index i)
+We, dont include index 0 in substring, otherwise prefix itself will become the substring
+Eg: aabaacaabaad
+Here aabaa, is a prefix which is also a substring, start from index 6
+*/
+void zAlgo(string str){
+
 }
 
 int main()

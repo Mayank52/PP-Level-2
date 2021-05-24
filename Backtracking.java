@@ -372,6 +372,7 @@ public class Backtracking {
 
         return true;
     }
+
     public static void nknights(int kpsf, int tk, boolean[][] chess, int lcno) {
         if (kpsf == tk) {
             for (int row = 0; row < chess.length; row++) {
@@ -392,6 +393,71 @@ public class Backtracking {
                 chess[row][col] = true;
                 nknights(kpsf + 1, tk, chess, row * chess.length + col);
                 chess[row][col] = false;
+            }
+        }
+    }
+
+    // Solve Sudoku
+    public static void display(int[][] board) {
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[0].length; j++) {
+                System.out.print(board[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+    public static boolean isValid(int[][] board, int i, int j, int n) {
+        // row
+        for (int c = 0; c < board.length; c++) {
+            if (board[i][c] == n)
+                return false;
+        }
+
+        // col
+        for (int r = 0; r < board.length; r++) {
+            if (board[r][j] == n)
+                return false;
+        }
+
+        // 3X3 grid
+        int x = i / 3 * 3;
+        int y = j / 3 * 3;
+        for (int r = 0; r < 3; r++) {
+            for (int c = 0; c < 3; c++) {
+                if (board[x + r][y + c] == n)
+                    return false;
+            }
+        }
+        return true;
+    }
+    public static void solveSudoku(int[][] board, int i, int j) {
+        if (i == board.length) {
+            display(board);
+            return;
+        }
+
+        // Get the next row, col
+        int r, c;
+        if (j == board.length - 1) {
+            r = i + 1;
+            c = 0;
+        } else {
+            r = i;
+            c = j + 1;
+        }
+
+        // if not empty go to next cell
+        if (board[i][j] != 0) {
+            solveSudoku(board, r, c);
+        }
+        // else try all 1 - 9 in that cell and call for next cell
+        else {
+            for (int n = 1; n <= 9; n++) {
+                if (isValid(board, i, j, n)) {
+                    board[i][j] = n;
+                    solveSudoku(board, r, c);
+                    board[i][j] = 0;
+                }
             }
         }
     }
