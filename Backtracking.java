@@ -397,6 +397,127 @@ public class Backtracking {
         }
     }
 
+    // Words - K Selection - 1
+    public static void solve() {
+        Scanner scn = new Scanner(System.in);
+        String str = scn.nextLine();
+        int k = scn.nextInt();
+
+        HashSet<Character> unique = new HashSet<>();
+        String ustr = "";
+        for (char ch : str.toCharArray()) {
+            if (unique.contains(ch) == false) {
+                unique.add(ch);
+                ustr += ch;
+            }
+        }
+
+        combination(0, ustr, 0, k, "");
+    }
+
+    public static void combination(int i, String ustr, int ssf, int ts, String asf) {
+        if (ssf == ts) {
+            System.out.println(asf);
+            return;
+        }
+
+        for (int idx = i; idx < ustr.length(); idx++) {
+            combination(idx + 1, ustr, ssf + 1, ts, asf + ustr.charAt(idx));
+        }
+
+    }
+
+    // Words - K Selection - 2
+    public static void combination(int i, String ustr, int ssf, int ts, String asf) {
+        if (ssf == ts) {
+            System.out.println(asf);
+            return;
+        }
+
+        if (i == ustr.length())
+            return;
+
+        combination(i + 1, ustr, ssf + 1, ts, asf + ustr.charAt(i));
+        combination(i + 1, ustr, ssf, ts, asf);
+
+    }
+
+    // Words - K Length Words - 1
+    public static void solve() {
+        Scanner scn = new Scanner(System.in);
+        String str = scn.nextLine();
+        int k = scn.nextInt();
+
+        HashSet<Character> unique = new HashSet<>();
+        String ustr = "";
+        for (char ch : str.toCharArray()) {
+            if (unique.contains(ch) == false) {
+                unique.add(ch);
+                ustr += ch;
+            }
+        }
+
+        Character[] vis = new Character[k];
+        combination(0, ustr, 0, k, vis);
+    }
+
+    public static void combination(int idx, String ustr, int ssf, int ts, Character[] vis) {
+        if (idx == ustr.length()) {
+            if (ssf == ts) {
+                for (int i = 0; i < vis.length; i++)
+                    System.out.print(vis[i]);
+                System.out.println();
+            }
+            return;
+        }
+
+        char ch = ustr.charAt(idx);
+
+        for (int i = 0; i < vis.length; i++) {
+            if (vis[i] == null) {
+                vis[i] = ch;
+                combination(idx + 1, ustr, ssf + 1, ts, vis);
+                vis[i] = null;
+            }
+        }
+
+        combination(idx + 1, ustr, ssf, ts, vis);
+    }
+
+    // Words - K Length Words - 2
+    public static void solve() {
+        Scanner scn = new Scanner(System.in);
+        String str = scn.nextLine();
+        int k = scn.nextInt();
+
+        HashSet<Character> unique = new HashSet<>();
+        String ustr = "";
+        for (char ch : str.toCharArray()) {
+            if (unique.contains(ch) == false) {
+                unique.add(ch);
+                ustr += ch;
+            }
+        }
+
+        boolean[] vis = new boolean[ustr.length()];
+        combination(ustr, 0, k, "", vis);
+    }
+
+    public static void combination(String ustr, int ssf, int ts, String asf, boolean[] vis) {
+        if (ssf == ts) {
+            System.out.println(asf);
+            return;
+        }
+
+        for (int i = 0; i < ustr.length(); i++) {
+            if (vis[i] == false) {
+                vis[i] = true;
+                combination(ustr, ssf + 1, ts, asf + ustr.charAt(i), vis);
+                vis[i] = false;
+            }
+        }
+    }
+
     // Solve Sudoku
     public static void display(int[][] board) {
         for (int i = 0; i < board.length; i++) {
@@ -406,6 +527,7 @@ public class Backtracking {
             System.out.println();
         }
     }
+
     public static boolean isValid(int[][] board, int i, int j, int n) {
         // row
         for (int c = 0; c < board.length; c++) {
@@ -430,6 +552,7 @@ public class Backtracking {
         }
         return true;
     }
+
     public static void solveSudoku(int[][] board, int i, int j) {
         if (i == board.length) {
             display(board);
@@ -460,6 +583,76 @@ public class Backtracking {
                 }
             }
         }
+    }
+
+    // Magnets
+    public static boolean isValid(char[][] ans, int row, int col, char sign, int[] top, int[] left, int[] right,
+            int[] bottom) {
+        // check count in T,B,L,R
+        if (sign == '+') {
+            if (top[col] == 0 || left[row] == 0)
+                return false;
+        } else {
+            if (bottom[col] == 0 || right[row] == 0)
+                return false;
+        }
+
+        // check adjacent signs
+        int[][] dir = { { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } };
+        for (int d = 0; d < 4; d++) {
+            int x = row + dir[d][0];
+            int y = col + dir[d][1];
+
+            if (x >= 0 && y >= 0 && x < ans.length && y < ans[0].length) {
+                if (sign == '+' || sign == '-') {
+                    if (ans[x][y] == sign)
+                        return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public static void updateCount(int[] top, int[] left, int[] right, int[] bottom, int row, int col, char sign,
+            int change) {
+        if (sign == '+') {
+            if (top[col] != -1)
+                top[col] += change;
+            if (left[row] != -1)
+                left[row] += change;
+        } else {
+            if (bottom[col] != -1)
+                bottom[col] += change;
+            if (right[row] != -1)
+                right[row] += change;
+        }
+    }
+
+    public static boolean solution(char[][] arr, int[] top, int[] left, int[] right, int[] bottom, char[][] ans,
+            int row, int col) {
+        // write your code here
+        if (row == arr.length)
+            return true;
+
+        int nextRow, nextCol;
+        if (col == arr[0].length - 1) {
+            nextRow = row + 1;
+            nextCol = 0;
+        } else {
+            nextRow = row;
+            nextCol = col + 1;
+        }
+
+        if (ans[row][col] == '#') {
+            //LR
+           if(arr[row][col]=='L'){
+               if(isValid())
+           }
+
+        }
+
+        return false;
     }
 
     public static void main(String[] args) throws Exception {
