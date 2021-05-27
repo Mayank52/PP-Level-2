@@ -878,11 +878,100 @@ public class Backtracking {
 
     }
 
+    // Crossword Puzzle
+    public static boolean canPlaceV(char[][] arr, String word, int sr, int sc) {
+        // enough cells available
+        if (sr + word.length() - 1 >= arr.length)
+            return false;
+
+        // either each index empty OR the right character already present
+        for (int i = 0; i < word.length(); i++) {
+            if (arr[sr + i][sc] != '-' && arr[sr + i][sc] != word.charAt(i))
+                return false;
+        }
+
+        return true;
+    }
+
+    public static boolean canPlaceH(char[][] arr, String word, int sr, int sc) {
+        // enough cells available
+        if (sc + word.length() - 1 >= arr[0].length)
+            return false;
+
+        // either each index empty OR the right character already present
+        for (int j = 0; j < word.length(); j++) {
+            if (arr[sr][sc + j] != '-' && arr[sr][sc + j] != word.charAt(j))
+                return false;
+        }
+
+        return true;
+    }
+
+    public static void placeV(char[][] arr, String word, int r, int c) {
+        for (int i = 0; i < word.length(); i++) {
+            arr[i + r][c] = word.charAt(i);
+        }
+    }
+
+    public static void unplaceV(char[][] arr, String word, int r, int c) {
+        for (int i = 0; i < word.length(); i++) {
+            arr[i + r][c] = '-';
+        }
+    }
+
+    public static void placeH(char[][] arr, String word, int r, int c) {
+        for (int j = 0; j < word.length(); j++) {
+            arr[r][j + c] = word.charAt(j);
+        }
+    }
+
+    public static void unplaceH(char[][] arr, String word, int r, int c) {
+        for (int j = 0; j < word.length(); j++) {
+            arr[r][j + c] = '-';
+        }
+    }
+
+    public static boolean solveCrossword(char[][] arr, String[] words, int idx) {
+        // write your code here
+        if (idx == words.length) {
+            print(arr);
+            return true;
+        }
+
+        String word = words[idx];
+
+        boolean res = false;
+
+        for (int i = 0; i < arr.length; i++) {
+            for (int j = 0; j < arr[0].length; j++) {
+                if (canPlaceH(arr, word, i, j)) {
+                    placeH(arr, word, i, j);
+                    res = res || solveCrossword(arr, words, idx + 1);
+                    unplaceH(arr, word, i, j);
+                }
+                if (canPlaceV(arr, word, i, j)) {
+                    placeV(arr, word, i, j);
+                    res = res || solveCrossword(arr, words, idx + 1);
+                    unplaceV(arr, word, i, j);
+                }
+            }
+        }
+
+        return res;
+
+    }
+
+    public static void print(char[][] arr) {
+        for (int i = 0; i < arr.length; i++) {
+            for (int j = 0; j < arr.length; j++) {
+                System.out.print(arr[i][j]);
+            }
+            System.out.println();
+        }
+
+    }
+
     public static void main(String[] args) throws Exception {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        int nboxes = Integer.parseInt(br.readLine());
-        int ritems = Integer.parseInt(br.readLine());
-        combinations(new int[nboxes], 1, ritems, -1);
     }
 
 }
