@@ -1168,8 +1168,10 @@ public class Backtracking {
         return maxScore;
     }
 
-    // 290. Word Pattern
-    public boolean wordPattern(String pattern, String s) {
+    // Pattern Matching
+    public static void solution(String str, String pattern, HashMap<Character, String> map, int idx) {
+        // write your code here
+        
 
     }
 
