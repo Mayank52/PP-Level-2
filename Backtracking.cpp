@@ -129,6 +129,75 @@ bool wordPatternMatch(string &pattern, string &str)
     return wordPatternMatch(pattern, str, 0, 0, mp1, mp2);
 }
 
+// Pattern Matching (Pepcoding)
+void wordPatternMatch(string &pattern, string &str, int pidx, int sidx, unordered_map<char, string> &mp1, unordered_map<string, char> &mp2)
+{
+    // write your code here
+    if (pidx == pattern.size() && sidx == str.size())
+    {
+        bool seen[26] = {false};
+        for (int i = 0; i < pattern.size(); i++)
+        {
+            char ch = pattern[i];
+            if (!seen[ch - 'a'])
+            {
+                seen[ch - 'a'] = true;
+                cout << ch << " -> " << mp1[ch] << ", ";
+            }
+        }
+        cout << "." << endl;
+        return;
+    }
+    if (pidx == pattern.size() || sidx == str.size())
+        return;
+
+    char ch = pattern[pidx];
+
+    //if char is already mapped to a word
+    if (mp1.find(ch) != mp1.end())
+    {
+        string mapWord = mp1[ch];
+
+        //if remaining string size is less than the required word
+        if (str.size() - sidx < mapWord.size())
+            return;
+
+        //get the word and compare it to the mapped word
+        string word = str.substr(sidx, mapWord.size());
+        if (mapWord != word)
+            return;
+
+        //make next call
+        wordPatternMatch(pattern, str, pidx + 1, sidx + word.size(), mp1, mp2);
+    }
+    else
+    {
+        //make a word with each remaining char in string
+        string word = "";
+        for (int i = sidx; i < str.size(); i++)
+        {
+            word += str[i];
+            //if the word is already mapped to another char, skip it
+            if (mp2.find(word) != mp2.end())
+                continue;
+
+            //else map it to pattern char, and make next call
+            mp1[ch] = word;
+            mp2[word] = ch;
+            wordPatternMatch(pattern, str, pidx + 1, i + 1, mp1, mp2);
+            mp1.erase(ch);
+            mp2.erase(word);
+        }
+    }
+}
+void wordPatternMatch(string &pattern, string &str)
+{
+    // write your code here
+    unordered_map<char, string> mp1;
+    unordered_map<string, char> mp2;
+    wordPatternMatch(pattern, str, 0, 0, mp1, mp2);
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
