@@ -1047,6 +1047,7 @@ public class Backtracking {
             return;
         }
 
+        // Brute Force
         for (int i = 0; i < str.length(); i++) {
             for (int j = i + 1; j < str.length(); j++) {
                 if (str.charAt(j) > str.charAt(i)) {
@@ -1060,6 +1061,115 @@ public class Backtracking {
                 }
             }
         }
+
+    }
+
+    // Tug Of War
+    static int mindiff = Integer.MAX_VALUE;
+    static String ans = "";
+
+    public static void solve(int[] arr, int idx, ArrayList<Integer> set1, ArrayList<Integer> set2, int soset1,
+            int soset2) {
+        if (idx == arr.length) {
+            int diff = Math.abs(soset1 - soset2);
+            if (diff < mindiff) {
+                mindiff = diff;
+                ans = "[";
+                for (int i = 0; i < set1.size(); i++) {
+                    if (i < set1.size() - 1)
+                        ans += set1.get(i) + ", ";
+                    else
+                        ans += set1.get(i) + "] [";
+                }
+                for (int i = 0; i < set2.size(); i++) {
+                    if (i < set2.size() - 1)
+                        ans += set2.get(i) + ", ";
+                    else
+                        ans += set2.get(i) + "]";
+                }
+            }
+            return;
+        }
+
+        int maxSize = (arr.length + 1) / 2;
+        if (set1.size() < maxSize) {
+            set1.add(arr[idx]);
+            solve(arr, idx + 1, set1, set2, soset1 + arr[idx], soset2);
+            set1.remove(set1.size() - 1);
+        }
+        if (set2.size() < maxSize) {
+            set2.add(arr[idx]);
+            solve(arr, idx + 1, set1, set2, soset1, soset2 + arr[idx]);
+            set2.remove(set2.size() - 1);
+        }
+    }
+
+    // Word Break - I
+    public static void wordBreak(String sentence, String ans, HashSet<String> dict, int idx) {
+        if (idx == sentence.length()) {
+            System.out.println(ans);
+            return;
+        }
+
+        for (int i = idx; i < sentence.length(); i++) {
+            String word = sentence.substring(idx, i + 1);
+            if (dict.contains(word)) {
+                wordBreak(sentence, ans + word + " ", dict, i + 1);
+            }
+        }
+    }
+
+    public static void wordBreak(String str, String ans, HashSet<String> dict) {
+        // write your code here
+        wordBreak(str, "", dict, 0);
+    }
+
+    // Max Score
+    public static int maxScore = Integer.MIN_VALUE;
+
+    public static void solution(String[] words, int[] farr, int[] score, int idx, int ans) {
+        // write your code
+        if (idx == words.length) {
+            maxScore = Math.max(maxScore, ans);
+            return;
+        }
+
+        solution(words, farr, score, idx + 1, ans);
+
+        int myScore = 0;
+        boolean canInclude = true;
+        int[] myFreq = new int[26];
+        for (char ch : words[idx].toCharArray()) {
+            myFreq[ch - 'a']++;
+        }
+        for (int i = 0; i < 26; i++) {
+            if (myFreq[i] > farr[i]) {
+                canInclude = false;
+                break;
+            }
+        }
+
+        if (canInclude) {
+            for (char ch : words[idx].toCharArray()) {
+                myScore += score[ch - 'a'];
+                farr[ch - 'a']--;
+            }
+            solution(words, farr, score, idx + 1, ans + myScore);
+            for (char ch : words[idx].toCharArray()) {
+                farr[ch - 'a']++;
+            }
+        }
+
+    }
+
+    public static int solution(String[] words, int[] farr, int[] score, int idx) {
+        // write your code here
+        solution(words, farr, score, 0, 0);
+        return maxScore;
+    }
+
+    // 290. Word Pattern
+    public boolean wordPattern(String pattern, String s) {
 
     }
 
