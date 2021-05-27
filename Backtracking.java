@@ -1019,6 +1019,50 @@ public class Backtracking {
         }
     }
 
+    // Lexicographical Numbers
+    public static void lexi(int curr, int n) {
+        if (curr > n)
+            return;
+
+        System.out.println(curr);
+        // for current number append 0-9 to it, and make next call
+        for (int i = 0; i < 10; i++)
+            lexi(curr * 10 + i, n);
+    }
+
+    public static void printLexi(int n) {
+        // for 1-9 print all lexicogrpahically number in given range
+        for (int i = 1; i < 10; i++)
+            lexi(i, n);
+    }
+
+    // Largest Number Possible After At Most K Swaps
+    static String max;
+
+    public static void findMaximum(String str, int k) {
+        if (str.compareTo(max) > 0)
+            max = str;
+
+        if (k == 0) {
+            return;
+        }
+
+        for (int i = 0; i < str.length(); i++) {
+            for (int j = i + 1; j < str.length(); j++) {
+                if (str.charAt(j) > str.charAt(i)) {
+                    // swap
+                    StringBuilder sb = new StringBuilder(str);
+                    sb.setCharAt(i, str.charAt(j));
+                    sb.setCharAt(j, str.charAt(i));
+
+                    String newStr = sb.toString();
+                    findMaximum(newStr, k - 1);
+                }
+            }
+        }
+
+    }
+
     public static void main(String[] args) throws Exception {
     }
 
