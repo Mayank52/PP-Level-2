@@ -1170,11 +1170,8 @@ public class Backtracking {
 
     // Pattern Matching(Done in Backtracking.cpp)
     public static void solution(String str, String pattern, HashMap<Character, String> map, int idx) {
-        // write your code here
-
-
+        // (Done in Backtracking.cpp)
     }
-
     public static void main(String[] args) throws Exception {
     }
 
