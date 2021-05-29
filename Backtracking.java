@@ -1125,10 +1125,64 @@ public class Backtracking {
     }
 
     // Max Score
+    /*
+     * For each word if check if it can be included i.e its letters are <= to the
+     * letters available Then include it and make call for next word and exclude it
+     * and call for next word
+     */
     public static int maxScore = Integer.MIN_VALUE;
 
     public static void solution(String[] words, int[] farr, int[] score, int idx, int ans) {
         // write your code
+        if (idx == words.length) {
+            maxScore = Math.max(maxScore, ans);
+            return;
+        }
+
+        // not include current word
+        solution(words, farr, score, idx + 1, ans);
+
+        int myScore = 0;
+        boolean canInclude = true;
+        int[] myFreq = new int[26];
+        // find letter freq of current word
+        for (char ch : words[idx].toCharArray()) {
+            myFreq[ch - 'a']++;
+        }
+
+        // check if it is <= available letters
+        for (int i = 0; i < 26; i++) {
+            if (myFreq[i] > farr[i]) {
+                canInclude = false;
+                break;
+            }
+        }
+
+        if (canInclude) {
+            // add it to score, and reduce the frequency in letters by current word's letter
+            // frequency
+            for (char ch : words[idx].toCharArray()) {
+                myScore += score[ch - 'a'];
+                farr[ch - 'a']--;
+            }
+            solution(words, farr, score, idx + 1, ans + myScore);
+            for (char ch : words[idx].toCharArray()) {
+                farr[ch - 'a']++;
+            }
+        }
+
+    }
+
+    public static int solution(String[] words, int[] farr, int[] score, int idx) {
+        // write your code here
+        solution(words, farr, score, 0, 0);
+        return maxScore;
+    }
+
+    // 1255. Maximum Score Words Formed by Letters
+    public int maxScore = Integer.MIN_VALUE;
+
+    public void solution(String[] words, int[] farr, int[] score, int idx, int ans) {
         if (idx == words.length) {
             maxScore = Math.max(maxScore, ans);
             return;
@@ -1162,8 +1216,12 @@ public class Backtracking {
 
     }
 
-    public static int solution(String[] words, int[] farr, int[] score, int idx) {
-        // write your code here
+    public int maxScoreWords(String[] words, char[] letters, int[] score) {
+        maxScore = Integer.MIN_VALUE;
+        int[] farr = new int[26];
+        for (char ch : letters) {
+            farr[ch - 'a']++;
+        }
         solution(words, farr, score, 0, 0);
         return maxScore;
     }
@@ -1172,6 +1230,7 @@ public class Backtracking {
     public static void solution(String str, String pattern, HashMap<Character, String> map, int idx) {
         // (Done in Backtracking.cpp)
     }
+
     public static void main(String[] args) throws Exception {
     }
 
