@@ -62,14 +62,8 @@ which is cde
 So ans is reverse of cde + given string s
 This is the shortest palindrome
 */
-string shortestPalindrome(string s)
+int KMP(string &str)
 {
-    //Make string = s + # + reverse(s)
-    string revStr = s;
-    reverse(revStr.begin(), revStr.end());
-    string str = s + '#' + revStr;
-
-    //LPS
     int n = str.size();
     vector<int> lps(n);
     int len = 0, i = 1;
@@ -91,24 +85,64 @@ string shortestPalindrome(string s)
         }
     }
 
+    return len;
+}
+string shortestPalindrome(string s)
+{
+    //make the str = s#s for lps
+    string revStr = s;
+    reverse(revStr.begin(), revStr.end());
+    string str = s + '#' + revStr;
+
+    //find the longest palindrome in given string
+    int len = KMP(str);
+
     //Get the substring to be added, reverse it
     string res = str.substr(len, s.size() - len);
     reverse(res.begin(), res.end());
 
-    //add it to beginning and return
+    //add it to beginning to get the shortest palindrome
     return res + s;
 }
 
-//Z - Algo
+//Z - Algo (Pepcoding)
 /*
-Approach: O(n), O(n)
+Approach: O(m + n), O(m + n)
 Make a Z Array: Longest length prefix which is also a substring (starting a index i)
 We, dont include index 0 in substring, otherwise prefix itself will become the substring
 Eg: aabaacaabaad
 Here aabaa, is a prefix which is also a substring, start from index 6
 */
-void zAlgo(string str){
+void zAlgo(string txt, string pat)
+{
+    string str = pat + "#" + txt;
+    int n = str.length();
 
+    vector<int> zarr(n);
+
+    int i = 1;
+    int l = 0, r = 0;
+
+    while (i < n)
+    {
+        if (i <= r)
+            zarr[i] = min(r - i + 1, zarr[i - l]);
+
+        while (i + zarr[i] < n && str[i + zarr[i]] == str[zarr[i]])
+            zarr[i]++;
+
+        if (i + zarr[i] - 1 > r)
+        {
+            l = i;
+            r = i + zarr[i] - 1;
+        }
+
+        //pattern found, print starting index according to string txt
+        if (zarr[i] == pat.size())
+            cout << i - pat.size() - 1 << endl;
+
+        i++;
+    }
 }
 
 int main()

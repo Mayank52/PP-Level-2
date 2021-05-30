@@ -39,7 +39,7 @@ public class Strings {
 
     // Kmp Pattern Searching
     /*
-     * Approach: O(n), O(n)
+     * Approach: O(m + n), O(n)
      * Use the LPS Algo. 
      * Make the string = pattern#text.
      * Whenever the len is equal to pattern length, we have found an occurence of the pattern
