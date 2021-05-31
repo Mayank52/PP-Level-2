@@ -1231,6 +1231,58 @@ public class Backtracking {
         // (Done in Backtracking.cpp)
     }
 
+    // Abbreviation Using Backtracking
+    public static void solution(String str, String asf, int count, int pos) {
+        // write your code here
+        if (pos == str.length()) {
+            if (count > 0)
+                asf += count;
+            System.out.println(asf);
+            return;
+        }
+
+        if (count > 0)
+            solution(str, asf + count + str.charAt(pos), 0, pos + 1);
+        else
+            solution(str, asf + str.charAt(pos), 0, pos + 1);
+
+        solution(str, asf, count + 1, pos + 1);
+
+    }
+
+    // Gold Mine - 2
+    static int maxGold = 0;
+
+    public static int dfs(int[][] arr, int sr, int sc) {
+        int[][] dir = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
+
+        int myGold = arr[sr][sc];
+        arr[sr][sc] = 0;
+
+        for (int d = 0; d < 4; d++) {
+            int x = sr + dir[d][0];
+            int y = sc + dir[d][1];
+
+            if (x >= 0 && y >= 0 && x < arr.length && y < arr[0].length && arr[x][y] > 0) {
+                myGold += dfs(arr, x, y);
+            }
+        }
+
+        return myGold;
+    }
+
+    public static void getMaxGold(int[][] arr) {
+        // write your code here
+        for (int i = 0; i < arr.length; i++) {
+            for (int j = 0; j < arr[0].length; j++) {
+                if (arr[i][j] > 0) {
+                    int myGold = dfs(arr, i, j);
+                    maxGold = Math.max(maxGold, myGold);
+                }
+            }
+        }
+    }
+
     public static void main(String[] args) throws Exception {
     }
 

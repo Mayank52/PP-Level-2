@@ -196,6 +196,7 @@ int chefAndSecretPassword_(string &str)
             r = i + zarr[i] - 1;
         }
 
+        //update the min length non 0 length
         if (zarr[i] > 0)
             minLen = min(minLen, zarr[i]);
 
