@@ -1257,6 +1257,9 @@ public class Backtracking {
         int[][] dir = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
 
         int myGold = arr[sr][sc];
+
+        // mark current as visited, dont unmark,
+        // otherwise it will be visited again in another call during backtracking
         arr[sr][sc] = 0;
 
         for (int d = 0; d < 4; d++) {
@@ -1279,6 +1282,45 @@ public class Backtracking {
                     int myGold = dfs(arr, i, j);
                     maxGold = Math.max(maxGold, myGold);
                 }
+            }
+        }
+    }
+
+    // K-partitions
+    static int count = 1;
+
+    public static void solution(int i, int n, int k, int rssf, ArrayList<ArrayList<Integer>> ans) {
+        // write your code here
+        if (i == n + 1) {
+            if (rssf == k) {
+                System.out.print(count + ". ");
+                count++;
+                for (int j = 0; j < ans.size(); j++) {
+                    System.out.print("[");
+                    for (int l = 0; l < ans.get(j).size(); l++) {
+                        if (l == ans.get(j).size() - 1)
+                            System.out.print(ans.get(j).get(l));
+                        else
+                            System.out.print(ans.get(j).get(l) + ", ");
+                    }
+                    System.out.print("] ");
+                }
+
+                System.out.println();
+            }
+            return;
+        }
+
+        for (int idx = 0; idx < k; idx++) {
+            if (ans.get(idx).size() == 0) {
+                ans.get(idx).add(i);
+                solution(i + 1, n, k, rssf + 1, ans);
+                ans.get(idx).remove(ans.get(idx).size() - 1);
+                break;
+            } else {
+                ans.get(idx).add(i);
+                solution(i + 1, n, k, rssf, ans);
+                ans.get(idx).remove(ans.get(idx).size() - 1);
             }
         }
     }
