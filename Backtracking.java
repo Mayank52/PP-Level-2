@@ -1289,9 +1289,13 @@ public class Backtracking {
     // K-partitions
     static int count = 1;
 
+    /*
+     * i: current number, rssf: number of non empty subsets so far, ans: all subsets
+     */
     public static void solution(int i, int n, int k, int rssf, ArrayList<ArrayList<Integer>> ans) {
         // write your code here
         if (i == n + 1) {
+            // if all subsets have been filled, i.e. no subset is empty
             if (rssf == k) {
                 System.out.print(count + ". ");
                 count++;
@@ -1312,12 +1316,19 @@ public class Backtracking {
         }
 
         for (int idx = 0; idx < k; idx++) {
+            // if this subset is empty, then add to it, and break
+            // if we dont break after adding to the empty subset, we will get permutations
+            // which we dont need
+            // because if this subset is empty, then all subsets after it will also be empty
+            // and adding to any empty subset gives the same combination
             if (ans.get(idx).size() == 0) {
                 ans.get(idx).add(i);
                 solution(i + 1, n, k, rssf + 1, ans);
                 ans.get(idx).remove(ans.get(idx).size() - 1);
                 break;
-            } else {
+            }
+            // if non empty subset then add to it and move forward
+            else {
                 ans.get(idx).add(i);
                 solution(i + 1, n, k, rssf, ans);
                 ans.get(idx).remove(ans.get(idx).size() - 1);

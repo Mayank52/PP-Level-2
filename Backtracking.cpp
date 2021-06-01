@@ -198,6 +198,91 @@ void wordPatternMatch(string &pattern, string &str)
     wordPatternMatch(pattern, str, 0, 0, mp1, mp2);
 }
 
+//Leetcode Practice====================================================================
+// 1863. Sum of All Subset XOR Totals
+int totalSum = 0;
+void subsets(vector<int> &nums, int idx, int xorSum)
+{
+    if (idx == nums.size())
+    {
+        totalSum += xorSum;
+        return;
+    }
+
+    subsets(nums, idx + 1, xorSum ^ nums[idx]);
+    subsets(nums, idx + 1, xorSum);
+}
+int subsetXORSum(vector<int> &nums)
+{
+    subsets(nums, 0, 0);
+    return totalSum;
+}
+
+// 1688. Count of Matches in Tournament
+int numberOfMatches(int n)
+{
+    if (n == 1)
+        return 0;
+    if (n == 2)
+        return 1;
+
+    int currMatches = n / 2;
+
+    if (n % 2 == 0)
+        currMatches += numberOfMatches(n / 2);
+    else
+        currMatches += numberOfMatches(n / 2 + 1);
+
+    return currMatches;
+}
+
+// 78. Subsets
+vector<vector<int>> res;
+void subsets(vector<int> &nums, int idx, vector<int> &subset)
+{
+    if (idx == nums.size())
+    {
+        res.push_back(subset);
+        return;
+    }
+
+    subset.push_back(nums[idx]);
+    subsets(nums, idx + 1, subset);
+    subset.pop_back();
+
+    subsets(nums, idx + 1, subset);
+}
+vector<vector<int>> subsets(vector<int> &nums)
+{
+    vector<int> subset;
+    subsets(nums, 0, subset);
+    return res;
+}
+
+// 22. Generate Parentheses
+vector<string> res;
+void generateParenthesis(int n, int openCount, int closeCount, string ans)
+{
+    if (openCount + closeCount == 2 * n)
+    {
+        res.push_back(ans);
+        return;
+    }
+
+    //If open brackets count > close bracket count -> add a close bracket
+    if (openCount > closeCount)
+        generateParenthesis(n, openCount, closeCount + 1, ans + ')');
+
+    //if open bracket count < total bracket count -> add a open bracket
+    if (openCount < n)
+        generateParenthesis(n, openCount + 1, closeCount, ans + '(');
+}
+vector<string> generateParenthesis(int n)
+{
+    generateParenthesis(n, 0, 0, "");
+    return res;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
