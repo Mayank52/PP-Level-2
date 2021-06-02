@@ -283,6 +283,39 @@ vector<string> generateParenthesis(int n)
     return res;
 }
 
+// 797. All Paths From Source to Target
+vector<vector<int>> res;
+
+void dfs(vector<vector<int>> &graph, int u, vector<int> &path)
+{
+    if (u == graph.size() - 1)
+    {
+        path.push_back(u);
+        res.push_back(path);
+        path.pop_back();
+        return;
+    }
+
+    path.push_back(u);
+
+    for (int v : graph[u])
+    {
+        dfs(graph, v, path);
+    }
+
+    path.pop_back();
+}
+vector<vector<int>> allPathsSourceTarget(vector<vector<int>> &graph)
+{
+    int n = graph.size();
+
+    //graph is acyclic, so no need to mark visited nodes, as there are no cycles
+    vector<int> path;
+    dfs(graph, 0, path);
+
+    return res;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
