@@ -1,7 +1,8 @@
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.ArrayList;
 
 class Trees {
     public class TreeNode {
@@ -20,6 +21,16 @@ class Trees {
             this.val = val;
             this.left = left;
             this.right = right;
+        }
+    }
+
+    class Node {
+        int data;
+        Node left, right;
+
+        Node(int item) {
+            data = item;
+            left = right = null;
         }
     }
 
@@ -134,6 +145,213 @@ class Trees {
 
         Collections.reverse(ans);
         return ans;
+    }
+
+    // 199. Binary Tree Right Side View
+    public List<Integer> rightSideView(TreeNode root) {
+        if (root == null)
+            return new ArrayList<>();
+
+        TreeNode node = root;
+        List<Integer> ans = new ArrayList<>();
+        LinkedList<TreeNode> que = new LinkedList<>();
+
+        que.add(node);
+
+        while (que.size() > 0) {
+            int size = que.size();
+
+            boolean firstNode = true;
+            while (size-- > 0) {
+                TreeNode rnode = que.poll();
+
+                // add first node of each reverse level into ans
+                if (firstNode) {
+                    ans.add(rnode.val);
+                    firstNode = false;
+                }
+
+                // add right node first -> to get the level in reverse
+                if (rnode.right != null)
+                    que.add(rnode.right);
+
+                // add left node
+                if (rnode.left != null)
+                    que.add(rnode.left);
+            }
+        }
+
+        return ans;
+    }
+
+    // Left View of Binary Tree
+    ArrayList<Integer> leftView(Node root) {
+        if (root == null)
+            return new ArrayList<>();
+
+        Node node = root;
+        ArrayList<Integer> ans = new ArrayList<>();
+        LinkedList<Node> que = new LinkedList<>();
+
+        que.add(node);
+
+        while (que.size() > 0) {
+            int size = que.size();
+
+            boolean firstNode = true;
+            while (size-- > 0) {
+                Node rnode = que.poll();
+
+                // add first node of each level into ans
+                if (firstNode) {
+                    ans.add(rnode.data);
+                    firstNode = false;
+                }
+
+                // add left node
+                if (rnode.left != null)
+                    que.add(rnode.left);
+
+                // add right node
+                if (rnode.right != null)
+                    que.add(rnode.right);
+            }
+        }
+
+        return ans;
+    }
+
+    // Top View of Binary Tree
+    // (https://practice.geeksforgeeks.org/problems/top-view-of-binary-tree/1)
+    static int rightwidth = Integer.MIN_VALUE;
+    static int leftwidth = Integer.MAX_VALUE;
+
+    static class pair {
+        Node node;
+        int vl;
+
+        pair(Node node, int vl) {
+            this.node = node;
+            this.vl = vl;
+        }
+    }
+
+    static int leftMinValue = 0;
+    static int rightMaxValue = 0;
+
+    static void width(Node node, int lev) {
+        if (node == null)
+            return;
+
+        leftwidth = Math.min(leftwidth, lev);
+        rightwidth = Math.max(rightwidth, lev);
+
+        width(node.left, lev - 1);
+        width(node.right, lev + 1);
+    }
+
+    static ArrayList<Integer> topView(Node node) {
+        // add your code
+        if (node == null)
+            return new ArrayList<>();
+
+        width(node, 0);
+
+        int[] ans = new int[rightwidth - leftwidth + 1];
+        Arrays.fill(ans, -1);
+
+        LinkedList<pair> que = new LinkedList<>();
+        que.addLast(new pair(node, -leftwidth));
+
+        while (que.size() != 0) {
+            int size = que.size();
+
+            while (size-- > 0) {
+                pair rpair = que.removeFirst();
+
+                if (ans[rpair.vl] == -1)
+                    ans[rpair.vl] = rpair.node.data;
+
+                if (rpair.node.left != null)
+                    que.addLast(new pair(rpair.node.left, rpair.vl - 1));
+                if (rpair.node.right != null)
+                    que.addLast(new pair(rpair.node.right, rpair.vl + 1));
+            }
+        }
+
+        ArrayList<Integer> temp = new ArrayList<>();
+        for (int ele : ans)
+            if (ele != -1)
+                temp.add(ele);
+
+        return temp;
+    }
+
+    // Bottom View of Binary Tree
+    // (https://practice.geeksforgeeks.org/problems/bottom-view-of-binary-tree/1)
+
+    static int rightwidth = Integer.MIN_VALUE;
+    static int leftwidth = Integer.MAX_VALUE;
+
+    static class pair {
+        Node node;
+        int vl;
+
+        pair(Node node, int vl) {
+            this.node = node;
+            this.vl = vl;
+        }
+    }
+
+    static int leftMinValue = 0;
+    static int rightMaxValue = 0;
+
+    static void width(Node node, int lev) {
+        if (node == null)
+            return;
+
+        leftwidth = Math.min(leftwidth, lev);
+        rightwidth = Math.max(rightwidth, lev);
+
+        width(node.left, lev - 1);
+        width(node.right, lev + 1);
+    }
+
+    // Function to return a list containing the bottom view of the given tree.
+    public ArrayList<Integer> bottomView(Node root) {
+        // Code here
+        Node node = root;
+        if (node == null)
+            return new ArrayList<>();
+
+        width(node, 0);
+
+        int[] ans = new int[rightwidth - leftwidth + 1];
+
+        LinkedList<pair> que = new LinkedList<>();
+        que.addLast(new pair(node, -leftwidth));
+
+        while (que.size() != 0) {
+            int size = que.size();
+
+            while (size-- > 0) {
+                pair rpair = que.removeFirst();
+
+                ans[rpair.vl] = rpair.node.data;
+
+                if (rpair.node.left != null)
+                    que.addLast(new pair(rpair.node.left, rpair.vl - 1));
+                if (rpair.node.right != null)
+                    que.addLast(new pair(rpair.node.right, rpair.vl + 1));
+            }
+        }
+
+        ArrayList<Integer> temp = new ArrayList<>();
+        for (int ele : ans)
+            if (ele != 0)
+                temp.add(ele);
+
+        return temp;
     }
 
     public static void main(String[] args) throws IOException {
