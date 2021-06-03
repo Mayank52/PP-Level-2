@@ -223,9 +223,6 @@ class Trees {
 
     // Top View of Binary Tree
     // (https://practice.geeksforgeeks.org/problems/top-view-of-binary-tree/1)
-    static int rightwidth = Integer.MIN_VALUE;
-    static int leftwidth = Integer.MAX_VALUE;
-
     static class pair {
         Node node;
         int vl;
@@ -236,6 +233,9 @@ class Trees {
         }
     }
 
+    //Approach 1:
+    static int rightwidth = Integer.MIN_VALUE;
+    static int leftwidth = Integer.MAX_VALUE;
     static int leftMinValue = 0;
     static int rightMaxValue = 0;
 
@@ -287,12 +287,53 @@ class Trees {
         return temp;
     }
 
+    //Approach 2: without finding the width -> use a hashmap instead of array to store the
+    // vertical level
+    static ArrayList<Integer> topView(Node node) {
+        // add your code
+        if (node == null)
+            return new ArrayList<>();
+
+        HashMap<Integer, Integer> map = new HashMap<>();
+
+        LinkedList<pair> que = new LinkedList<>();
+        que.addLast(new pair(node, 0));
+        int min = 0; // leftMin
+        int max = 0; // rightMax
+
+        while (que.size() != 0) {
+            int size = que.size();
+
+            while (size-- > 0) {
+                pair rpair = que.removeFirst();
+
+                // update the leftMin, rightMax
+                min = Math.min(min, rpair.vl);
+                max = Math.max(max, rpair.vl);
+
+                // add only the first value of each vertical level in map
+                if (map.containsKey(rpair.vl) == false) {
+                    map.put(rpair.vl, rpair.node.data);
+                }
+
+                if (rpair.node.left != null)
+                    que.addLast(new pair(rpair.node.left, rpair.vl - 1));
+                if (rpair.node.right != null)
+                    que.addLast(new pair(rpair.node.right, rpair.vl + 1));
+            }
+        }
+
+        // add the top view nodes in answer
+        ArrayList<Integer> ans = new ArrayList<>();
+        for (int i = min; i <= max; i++) {
+            ans.add(map.get(i));
+        }
+
+        return ans;
+    }
+
     // Bottom View of Binary Tree
     // (https://practice.geeksforgeeks.org/problems/bottom-view-of-binary-tree/1)
-
-    static int rightwidth = Integer.MIN_VALUE;
-    static int leftwidth = Integer.MAX_VALUE;
-
     static class pair {
         Node node;
         int vl;
@@ -303,6 +344,9 @@ class Trees {
         }
     }
 
+    //Approach 1:
+    static int rightwidth = Integer.MIN_VALUE;
+    static int leftwidth = Integer.MAX_VALUE;
     static int leftMinValue = 0;
     static int rightMaxValue = 0;
 
@@ -317,7 +361,6 @@ class Trees {
         width(node.right, lev + 1);
     }
 
-    // Function to return a list containing the bottom view of the given tree.
     public ArrayList<Integer> bottomView(Node root) {
         // Code here
         Node node = root;
@@ -352,6 +395,48 @@ class Trees {
                 temp.add(ele);
 
         return temp;
+    }
+
+    //Approach 2: without finding width -> use hashmap instead of array
+    public ArrayList<Integer> bottomView(Node node) {
+        // add your code
+        if (node == null)
+            return new ArrayList<>();
+
+        HashMap<Integer, Integer> map = new HashMap<>();
+
+        LinkedList<pair> que = new LinkedList<>();
+        que.addLast(new pair(node, 0));
+        int min = 0; // leftMin
+        int max = 0; // rightMax
+
+        while (que.size() != 0) {
+            int size = que.size();
+
+            while (size-- > 0) {
+                pair rpair = que.removeFirst();
+
+                // update the leftMin, rightMax
+                min = Math.min(min, rpair.vl);
+                max = Math.max(max, rpair.vl);
+
+                //update the node for the vertical level in hashmap
+                map.put(rpair.vl, rpair.node.data);
+
+                if (rpair.node.left != null)
+                    que.addLast(new pair(rpair.node.left, rpair.vl - 1));
+                if (rpair.node.right != null)
+                    que.addLast(new pair(rpair.node.right, rpair.vl + 1));
+            }
+        }
+
+        // add the bottom view nodes in answer
+        ArrayList<Integer> ans = new ArrayList<>();
+        for (int i = min; i <= max; i++) {
+            ans.add(map.get(i));
+        }
+
+        return ans;
     }
 
     public static void main(String[] args) throws IOException {
