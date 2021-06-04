@@ -670,6 +670,37 @@ class Trees {
         return res;
     }
 
+    // 1145. Binary Tree Coloring Game
+    /*
+        To win you have to choose a one of 3 nodes: parent of x, left child of x, right of x
+        You can only win if 1 of # conditions is true:
+        1. Count of nodes in left subtree of x node > totalNodes/2
+        2. Count of nodes in right subtree of x node > totalNodes/2
+        3. Count of nodes in rest of the tree i.e. n - leftCount - rightCount - 1(for node x) > totalNodes/2
+    */
+    public boolean res = false;
+
+    public int countNodes(TreeNode node, int n, int x) {
+        if (node == null)
+            return 0;
+
+        int leftCount = countNodes(node.left, n, x);
+        int rightCount = countNodes(node.right, n, x);
+
+        if (node.val == x) {
+            if (leftCount > n / 2 || rightCount > n / 2 || n - (leftCount + rightCount + 1) > n / 2)
+                res = true;
+        }
+
+        return leftCount + rightCount + 1;
+    }
+
+    public boolean btreeGameWinningMove(TreeNode root, int n, int x) {
+        res = false;
+        countNodes(root, n, x);
+        return res;
+    }
+
     public static void main(String[] args) throws IOException {
 
     }
