@@ -518,6 +518,12 @@ class Trees {
 
     // Diagonal Traversal of Binary Tree
     // (https://practice.geeksforgeeks.org/problems/diagonal-traversal-of-binary-tree/1)
+    /*
+     * On GFG, the diagonal order is taken in DFS form, not levelOrder. So, BFS
+     * gives the correct elements in a diagonal but in wrong order.
+     * 
+     * The DFS Solution passes in C++. But in java gets a TLE
+     */
     public ArrayList<Integer> diagonal(TreeNode root) {
         TreeNode node = root;
         LinkedList<Pair> que = new LinkedList<>();
@@ -527,7 +533,6 @@ class Trees {
         int max = Integer.MIN_VALUE;
 
         que.addFirst(new Pair(node, 0));
-        // int hl = 0;
 
         while (que.size() > 0) {
             int size = que.size();
@@ -549,22 +554,14 @@ class Trees {
                 if (rpair.node.right != null)
                     que.addLast(new Pair(rpair.node.right, rpair.level + 0));
             }
-
-            // hl++;
         }
 
         ArrayList<Integer> ans = new ArrayList<>();
         for (int i = min; i <= max; i++) {
             ArrayList<Integer> nodes = map.get(i);
-
-            // Sort the vertical level such that nodes on same horizontal level are sorted
-            // in increasing order
-            // Collections.sort(nodes);
-            // List<Integer> lvl = new ArrayList<>();
             for (int j = 0; j < nodes.size(); j++) {
                 ans.add(nodes.get(j));
             }
-            // ans.add(lvl);
         }
 
         return ans;

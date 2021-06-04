@@ -8,6 +8,12 @@ struct Node
 };
 
 // Diagonal Traversal of Binary Tree (https://practice.geeksforgeeks.org/problems/diagonal-traversal-of-binary-tree/1#)
+/*
+On GFG, the diagonal order is taken in DFS form, not in level order.
+So, BFS gives the correct elements in a diagonal but in wrong order.
+
+The DFS Solution passes in C++. But in java gets a TLE.
+*/
 int leftMin = INT_MAX;
 int rightMax = INT_MIN;
 void diagonal(Node *node, int lvl, map<int, vector<int>> &mp)
