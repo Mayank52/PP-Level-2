@@ -3,6 +3,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.HashMap;
 
 class Trees {
     public class TreeNode {
@@ -184,7 +186,7 @@ class Trees {
         return ans;
     }
 
-    // Left View of Binary Tree
+    // Left View of Binary Tree (GFG)
     ArrayList<Integer> leftView(Node root) {
         if (root == null)
             return new ArrayList<>();
@@ -233,7 +235,7 @@ class Trees {
         }
     }
 
-    //Approach 1:
+    // Approach 1:
     static int rightwidth = Integer.MIN_VALUE;
     static int leftwidth = Integer.MAX_VALUE;
     static int leftMinValue = 0;
@@ -287,7 +289,8 @@ class Trees {
         return temp;
     }
 
-    //Approach 2: without finding the width -> use a hashmap instead of array to store the
+    // Approach 2: without finding the width -> use a hashmap instead of array to
+    // store the
     // vertical level
     static ArrayList<Integer> topView(Node node) {
         // add your code
@@ -344,7 +347,7 @@ class Trees {
         }
     }
 
-    //Approach 1:
+    // Approach 1:
     static int rightwidth = Integer.MIN_VALUE;
     static int leftwidth = Integer.MAX_VALUE;
     static int leftMinValue = 0;
@@ -397,7 +400,7 @@ class Trees {
         return temp;
     }
 
-    //Approach 2: without finding width -> use hashmap instead of array
+    // Approach 2: without finding width -> use hashmap instead of array
     public ArrayList<Integer> bottomView(Node node) {
         // add your code
         if (node == null)
@@ -420,7 +423,7 @@ class Trees {
                 min = Math.min(min, rpair.vl);
                 max = Math.max(max, rpair.vl);
 
-                //update the node for the vertical level in hashmap
+                // update the node for the vertical level in hashmap
                 map.put(rpair.vl, rpair.node.data);
 
                 if (rpair.node.left != null)
@@ -434,6 +437,171 @@ class Trees {
         ArrayList<Integer> ans = new ArrayList<>();
         for (int i = min; i <= max; i++) {
             ans.add(map.get(i));
+        }
+
+        return ans;
+    }
+
+    // 987. Vertical Order Traversal of a Binary Tree
+    public class Pair implements Comparable<Pair> {
+        public TreeNode node;
+        public int level; // stores either vertical or horizontal level
+
+        public Pair(TreeNode n, int lvl) {
+            this.node = n;
+            this.level = lvl;
+        }
+
+        @Override
+        public int compareTo(Pair o) {
+            // if horizontal level is different -> sort according to horizontal level
+            if (this.level != o.level)
+                return this.level - o.level;
+            // if same horiontal level -> sort according to node values
+            else
+                return this.node.val - o.node.val;
+        }
+
+    }
+
+    public List<List<Integer>> verticalTraversal(TreeNode root) {
+        TreeNode node = root;
+        LinkedList<Pair> que = new LinkedList<>();
+        HashMap<Integer, ArrayList<Pair>> map = new HashMap<>();
+
+        int min = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
+
+        que.addFirst(new Pair(node, 0));
+        int hl = 0;
+
+        while (que.size() > 0) {
+            int size = que.size();
+
+            while (size-- > 0) {
+                Pair rpair = que.removeFirst();
+
+                min = Math.min(min, rpair.level);
+                max = Math.max(max, rpair.level);
+
+                if (!map.containsKey(rpair.level)) {
+                    map.put(rpair.level, new ArrayList<Pair>());
+                }
+
+                map.get(rpair.level).add(new Pair(rpair.node, hl));
+
+                if (rpair.node.left != null)
+                    que.addLast(new Pair(rpair.node.left, rpair.level - 1));
+                if (rpair.node.right != null)
+                    que.addLast(new Pair(rpair.node.right, rpair.level + 1));
+            }
+
+            hl++;
+        }
+
+        List<List<Integer>> ans = new ArrayList<>();
+        for (int i = min; i <= max; i++) {
+            ArrayList<Pair> nodes = map.get(i);
+
+            // Sort the vertical level such that nodes on same horizontal level are sorted
+            // in increasing order
+            Collections.sort(nodes);
+            List<Integer> lvl = new ArrayList<>();
+            for (Pair pr : nodes) {
+                lvl.add(pr.node.val);
+            }
+            ans.add(lvl);
+        }
+
+        return ans;
+    }
+
+    // Diagonal Traversal of Binary Tree
+    // (https://practice.geeksforgeeks.org/problems/diagonal-traversal-of-binary-tree/1)
+    public ArrayList<Integer> diagonal(TreeNode root) {
+        TreeNode node = root;
+        LinkedList<Pair> que = new LinkedList<>();
+        HashMap<Integer, ArrayList<Integer>> map = new HashMap<>();
+
+        int min = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
+
+        que.addFirst(new Pair(node, 0));
+        // int hl = 0;
+
+        while (que.size() > 0) {
+            int size = que.size();
+
+            while (size-- > 0) {
+                Pair rpair = que.removeFirst();
+
+                min = Math.min(min, rpair.level);
+                max = Math.max(max, rpair.level);
+
+                if (!map.containsKey(rpair.level)) {
+                    map.put(rpair.level, new ArrayList<Integer>());
+                }
+
+                map.get(rpair.level).add(rpair.node.val);
+
+                if (rpair.node.left != null)
+                    que.addLast(new Pair(rpair.node.left, rpair.level - 1));
+                if (rpair.node.right != null)
+                    que.addLast(new Pair(rpair.node.right, rpair.level + 0));
+            }
+
+            // hl++;
+        }
+
+        ArrayList<Integer> ans = new ArrayList<>();
+        for (int i = min; i <= max; i++) {
+            ArrayList<Integer> nodes = map.get(i);
+
+            // Sort the vertical level such that nodes on same horizontal level are sorted
+            // in increasing order
+            // Collections.sort(nodes);
+            // List<Integer> lvl = new ArrayList<>();
+            for (int j = 0; j < nodes.size(); j++) {
+                ans.add(nodes.get(j));
+            }
+            // ans.add(lvl);
+        }
+
+        return ans;
+    }
+
+    public int leftMin = Integer.MAX_VALUE;
+    public int rightMax = Integer.MIN_VALUE;
+
+    public void diagonal(Node node, int lvl, HashMap<Integer, ArrayList<Integer>> map) {
+        if (node == null)
+            return;
+
+        if (!map.containsKey(lvl))
+            map.put(lvl, new ArrayList<Integer>());
+
+        map.get(lvl).add(node.data);
+
+        leftMin = Math.min(leftMin, lvl);
+        rightMax = Math.max(rightMax, lvl);
+
+        diagonal(node.left, lvl - 1, map);
+        diagonal(node.right, lvl + 0, map);
+
+    }
+
+    public ArrayList<Integer> diagonal(Node root) {
+        // add your code here.
+        HashMap<Integer, ArrayList<Integer>> map = new HashMap<>();
+
+        diagonal(root, 0, map);
+
+        ArrayList<Integer> ans = new ArrayList<>();
+        for (int i = rightMax; i >= leftMin; i--) {
+            ArrayList<Integer> nodes = map.get(i);
+            for (int j = 0; j < nodes.size(); j++) {
+                ans.add(nodes.get(j));
+            }
         }
 
         return ans;
