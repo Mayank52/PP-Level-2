@@ -604,6 +604,72 @@ class Trees {
         return ans;
     }
 
+    // 878 · Boundary of Binary Tree
+    public TreeNode leftMostNode = null;
+    public TreeNode rightMostNode = null;
+
+    public void leftBoundary(TreeNode node, List<Integer> res) {
+        if (node == null)
+            return;
+
+        res.add(node.val);
+
+        if (node.left != null)
+            leftBoundary(node.left, res);
+        else if (node.right != null)
+            leftBoundary(node.right, res);
+        else
+            leftMostNode = node;
+    }
+
+    public void rightBoundary(TreeNode node, List<Integer> res) {
+        if (node == null)
+            return;
+
+        if (node.right != null)
+            rightBoundary(node.right, res);
+        else if (node.left != null)
+            rightBoundary(node.left, res);
+        else
+            rightMostNode = node;
+
+        if (node != rightMostNode)
+            res.add(node.val);
+    }
+
+    public void leafNodes(TreeNode node, List<Integer> res) {
+        if (node == null)
+            return;
+
+        if (node.left == null && node.right == null) {
+            if (node != leftMostNode)
+                res.add(node.val);
+            return;
+        }
+
+        if (node.left != null)
+            leafNodes(node.left, res);
+        if (node.right != null)
+            leafNodes(node.right, res);
+    }
+
+    public List<Integer> boundaryOfBinaryTree(TreeNode root) {
+        // write your code here
+        if (root == null)
+            return new ArrayList<>();
+
+        List<Integer> res = new ArrayList<>();
+
+        res.add(root.val);
+
+        leftBoundary(root.left, res);
+        leafNodes(root.left, res);
+        leafNodes(root.right, res);
+        rightBoundary(root.right, res);
+
+        return res;
+    }
+
     public static void main(String[] args) throws IOException {
 
     }
