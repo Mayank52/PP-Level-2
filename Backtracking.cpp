@@ -316,6 +316,51 @@ vector<vector<int>> allPathsSourceTarget(vector<vector<int>> &graph)
     return res;
 }
 
+// 1723. Find Minimum Time to Finish All Jobs
+int res = INT_MAX;
+void minimumTimeRequired(vector<int> &jobs, int k, int idx, vector<int> &workers, int maxTime)
+{
+    if (maxTime > res)
+        return;
+
+    if (idx == jobs.size())
+    {
+        if (k == 0)
+        {
+            res = min(res, maxTime);
+        }
+
+        return;
+    }
+
+    for (int i = 0; i < workers.size(); i++)
+    {
+        if (workers[i] == 0)
+        {
+            workers[i] += jobs[idx];
+            minimumTimeRequired(jobs, k - 1, idx + 1, workers, max(maxTime, workers[i]));
+            workers[i] -= jobs[idx];
+
+            break;
+        }
+        else
+        {
+            workers[i] += jobs[idx];
+            minimumTimeRequired(jobs, k, idx + 1, workers, max(maxTime, workers[i]));
+            workers[i] -= jobs[idx];
+        }
+    }
+}
+int minimumTimeRequired(vector<int> &jobs, int k)
+{
+    res = INT_MAX;
+
+    vector<int> workers(k, 0);
+    minimumTimeRequired(jobs, k, 0, workers, 0);
+
+    return res;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
