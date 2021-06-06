@@ -320,6 +320,8 @@ vector<vector<int>> allPathsSourceTarget(vector<vector<int>> &graph)
 int res = INT_MAX;
 void minimumTimeRequired(vector<int> &jobs, int k, int idx, vector<int> &workers, int maxTime)
 {
+    //Optimization - 2
+    //if the current maxTime is already more than min res, then no need to check further
     if (maxTime > res)
         return;
 
@@ -341,6 +343,7 @@ void minimumTimeRequired(vector<int> &jobs, int k, int idx, vector<int> &workers
             minimumTimeRequired(jobs, k - 1, idx + 1, workers, max(maxTime, workers[i]));
             workers[i] -= jobs[idx];
 
+            //to prevent permutations
             break;
         }
         else
@@ -351,9 +354,15 @@ void minimumTimeRequired(vector<int> &jobs, int k, int idx, vector<int> &workers
         }
     }
 }
+
 int minimumTimeRequired(vector<int> &jobs, int k)
 {
     res = INT_MAX;
+
+    //Optimization - 1
+    //sort jobs in descending order, so that greatest time jobs get assigned first
+    //so you will get the max possible time earlier
+    sort(jobs.begin(), jobs.end(), greater<int>());
 
     vector<int> workers(k, 0);
     minimumTimeRequired(jobs, k, 0, workers, 0);
