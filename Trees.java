@@ -524,6 +524,7 @@ class Trees {
      * 
      * The DFS Solution passes in C++. But in java gets a TLE
      */
+    // Approach 1: BFS
     public ArrayList<Integer> diagonal(TreeNode root) {
         TreeNode node = root;
         LinkedList<Pair> que = new LinkedList<>();
@@ -567,6 +568,7 @@ class Trees {
         return ans;
     }
 
+    // Approach 2: DFS
     public int leftMin = Integer.MAX_VALUE;
     public int rightMax = Integer.MIN_VALUE;
 
@@ -672,12 +674,12 @@ class Trees {
 
     // 1145. Binary Tree Coloring Game
     /*
-        To win you have to choose a one of 3 nodes: parent of x, left child of x, right of x
-        You can only win if 1 of # conditions is true:
-        1. Count of nodes in left subtree of x node > totalNodes/2
-        2. Count of nodes in right subtree of x node > totalNodes/2
-        3. Count of nodes in rest of the tree i.e. n - leftCount - rightCount - 1(for node x) > totalNodes/2
-    */
+     * To win you have to choose a one of 3 nodes: parent of x, left child of x,
+     * right of x You can only win if 1 of # conditions is true: 1. Count of nodes
+     * in left subtree of x node > totalNodes/2 2. Count of nodes in right subtree
+     * of x node > totalNodes/2 3. Count of nodes in rest of the tree i.e. n -
+     * leftCount - rightCount - 1(for node x) > totalNodes/2
+     */
     public boolean res = false;
 
     public int countNodes(TreeNode node, int n, int x) {
@@ -700,6 +702,8 @@ class Trees {
         countNodes(root, n, x);
         return res;
     }
+
+    
 
     public static void main(String[] args) throws IOException {
 

@@ -1266,9 +1266,8 @@ public:
 bool canAttendMeetings(vector<Interval> &intervals)
 {
     //sort using custom comparator, here we use a lambda expression
-    sort(intervals.begin(), intervals.end(), [](const Interval &lhs, const Interval &rhs) {
-        return lhs.start < rhs.start;
-    });
+    sort(intervals.begin(), intervals.end(), [](const Interval &lhs, const Interval &rhs)
+         { return lhs.start < rhs.start; });
 
     //if any interval start is less than previous interval end, return false
     for (int i = 1; i < intervals.size(); i++)
@@ -2229,6 +2228,29 @@ vector<int> smallestRange(vector<vector<int>> &nums)
     }
 
     return {ansStart, ansEnd};
+}
+
+// 1679. Max Number of K-Sum Pairs
+int maxOperations(vector<int> &nums, int k)
+{
+    sort(nums.begin(), nums.end());
+
+    int i = 0, j = nums.size() - 1, count = 0;
+    while (i < j)
+    {
+        if (nums[i] + nums[j] < k)
+            i++;
+        else if (nums[i] + nums[j] > k)
+            j--;
+        else
+        {
+            count++;
+            i++;
+            j--;
+        }
+    }
+
+    return count;
 }
 
 int main()
