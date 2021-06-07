@@ -120,6 +120,61 @@ int minCameraCover(TreeNode *root)
     return cameras;
 }
 
+// 124. Binary Tree Maximum Path Sum
+int res = INT_MIN;
+int maxPathSum_(TreeNode *root)
+{
+    if (root == nullptr)
+        return 0;
+
+    int leftAns = maxPathSum_(root->left);
+    int rightAns = maxPathSum_(root->right);
+
+    int smallAns = max(leftAns, rightAns) + root->val;
+
+    res = max(max(res, smallAns), max(root->val, leftAns + rightAns + root->val));
+
+    return max(smallAns, root->val);
+}
+int maxPathSum(TreeNode *root)
+{
+    res = INT_MIN;
+
+    maxPathSum_(root);
+
+    return res;
+}
+
+// 99. Recover Binary Search Tree
+TreeNode *a, *b, *prev;
+
+void recoverTree_(TreeNode *root)
+{
+    if (root == nullptr)
+        return;
+
+    recoverTree_(root->left);
+
+    if (prev != nullptr && root->val < prev->val)
+    {
+        if (a == nullptr)
+            a = prev;
+        b = root;
+    }
+
+    prev = root;
+
+    recoverTree_(root->right);
+}
+void recoverTree(TreeNode *root)
+{
+    recoverTree_(root);
+
+    int temp = a->val;
+    a->val = b->val;
+    b->val = temp;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
