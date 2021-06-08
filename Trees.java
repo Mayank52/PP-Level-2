@@ -703,7 +703,39 @@ class Trees {
         return res;
     }
 
-    
+    // 222. Count Complete Tree Nodes
+    public int getLeftHeight(TreeNode root) {
+        int count = 1;
+        while (root.left != null) {
+            root = root.left;
+            count++;
+        }
+
+        return count;
+    }
+
+    public int getRightHeight(TreeNode root) {
+        int count = 1;
+        while (root.right != null) {
+            root = root.right;
+            count++;
+        }
+
+        return count;
+    }
+
+    public int countNodes(TreeNode root) {
+        if (root == null)
+            return 0;
+
+        int lh = getLeftHeight(root);
+        int rh = getRightHeight(root);
+
+        if (lh == rh)
+            return (1 << lh) - 1;
+
+        return countNodes(root.left) + countNodes(root.right) + 1;
+    }
 
     public static void main(String[] args) throws IOException {
 

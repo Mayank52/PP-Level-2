@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
+#include <queue>
 #include <limits.h>
+#include <math.h>
 #include <unordered_map>
 using namespace std;
 
@@ -173,6 +175,137 @@ void recoverTree(TreeNode *root)
     int temp = a->val;
     a->val = b->val;
     b->val = temp;
+}
+
+// 448 · Inorder Successor in BST
+TreeNode *succ = nullptr, *prev = nullptr;
+void inorderSuccessor_(TreeNode *root, TreeNode *p)
+{
+    if (root == nullptr)
+        return;
+
+    inorderSuccessor_(root->left, p);
+
+    if (prev == p)
+    {
+        succ = root;
+    }
+
+    prev = root;
+
+    inorderSuccessor_(root->right, p);
+}
+TreeNode *inorderSuccessor(TreeNode *root, TreeNode *p)
+{
+    // write your code here
+    inorderSuccessor_(root, p);
+
+    return succ;
+}
+
+// 222. Count Complete Tree Nodes
+/*
+Approach : O(h*2h)
+*/
+int getLeftHeight(TreeNode *root)
+{
+    int count = 1;
+    while (root->left != nullptr)
+    {
+        root = root->left;
+        count++;
+    }
+
+    return count;
+}
+int getRightHeight(TreeNode *root)
+{
+    int count = 1;
+    while (root->right != nullptr)
+    {
+        root = root->right;
+        count++;
+    }
+
+    return count;
+}
+int countNodes(TreeNode *root) //O(h)
+{
+    if (root == nullptr)
+        return 0;
+
+    int lh = getLeftHeight(root);  //O(h)
+    int rh = getRightHeight(root); //O(h)
+
+    if (lh == rh)
+        return (1 << lh) - 1;
+
+    return countNodes(root->left) + countNodes(root->right) + 1;
+}
+
+// 900 · Closest Binary Search Tree Value
+int closestValue(TreeNode *root, double target)
+{
+    // write your code here
+    TreeNode *curr = root;
+    int closestVal = -1;
+
+    while (curr != nullptr)
+    {
+        if (abs(target - curr->val) < abs(target - closestVal))
+            closestVal = curr->val;
+        if (target < curr->val)
+        {
+            curr = curr->left;
+        }
+        else
+        {
+            curr = curr->right;
+        }
+    }
+
+    return closestVal;
+}
+
+// 901 · Closest Binary Search Tree Value II
+void closestKValues(TreeNode *root, double target, int k, priority_queue<vector<double>, vector<vector<double>>> &pq)
+{
+    if (root == nullptr)
+        return;
+
+    if (pq.size() < k)
+    {
+        pq.push({abs(target - root->val), (double)root->val});
+    }
+    else
+    {
+        vector<double> top = pq.top();
+        if (abs(target - root->val) < top[0])
+        {
+            pq.pop();
+            pq.push({abs(target - root->val), (double)root->val});
+        }
+    }
+
+    closestKValues(root->left, target, k, pq);
+    closestKValues(root->right, target, k, pq);
+}
+
+vector<int> closestKValues(TreeNode *root, double target, int k)
+{
+    priority_queue<vector<double>, vector<vector<double>>> pq;
+
+    closestKValues(root, target, k, pq);
+
+    vector<int> res;
+    while (pq.size() != 0)
+    {
+        vector<double> rVal = pq.top();
+        pq.pop();
+        res.push_back((int)rVal[1]);
+    }
+
+    return res;
 }
 
 int main()
