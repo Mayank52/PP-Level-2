@@ -835,8 +835,8 @@ class Trees {
         return isValidBST(root, Long.MIN_VALUE, Long.MAX_VALUE);
     }
 
-    // Construct BST from Postorder
-    // Approach 1: Using Next Smaller Element (Not Complete, Not Submitted)
+    // Construct BST from Postorder (GFG)
+    // Approach 1: Using Next Smaller Element (Not Submitted)
     public Node constructTree(int[] post, int[] nextSmaller, int psi, int pei) {
         if (psi > pei)
             return null;
@@ -867,7 +867,7 @@ class Trees {
         return constructTree(post, nextSmaller, 0, n - 1);
     }
 
-    // Approach 2: Using (lower bound, upper bound)
+    // Approach 2: (Better) Using (lower bound, upper bound)
     public static int idx = -1;
 
     public static Node constructTree(int post[], int lb, int ub) {
@@ -892,29 +892,32 @@ class Trees {
         return constructTree(post, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
 
-    // Construct BST from Preorder
-    // Approach 1: Using (lower bound, upper bound)
+    // 1008. Construct Binary Search Tree from Preorder Traversal
+    // Approach: Using (lower bound, upper bound)
     public static int idx = -1;
 
-    public static Node constructTree(int pre[], int lb, int ub) {
+    public static TreeNode constructTree(int pre[], int lb, int ub) {
         if (idx == pre.length)
             return null;
 
         if (pre[idx] >= ub || pre[idx] <= lb)
             return null;
 
-        Node root = new Node(pre[idx++]);
+        TreeNode root = new TreeNode(pre[idx++]);
 
-        root.left = constructTree(pre, lb, root.data);
-        root.right = constructTree(pre, root.data, ub);
+        root.left = constructTree(pre, lb, root.val);
+        root.right = constructTree(pre, root.val, ub);
 
         return root;
     }
 
-    public static Node constructTree(int pre[], int n) {
+    public TreeNode bstFromPreorder(int[] preorder) {
         idx = 0;
-        return constructTree(pre, Integer.MIN_VALUE, Integer.MAX_VALUE);
+        return constructTree(preorder, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
+
+    // 834. Sum of Distances in Tree
+    
 
     public static void main(String[] args) throws IOException {
 
