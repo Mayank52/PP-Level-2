@@ -788,6 +788,57 @@ class Trees {
         return postAndIn(postorder, 0, postorder.length - 1, inorder, 0, inorder.length - 1, map);
     }
 
+    // 98. Validate Binary Search Tree
+    // Approach 1: Inorder
+    /*
+     * Traverse in inorder. If prev node value >= current node value, then ans is
+     * false
+     */
+    public TreeNode prev = null;
+
+    public boolean isValidBST(TreeNode root) {
+        if (root == null)
+            return true;
+
+        boolean res = true;
+
+        res = res && isValidBST(root.left);
+
+        if (prev != null && prev.val >= root.val) {
+            return false;
+        }
+
+        prev = root;
+
+        res = res && isValidBST(root.right);
+
+        return res;
+    }
+
+    // Approach 2: Preorder
+    /*
+    Do Preorder traversal.
+    For each node check if it is in the range (lo, hi)
+    For root range is (-inf, inf)
+    For left node range becomes (-inf, curr.val)
+    For right node range becomes (curr.val, inf)
+     */
+    public boolean isValidBST(TreeNode root, long lo, long hi) {
+        if (root == null)
+            return true;
+
+        boolean res = true;
+
+        if (root.val <= lo || root.val >= hi)
+            return false;
+
+        return isValidBST(root.left, lo, root.val) && isValidBST(root.right, root.val, hi);
+    }
+
+    public boolean isValidBST(TreeNode root) {
+        return isValidBST(root, Long.MIN_VALUE, Long.MAX_VALUE);
+    }
+
     public static void main(String[] args) throws IOException {
 
     }
