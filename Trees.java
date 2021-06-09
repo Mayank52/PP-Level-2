@@ -817,17 +817,13 @@ class Trees {
 
     // Approach 2: Preorder
     /*
-    Do Preorder traversal.
-    For each node check if it is in the range (lo, hi)
-    For root range is (-inf, inf)
-    For left node range becomes (-inf, curr.val)
-    For right node range becomes (curr.val, inf)
+     * Do Preorder traversal. For each node check if it is in the range (lo, hi) For
+     * root range is (-inf, inf) For left node range becomes (-inf, curr.val) For
+     * right node range becomes (curr.val, inf)
      */
     public boolean isValidBST(TreeNode root, long lo, long hi) {
         if (root == null)
             return true;
-
-        boolean res = true;
 
         if (root.val <= lo || root.val >= hi)
             return false;
@@ -837,6 +833,87 @@ class Trees {
 
     public boolean isValidBST(TreeNode root) {
         return isValidBST(root, Long.MIN_VALUE, Long.MAX_VALUE);
+    }
+
+    // Construct BST from Postorder
+    // Approach 1: Using Next Smaller Element (Not Complete, Not Submitted)
+    public Node constructTree(int[] post, int[] nextSmaller, int psi, int pei) {
+        if (psi > pei)
+            return null;
+
+        Node root = new Node(post[pei]);
+
+        root.left = constructTree(post, nextSmaller, psi, nextSmaller[pei]);
+        root.right = constructTree(post, nextSmaller, nextSmaller[pei] + 1, pei - 1);
+
+        return root;
+    }
+
+    public static Node constructTree(int post[], int n) {
+        // Find the Next Smaller Element in left for postorder elements
+        LinkedList<Integer> st = new LinkedList<>();
+        int[] nextSmaller = new int[n];
+
+        st.addLast(n - 1);
+        nextSmaller[0] = -1;
+
+        for (int i = n - 1; i > 0; i--) {
+            while (st.getLast() != -1 && post[st.getLast()] > post[i]) {
+                nextSmaller[i] = st.removeLast();
+            }
+            st.addLast(i);
+        }
+
+        return constructTree(post, nextSmaller, 0, n - 1);
+    }
+
+    // Approach 2: Using (lower bound, upper bound)
+    public static int idx = -1;
+
+    public static Node constructTree(int post[], int lb, int ub) {
+        if (idx < 0)
+            return null;
+
+        if (post[idx] >= ub || post[idx] <= lb)
+            return null;
+
+        Node root = new Node(post[idx--]);
+
+        // Call for right child first because it is postorder array
+        // so right child appears first
+        root.right = constructTree(post, root.data, ub);
+        root.left = constructTree(post, lb, root.data);
+
+        return root;
+    }
+
+    public static Node constructTree(int post[], int n) {
+        idx = n - 1;
+        return constructTree(post, Integer.MIN_VALUE, Integer.MAX_VALUE);
+    }
+
+    // Construct BST from Preorder
+    // Approach 1: Using (lower bound, upper bound)
+    public static int idx = -1;
+
+    public static Node constructTree(int pre[], int lb, int ub) {
+        if (idx == pre.length)
+            return null;
+
+        if (pre[idx] >= ub || pre[idx] <= lb)
+            return null;
+
+        Node root = new Node(pre[idx++]);
+
+        root.left = constructTree(pre, lb, root.data);
+        root.right = constructTree(pre, root.data, ub);
+
+        return root;
+    }
+
+    public static Node constructTree(int pre[], int n) {
+        idx = 0;
+        return constructTree(pre, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
 
     public static void main(String[] args) throws IOException {
