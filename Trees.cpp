@@ -3,6 +3,7 @@
 #include <queue>
 #include <limits.h>
 #include <math.h>
+#include <list>
 #include <unordered_map>
 using namespace std;
 
@@ -244,6 +245,11 @@ int countNodes(TreeNode *root) //O(h)
 }
 
 // 900 · Closest Binary Search Tree Value
+/*
+Approach: O(h)
+Use the find target in BST approach.
+At each node check its absolute difference with target, and update the closest node.
+*/
 int closestValue(TreeNode *root, double target)
 {
     // write your code here
@@ -252,8 +258,10 @@ int closestValue(TreeNode *root, double target)
 
     while (curr != nullptr)
     {
+        //for each node check the absolute difference and update the closest node
         if (abs(target - curr->val) < abs(target - closestVal))
             closestVal = curr->val;
+
         if (target < curr->val)
         {
             curr = curr->left;
@@ -268,9 +276,36 @@ int closestValue(TreeNode *root, double target)
 }
 
 // 901 · Closest Binary Search Tree Value II
+/*
+Approach 1: O(nlogk), O(k)
+Using Priority Queue 
+Keep {abs diff, node val} in priority queue of size k
+Go to all nodes and update the pq
+
+Approach 2: O(n), O(k)
+Use a Sliding window of size k
+Keep a queue of size of K
+Move in inorder
+For each element if its absolute difference is less than front of queue, then pop the front, and add this element to last
+If current element cant beat the front element then, no element after it can do so either as we are moving in increasing order.
+
+Approach 3:
+For balanced BST,we can get less than O(n)
+*/
+
+int leftCount = 0, rightCount = 0;
+//Approach 1:
 void closestKValues(TreeNode *root, double target, int k, priority_queue<vector<double>, vector<vector<double>>> &pq)
 {
     if (root == nullptr)
+        return;
+
+    closestKValues(root->left, target, k, pq);
+
+    if (root->val > target)
+        rightCount++;
+
+    if (rightCount == k)
         return;
 
     if (pq.size() < k)
@@ -287,10 +322,8 @@ void closestKValues(TreeNode *root, double target, int k, priority_queue<vector<
         }
     }
 
-    closestKValues(root->left, target, k, pq);
     closestKValues(root->right, target, k, pq);
 }
-
 vector<int> closestKValues(TreeNode *root, double target, int k)
 {
     priority_queue<vector<double>, vector<vector<double>>> pq;
@@ -303,6 +336,47 @@ vector<int> closestKValues(TreeNode *root, double target, int k)
         vector<double> rVal = pq.top();
         pq.pop();
         res.push_back((int)rVal[1]);
+    }
+
+    return res;
+}
+//Approach 2:
+void closestKValues(TreeNode *root, double target, int k, list<int> &res)
+{
+    if (root == nullptr)
+        return;
+
+    closestKValues(root->left, target, k, res);
+
+    if (res.size() < k)
+    {
+        res.push_back(root->val);
+    }
+    else
+    {
+        if (abs(target - root->val) < abs(target - res.front()))
+        {
+            res.pop_front();
+            res.push_back(root->val);
+        }
+        else
+            return;
+    }
+
+    closestKValues(root->right, target, k, res);
+}
+vector<int> closestKValues(TreeNode *root, double target, int k)
+{
+    list<int> window;
+
+    closestKValues(root, target, k, window);
+
+    vector<int> res;
+    while (window.size() != 0)
+    {
+        int rVal = window.front();
+        window.pop_front();
+        res.push_back(rVal);
     }
 
     return res;

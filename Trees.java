@@ -737,6 +737,57 @@ class Trees {
         return countNodes(root.left) + countNodes(root.right) + 1;
     }
 
+    // 105. Construct Binary Tree from Preorder and Inorder Traversal
+    public TreeNode preAndIn(int[] pre, int psi, int pei, int[] in, int isi, int iei, HashMap<Integer, Integer> map) {
+        if (psi > pei || isi > iei)
+            return null;
+
+        TreeNode root = new TreeNode(pre[psi]);
+
+        int idx = map.get(pre[psi]);
+
+        int tot = idx - isi;
+
+        root.left = preAndIn(pre, psi + 1, psi + tot, in, isi, idx - 1, map);
+        root.right = preAndIn(pre, psi + tot + 1, pei, in, idx + 1, iei, map);
+
+        return root;
+    }
+
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        HashMap<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < inorder.length; i++) {
+            map.put(inorder[i], i);
+        }
+        return preAndIn(preorder, 0, preorder.length - 1, inorder, 0, inorder.length - 1, map);
+    }
+
+    // 106. Construct Binary Tree from Inorder and Postorder Traversal
+    public static TreeNode postAndIn(int[] post, int psi, int pei, int[] in, int isi, int iei,
+            HashMap<Integer, Integer> map) {
+        if (psi > pei || isi > iei)
+            return null;
+
+        TreeNode root = new TreeNode(post[pei]);
+
+        int idx = map.get(post[pei]);
+
+        int tot = idx - isi;
+
+        root.left = postAndIn(post, psi, psi + tot - 1, in, isi, idx - 1, map);
+        root.right = postAndIn(post, psi + tot, pei - 1, in, idx + 1, iei, map);
+
+        return root;
+    }
+
+    public TreeNode buildTree(int[] inorder, int[] postorder) {
+        HashMap<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < inorder.length; i++) {
+            map.put(inorder[i], i);
+        }
+        return postAndIn(postorder, 0, postorder.length - 1, inorder, 0, inorder.length - 1, map);
+    }
+
     public static void main(String[] args) throws IOException {
 
     }
