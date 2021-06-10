@@ -917,6 +917,16 @@ class Trees {
     }
 
     // 834. Sum of Distances in Tree
+    /*
+    Approach: O(n)
+    We use 3 steps:
+        1.Calculate the count node for every node's subtree
+        2.Calculate the root's distance sum from all nodes
+        3.Now using these two values, we can calculate distance sum for all other nodes in O(1) by:
+        For the current node its distance reduces by 1 from all the nodes in its own subtree
+        and increases by 1 from all other nodes. 
+        So dist of curr node = distSum of parent - my subtree node count + ( n - my node count)
+    */
     public int countNodes(ArrayList<ArrayList<Integer>> tree, int src, int[] nodeCount, boolean[] vis) {
 
         int myCount = 1;
