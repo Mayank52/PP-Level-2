@@ -1023,6 +1023,57 @@ class Trees {
 
     }
 
+    // 116. Populating Next Right Pointers in Each Node
+    public Node connect(Node root) {
+        if(root == null || root.left==null) return root;
+        
+        Node curr = root;
+        curr.left.next = curr.right;
+        curr = curr.left;
+    
+        while(curr.left != null){
+            Node startNode = curr;
+            while(startNode != null){
+                startNode.left.next = startNode.right;
+                if(startNode.next != null){
+                    startNode.right.next = startNode.next.left;
+                }
+                startNode = startNode.next;
+            }
+            curr = curr.left;
+        }
+        
+        return root;
+    }
+
+    // Image Multiplication (GFG)
+    public long MOD = 1000000007;
+
+    public long modMul(long a, long b) {
+        return (a % MOD * b % MOD) % MOD;
+    }
+
+    public long modAdd(long a, long b) {
+        return (a % MOD + b % MOD) % MOD;
+    }
+
+    public long imgMultiply(Node root1, Node root2) {
+        if (root1 == null || root2 == null)
+            return 0;
+
+        long myAns = modMul(root1.data, root2.data);
+        long leftAns = imgMultiply(root1.left, root2.right);
+        long rightAns = imgMultiply(root1.right, root2.left);
+
+        return modAdd(modAdd(leftAns, rightAns), myAns);
+    }
+
+    public long imgMultiply(Node root) {
+        // code here
+        long rootAns = modMul(root.data, root.data);
+        long remAns = imgMultiply(root.left, root.right);
+        return modAdd(rootAns, remAns);
+    }
     public static void main(String[] args) throws IOException {
 
     }
