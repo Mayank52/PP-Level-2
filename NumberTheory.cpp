@@ -5,7 +5,20 @@ using namespace std;
 
 //GCD : Euclid's Algorithm
 
-//Calculate a^b for values out of long long range
+const long MOD = 1000000007; //10^9 + 7
+//Modular Multiplication (a*b)
+long long modMul(long a, long long b)
+{
+    return (a % MOD * b % MOD) % MOD;
+}
+
+//Modular Addition (a+b)
+long long modAdd(long long a, long long b)
+{
+    return (a % MOD + b % MOD) % MOD;
+}
+
+//Modular Exponentiation (a^b)
 /*
 For (a^b)%p
 here, p = prime number
