@@ -917,7 +917,101 @@ class Trees {
     }
 
     // 834. Sum of Distances in Tree
-    
+    public int countNodes(ArrayList<ArrayList<Integer>> tree, int src, int[] nodeCount, boolean[] vis) {
+
+        int myCount = 1;
+        vis[src] = true;
+
+        for (int i = 0; i < tree.get(src).size(); i++) {
+            int child = tree.get(src).get(i);
+            if (!vis[child])
+                myCount += countNodes(tree, child, nodeCount, vis);
+        }
+
+        nodeCount[src] = myCount;
+
+        return myCount;
+    }
+
+    public int rootDistanceSum(ArrayList<ArrayList<Integer>> tree, int src) {
+        LinkedList<Integer> que = new LinkedList<>();
+        boolean[] vis = new boolean[tree.size()];
+        int lvl = 1, dist = 0;
+        que.addLast(src);
+
+        while (que.size() > 0) {
+            int size = que.size();
+
+            while (size-- > 0) {
+                int rnode = que.removeFirst();
+
+                vis[rnode] = true;
+
+                for (int i = 0; i < tree.get(rnode).size(); i++) {
+                    int child = tree.get(rnode).get(i);
+                    if (!vis[child]) {
+                        que.addLast(child);
+                        dist += lvl;
+                    }
+                }
+            }
+            lvl++;
+        }
+
+        return dist;
+    }
+
+    public void getDistances(ArrayList<ArrayList<Integer>> tree, int src, int[] distSum, int[] nodeCount) {
+        LinkedList<Integer> que = new LinkedList<>();
+        boolean[] vis = new boolean[tree.size()];
+        que.addLast(src);
+
+        while (que.size() > 0) {
+            int size = que.size();
+
+            while (size-- > 0) {
+                int rnode = que.removeFirst();
+
+                vis[rnode] = true;
+
+                for (int i = 0; i < tree.get(rnode).size(); i++) {
+                    int child = tree.get(rnode).get(i);
+                    if (!vis[child]) {
+                        int parDist = distSum[rnode];
+                        distSum[child] = parDist - nodeCount[child] + (nodeCount[src] - nodeCount[child]);
+                        que.addLast(child);
+                    }
+                }
+            }
+        }
+    }
+
+    public int[] sumOfDistancesInTree(int n, int[][] edges) {
+        ArrayList<ArrayList<Integer>> tree = new ArrayList<>();
+
+        for (int i = 0; i < n; i++)
+            tree.add(new ArrayList<Integer>());
+
+        for (int i = 0; i < edges.length; i++) {
+            int u = edges[i][0];
+            int v = edges[i][1];
+            tree.get(u).add(v);
+            tree.get(v).add(u);
+        }
+
+        int src = 0;
+
+        int[] nodeCount = new int[n];
+        int[] distSum = new int[n];
+        boolean[] vis = new boolean[n];
+
+        countNodes(tree, src, nodeCount, vis);
+        distSum[0] = rootDistanceSum(tree, src);
+        getDistances(tree, src, distSum, nodeCount);
+
+        return distSum;
+
+    }
 
     public static void main(String[] args) throws IOException {
 
