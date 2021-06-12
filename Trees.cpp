@@ -81,7 +81,6 @@ So, if the child returns:
 1-> they are parent of leaf, so they have a camera, which , means I am already covered by my child.
 2-> My child does not have a camera, but is covered by another camera.
 
-
 So, apart from leaf nodes and their parents, for all other nodes, 
 if both their children are already covered by another camera(returns 2)
 Then this node does not have any effect on its children and the children have no effect on this node.
