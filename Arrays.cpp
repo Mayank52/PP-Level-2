@@ -2253,6 +2253,66 @@ int maxOperations(vector<int> &nums, int k)
     return count;
 }
 
+// 15. 3Sum
+/*
+Approach: O(n^2), O(1)
+1. Sort the Array
+2. For each element use 2 sum to find all pairs whose sum = 0 - current element
+ For 2 sum, start searching from curr index + 1
+ And skip all duplicates to avoid getting same answer again
+
+ Skip all duplicates while finding ans using 2 sum, as well as skip duplicates after completing for current element
+ We cannot skip duplicates for current element in before 2 sum as it will be wrong for cases like:
+ EG: [-4,-1,-1,-1,-1,0,1,2]
+ Output: [[-1,-1,2],[-1,0,1]]
+
+ Here duplicate of -1 is part of its answer
+*/
+vector<vector<int>> threeSum(vector<int> &nums)
+{
+    int n = nums.size();
+
+    vector<vector<int>> res;
+    sort(nums.begin(), nums.end());
+
+    for (int i = 0; i < n; i++)
+    {
+        //target for 2 sum
+        int target = 0 - nums[i];
+
+        //Run 2 Sum for range (i+1, n-1)
+        int lo = i + 1, hi = n - 1;
+        while (lo < hi)
+        {
+            if (nums[lo] + nums[hi] < target)
+                lo++;
+            else if (nums[lo] + nums[hi] > target)
+                hi--;
+            else
+            {
+                //add the answer to res
+                res.push_back({nums[lo], nums[hi], nums[i]});
+
+                //skip all duplicates
+                while (lo < n - 1 && nums[lo] == nums[lo + 1])
+                    lo++;
+                while (hi > 0 && nums[hi] == nums[hi - 1])
+                    hi--;
+
+                //keep searching using 2 sum for the remaining array 
+                lo++;
+                hi--;
+            }
+        }
+
+        //skip all duplicates of current element
+        while (i < n - 1 && nums[i] == nums[i + 1])
+            i++;
+    }
+
+    return res;
+}
+
 int main()
 {
     return 0;
