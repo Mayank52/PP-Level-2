@@ -916,6 +916,53 @@ class Trees {
         return constructTree(preorder, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
 
+     // Construct tree from Inorder and LevelOrder (GFG)
+    public Node levelAndIn(int in[], ArrayList<Integer> level, HashMap<Integer, Integer> map, int isi, int iei) {
+        if (isi > iei)
+            return null;
+
+        //Root is the first element of current level
+        Node root = new Node(level.get(0));
+        int rootIdx = map.get(level.get(0));
+
+        //get the left, right level elements from inorder
+        ArrayList<Integer> leftLevel = new ArrayList<>();
+        ArrayList<Integer> rightLevel = new ArrayList<>();
+
+        for (int i = 1; i < level.size(); i++) {
+            int ele = level.get(i);
+            if (map.get(ele) < rootIdx)
+                leftLevel.add(ele);
+            else if (map.get(ele) > rootIdx)
+                rightLevel.add(ele);
+        }
+
+        //make call for left and right child
+        root.left = levelAndIn(in, leftLevel, map, isi, rootIdx - 1);
+        root.right = levelAndIn(in, rightLevel, map, rootIdx + 1, iei);
+
+        return root;
+
+    }
+    Node buildTree(int inord[], int level[]) {
+        // your code here
+        HashMap<Integer, Integer> map = new HashMap<>();
+        ArrayList<Integer> levelOrder = new ArrayList<>();
+
+        for (int ele : level)
+            levelOrder.add(ele);
+
+        for (int i = 0; i < inord.length; i++)
+            map.put(inord[i], i);
+
+        return levelAndIn(inord, levelOrder, map, 0, inord.length - 1);
+    }
+
+    //  889. Construct Binary Tree from Preorder and Postorder Traversal
+    public TreeNode constructFromPrePost(int[] pre, int[] post) {
+        
+    }
+ 
     // 834. Sum of Distances in Tree
     /*
     Approach: O(n)
@@ -1047,29 +1094,8 @@ class Trees {
         return root;
     }
 
-    // 117. Populating Next Right Pointers in Each Node II
-    public Node connect(Node root) {
-        if (root == null || root.left == null)
-        return root;
-
-    Node curr = root;
-    curr.left.next = curr.right;
-    curr = curr.left;
-
-    while (curr.left != null) {
-        Node startNode = curr;
-        while (startNode != null) {
-            startNode.left.next = startNode.right;
-            if (startNode.next != null) {
-                startNode.right.next = startNode.next.left;
-            }
-            startNode = startNode.next;
-        }
-        curr = curr.left;
-    }
-
-    return root;
-    }
+    // 117. Populating Next Right Pointers in Each Node II (Not Completed)
+   
 
     // Image Multiplication (GFG)
     public long MOD = 1000000007;
