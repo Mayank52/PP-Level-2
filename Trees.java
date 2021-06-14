@@ -959,8 +959,28 @@ class Trees {
     }
 
     //  889. Construct Binary Tree from Preorder and Postorder Traversal
-    public TreeNode constructFromPrePost(int[] pre, int[] post) {
+    public TreeNode preAndPost(int[] pre, int psi, int pei, int[] post, int ppsi, int ppei) {
+        if (psi > pei)
+            return null;
+        if (psi == pei)
+            return new TreeNode(pre[psi]);
         
+        TreeNode root = new TreeNode(pre[psi]);
+
+        int idx = ppsi;
+        while (post[idx] != pre[psi + 1]) {
+            idx++;
+        }
+
+        int tot = idx - ppsi + 1;
+
+        root.left = preAndPost(pre, psi + 1, psi + tot, post, ppsi, idx);
+        root.right = preAndPost(pre, psi + tot + 1, pei, post, idx + 1, ppei - 1);
+
+        return root;
+    }
+    public TreeNode constructFromPrePost(int[] pre, int[] post) {
+       return preAndPost(pre,0,pre.length-1,post,0,post.length-1);
     }
  
     // 834. Sum of Distances in Tree
