@@ -381,6 +381,68 @@ vector<int> closestKValues(TreeNode *root, double target, int k)
     return res;
 }
 
+// https://codeforces.com/gym/304970/problem/A
+/*
+Approach : O(2n) = O(n)
+
+Make a tree(graph) using the edges given
+
+Now for each node check if its respect is 1, and all its children's respect is 1
+Then it can be removed
+
+Store all nodes to be deleted in the res and print at end
+*/
+void queen()
+{
+    int n;
+    cin >> n;
+    vector<vector<int>> tree(n);
+    vector<int> respect(n);
+
+    for (int i = 0; i < n; i++)
+    {
+        int p, c;
+        cin >> p >> c;
+
+        if (p != -1)
+            tree[p - 1].push_back(i);
+        respect[i] = c;
+    }
+
+    vector<int> res;
+    for (int i = 0; i < n; i++)
+    {
+        //if current node does not respect its parent
+        if (respect[i] == 1)
+        {
+            bool flag = false;
+            //check if all its children respect it
+            for (int child : tree[i])
+            {
+                if (respect[child] == 0)
+                {
+                    flag = true;
+                    break;
+                }
+            }
+
+            //no child respects it, then delete it
+            if (!flag)
+                res.push_back(i + 1);
+        }
+    }
+
+    if (res.size() == 0)
+    {
+        cout << -1;
+        return;
+    }
+
+    for (int e : res)
+        cout << e << " ";
+    cout << endl;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
