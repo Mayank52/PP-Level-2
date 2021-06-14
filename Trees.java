@@ -1146,7 +1146,73 @@ class Trees {
         return modAdd(rootAns, remAns);
     }
     
-    
+    // 114. Flatten Binary Tree to Linked List
+    /*
+    Approach: O(n), Recursive
+
+    Flatten left and right childs and get their tail
+    Now,
+    LeftHead = node.left
+    RightHead = node.right
+    LeftTail = flatten(node.left)
+    RightTail = flatten(node.right)
+
+    Now Left and right are flattened
+    Flatten current node
+
+    //put the left flattened list on my right
+    node.right = leftHead
+
+    //put the right flattened list on right of left list
+    leftTail.right = rightHead
+
+    //make my left null
+    node.left = null
+
+    Now my tail is the RightTail
+    */
+    public TreeNode flatten_(TreeNode node) {
+        // null node and leaf node
+        if (node == null || node.left == null && node.right == null)
+            return node;
+        
+        // both children present flatten both, then flatten self
+        if (node.left != null && node.right != null) {
+            TreeNode leftHead = node.left;
+            TreeNode rightHead = node.right;
+            TreeNode leftTail = flatten_(node.left);
+            TreeNode rightTail = flatten_(node.right);
+
+            node.right = leftHead;
+            leftTail.right = rightHead;
+            node.left = null;
+
+            return rightTail;
+        } 
+        //if left child is null, flatten right child and return its tail
+        else if (node.left == null)
+            return flatten_(node.right);
+        //if right child is null
+        else {
+            //flatten left
+            TreeNode leftTail = flatten_(node.left);
+
+            //put flattened left on my current node right
+            node.right = node.left;
+
+            //make current left null
+            node.left = null;
+
+            //leftTail is my tail
+            return leftTail;
+        }
+
+    }
+
+    public void flatten(TreeNode root) {
+        flatten_(root);
+    }   
+
     
     public static void main(String[] args) throws IOException {
 
