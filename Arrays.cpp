@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <queue>
 #include <list>
+#include <map>
+#include <unordered_map>
 
 using namespace std;
 // 925. Long Pressed Name
@@ -2299,7 +2301,7 @@ vector<vector<int>> threeSum(vector<int> &nums)
                 while (hi > 0 && nums[hi] == nums[hi - 1])
                     hi--;
 
-                //keep searching using 2 sum for the remaining array 
+                //keep searching using 2 sum for the remaining array
                 lo++;
                 hi--;
             }
@@ -2311,6 +2313,75 @@ vector<vector<int>> threeSum(vector<int> &nums)
     }
 
     return res;
+}
+
+// https://codeforces.com/contest/1536/problem/C#
+/*
+Approach:
+Calculate the D and K count for each index using prefix sum
+Then using that count we can find ratio D:K for each index
+Now, for each index the answer is the number of times that ratio has occured till now
+We can maintain the count of each ratio in a hashmap -> {num, den} : count
+
+To do this we will have to find
+D count / K count 
+Then reduce this fraction to its simplest form to get the right ratio
+This can be done by
+1. Get GCD of numerator, denominator
+2. numerator = numerator/gcd, denominator = denominator/gcd
+
+And then increment the count of this fraction in hashmap
+*/
+int gcd(int a, int b)
+{
+    if (b == 0)
+        return a;
+
+    return gcd(b, a % b);
+}
+void dilucAndKaeya()
+{
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
+    int t;
+    cin >> t;
+
+    while (t--)
+    {
+        int n;
+        cin >> n;
+
+        string str;
+        cin >> str;
+
+        map<vector<int>, int> mp;
+
+        vector<int> kCount(n);
+        vector<int> dCount(n);
+
+        dCount[0] = (str[0] == 'D') ? 1 : 0;
+        kCount[0] = (str[0] == 'K') ? 1 : 0;
+
+        mp[{dCount[0], kCount[0]}]++;
+        cout << mp[{dCount[0], kCount[0]}] << " ";
+
+        for (int i = 1; i < n; i++)
+        {
+            dCount[i] = dCount[i - 1] + ((str[i] == 'D') ? 1 : 0);
+            kCount[i] = kCount[i - 1] + ((str[i] == 'K') ? 1 : 0);
+
+            int div = gcd(dCount[i], kCount[i]);
+            int num = dCount[i] / div;
+            int den = kCount[i] / div;
+
+            mp[{num, den}]++;
+
+            cout << mp[{num, den}] << " ";
+        }
+
+        cout << endl;
+    }
 }
 
 int main()

@@ -1,9 +1,13 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-// g++ test.cpp -o out && out < input.txt > output.txt
-
 //GCD : Euclid's Algorithm
+int gcd(int a, int b)
+{
+    if (b == 0)
+        return a;
+    return gcd(b, a % b);
+}
 
 const long MOD = 1000000007; //10^9 + 7
 //Modular Multiplication (a*b)
@@ -86,6 +90,16 @@ b1 = 6/3 = 2
 
 Simplest fraction : 1/2
 */
+void reduceFraction(int num, int den)
+{
+    //find gcd(numerator, denominator)
+    int div = gcd(num, den);
+
+    //simplest numerator
+    num = num / div;
+    //simplest denominator
+    den = den / div;
+}
 
 // Sieve of Eratosthenes (Standard Algo)
 /*
