@@ -1208,12 +1208,81 @@ class Trees {
         }
 
     }
-
     public void flatten(TreeNode root) {
         flatten_(root);
     }   
 
-    
+    // 1534 · Convert Binary Search Tree to Sorted Doubly Linked List
+    public void treeToDoublyList_(TreeNode root) {
+        if (root == null)
+            return;
+
+        treeToDoublyList_(root.left);
+
+        if (head == null) {
+            head = root;
+        } else {
+            tail.right = root;
+            root.left = tail;
+        }
+
+        tail = root;
+
+        treeToDoublyList_(root.right);
+    }
+    public TreeNode treeToDoublyList(TreeNode root) {
+        // Write your code here.
+        head = null;
+        tail = null;
+
+        //convert to DLL
+        treeToDoublyList_(root);
+        
+        //make it circular
+        head.left = tail;
+        tail.right = head;
+
+        return head;
+    }
+
+    // 109. Convert Sorted List to Binary Search Tree
+    ListNode listCurr = null;
+    public TreeNode sortedListToBST_(int n) {
+        if (n == 0)
+            return null;
+
+        TreeNode leftChild = sortedListToBST_(n / 2);
+
+        TreeNode root = new TreeNode(listCurr.val);
+        root.left = leftChild;
+        listCurr = listCurr.next;
+
+        root.right = sortedListToBST_(n - n / 2 - 1);
+
+        return root;
+    }
+    public TreeNode sortedListToBST(ListNode head) {
+        int size = 0;
+        listCurr = head;
+
+        ListNode curr = head;
+        while (curr != null) {
+            size++;
+            curr = curr.next;
+        }
+
+        return sortedListToBST_(size);
+    }
+
+    // Merge Two Balanced Binary Search Trees
+    /*
+    Approach : O(n+m)  
+    1. Convert both BSTs to sorted DLL -> O(n), O(m)
+    2. Merge both sorted DLLs   -> O(n+m)
+    3. Convert sorted DLL to BST    -> O(n+m)
+    */
+
+
     public static void main(String[] args) throws IOException {
 
     }
