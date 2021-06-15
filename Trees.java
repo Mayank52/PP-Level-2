@@ -1148,7 +1148,7 @@ class Trees {
     
     // 114. Flatten Binary Tree to Linked List
     /*
-    Approach: O(n), Recursive
+    Approach 1: O(n), Recursive
 
     Flatten left and right childs and get their tail
     Now,
@@ -1171,6 +1171,7 @@ class Trees {
 
     Now my tail is the RightTail
     */
+    //Approach 1: O(n), Recursion Stack Space
     public TreeNode flatten_(TreeNode node) {
         // null node and leaf node
         if (node == null || node.left == null && node.right == null)
@@ -1212,6 +1213,29 @@ class Trees {
         flatten_(root);
     }   
 
+    //Approach 2: O(n), O(1) (From Leetcode discuss section)
+    public void flatten(TreeNode root) {
+        TreeNode curr = root;
+		while(curr != null)
+		{
+			if(curr.left != null)
+			{
+                //Find current node's prenode that links to current node's right subtree
+				TreeNode pre = curr.left;
+				while(pre.right != null)
+				{
+					pre = pre.right;
+				}
+				pre.right = curr.right;
+                //Use current node's left subtree to replace its right subtree(original right 
+                //subtree is already linked by current node's prenode
+				curr.right = curr.left;
+				curr.left = null;
+			}
+			curr = curr.right;
+		}  
+    }
+    
     // 1534 · Convert Binary Search Tree to Sorted Doubly Linked List
     public void treeToDoublyList_(TreeNode root) {
         if (root == null)
@@ -1294,7 +1318,6 @@ class Trees {
         
     }
 
-
     // 235. Lowest Common Ancestor of a Binary Search Tree
     public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
         TreeNode curr = root;
@@ -1314,9 +1337,19 @@ class Trees {
     }
 
     // 236. Lowest Common Ancestor of a Binary Tree
+    /*
+    Approach : O(n)
+    We have 2 cases for a node to be LCA:
+    1. It is one of the two given nodes, and other lies in its subtree
+    2. One node is in its left subtree and other in its right subtree
+    */
     TreeNode LCA = null;
     public boolean findLCA(TreeNode node, TreeNode p, TreeNode q) {
         if (node == null)
+            return false;
+        
+        // if LCA already found no need to check further
+        if(LCA != null) 
             return false;
 
         boolean myAns = (node.val == p.val || node.val == q.val);
