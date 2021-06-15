@@ -1274,13 +1274,65 @@ class Trees {
         return sortedListToBST_(size);
     }
 
-    // Merge Two Balanced Binary Search Trees
+    // Merge Two Balanced Binary Search Trees (Not available to submit, can submit next problem)
     /*
     Approach : O(n+m)  
     1. Convert both BSTs to sorted DLL -> O(n), O(m)
     2. Merge both sorted DLLs   -> O(n+m)
     3. Convert sorted DLL to BST    -> O(n+m)
     */
+    public void mergeBST(TreeNode root){
+        
+    }
+
+    // 1305. All Elements in Two Binary Search Trees
+    /*
+    Same as merge two BST
+    You have to return the merged List instead of converting it to BST
+    */
+    public List<Integer> getAllElements(TreeNode root1, TreeNode root2) {
+        
+    }
+
+
+    // 235. Lowest Common Ancestor of a Binary Search Tree
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        TreeNode curr = root;
+        int min = Math.min(p.val, q.val);
+        int max = Math.max(p.val, q.val);
+
+        while (curr != null) {
+            if (curr.val < min)
+                curr = curr.right;
+            else if (curr.val > max)
+                curr = curr.left;
+            else
+                return curr;
+        }
+
+        return null;
+    }
+
+    // 236. Lowest Common Ancestor of a Binary Tree
+    TreeNode LCA = null;
+    public boolean findLCA(TreeNode node, TreeNode p, TreeNode q) {
+        if (node == null)
+            return false;
+
+        boolean myAns = (node.val == p.val || node.val == q.val);
+        boolean leftAns = findLCA(node.left, p, q);
+        boolean rightAns = findLCA(node.right, p, q);
+
+        if (myAns && leftAns || myAns && rightAns || leftAns && rightAns)
+            LCA = node;
+
+        return myAns || leftAns || rightAns;
+    }
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        LCA = null;
+        findLCA(root, p, q);
+        return LCA;
+    }
 
 
     public static void main(String[] args) throws IOException {
