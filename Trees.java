@@ -1342,6 +1342,12 @@ class Trees {
     We have 2 cases for a node to be LCA:
     1. It is one of the two given nodes, and other lies in its subtree
     2. One node is in its left subtree and other in its right subtree
+
+    So, we make left and right call, and return true if one of the nodes is present in subtree.
+    The leftAns, rightAns and check if current is one of the two nodes
+    Then if any 2 of these are true, then current is LCA
+
+    This approach works even if one of the two given nodes is not present in the tree
     */
     TreeNode LCA = null;
     public boolean findLCA(TreeNode node, TreeNode p, TreeNode q) {
@@ -1365,6 +1371,52 @@ class Trees {
         LCA = null;
         findLCA(root, p, q);
         return LCA;
+    }
+
+    // 230. Kth Smallest Element in a BST
+    /*
+    Approach: O(n), O(1)
+    We want O(1) space, not even stack space
+    So, use Morris inorder
+    Then the kth element in inorder is answer.
+    */
+    public int kthSmallest(TreeNode root, int k) {
+        int ans = root.val;
+        while (root != null) {
+            if (root.left == null) {
+                // ans.add(root.val);
+                
+                //instead of adding to answer, reduce k, when k = 0, you found the answer
+                k--;
+                if (k == 0)
+                    return root.val;
+
+                root = root.right;
+            } else {
+                TreeNode rootp1 = root.left;
+
+                while (rootp1.right != null && rootp1.right != root) {
+                    rootp1 = rootp1.right;
+                }
+
+                if (rootp1.right == null) { // 1st time
+                    rootp1.right = root;
+                    root = root.left;
+                } else { // 2nd time -> break connection, add to ans
+                    // ans.add(root.val);
+
+                    //instead of adding to answer, reduce k, when k = 0, you found the answer
+                    k--;
+                    if (k == 0)
+                        return root.val;
+
+                    rootp1.right = null;
+                    root = root.right;
+                }
+            }
+        }
+
+        return ans;
     }
 
 
