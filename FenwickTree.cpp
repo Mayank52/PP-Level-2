@@ -2,7 +2,9 @@
 
 using namespace std;
 
-long long prefixSum(vector<long long> &farr, int idx)
+vector<long long> farr;
+
+long long prefixSum(int idx)
 {
     long long sum = 0;
     while (idx > 0)
@@ -10,15 +12,16 @@ long long prefixSum(vector<long long> &farr, int idx)
         sum += farr[idx];
         idx -= (idx & -idx);
     }
-    
+
     return sum;
 }
 
-long long query(vector<long long> &farr, int l, int r){
-    return prefixSum(farr, r) - prefixSum(farr, l-1);
+long long query(int l, int r)
+{
+    return prefixSum(r) - prefixSum(l - 1);
 }
 
-void update(vector<long long> &farr, int idx, int delta)
+void update(int idx, int delta)
 {
     while (idx < farr.size())
     {
@@ -27,30 +30,21 @@ void update(vector<long long> &farr, int idx, int delta)
     }
 }
 
-int construct(vector<long long> &arr, vector<long long> &farr)
+void construct(vector<long long> &arr)
 {
-    int n = arr.size();
-
-    for (int i = 1; i <= n; i++)
+    for (int i = 1; i < arr.size(); i++)
     {
-        update(farr, i, arr[i]);
+        update(i, arr[i]);
     }
 }
 
-int main()
+void fenwickTree(vector<long long> &arr)
 {
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
+    int n = arr.size();
 
-    int n;
-    cin >> n;
+    farr.resize(n);
 
-    vector<long long> arr(n + 1), farr(n + 1);
-
-    for (int i = 1; i <= n; i++)
-        cin >> arr[i];
-    
-    construct(arr, farr);
+    construct(arr);
 
     int q;
     cin >> q;
@@ -64,17 +58,33 @@ int main()
             int l, r;
             cin >> l >> r;
 
-            long long ans = query(farr, l, r);
-            cout<<ans<<endl;
+            long long ans = query(l, r);
+            cout << ans << endl;
         }
         else
         {
             int idx, delta;
             cin >> idx >> delta;
 
-            update(farr, idx, delta);
+            update(idx, delta);
         }
     }
+}
+
+int main()
+{
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
+    int n;
+    cin >> n;
+
+    vector<long long> arr(n + 1);
+
+    for (int i = 1; i <= n; i++)
+        cin >> arr[i];
+
+    fenwickTree(arr);
 
     return 0;
 }
