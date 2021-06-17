@@ -443,6 +443,52 @@ void queen()
     cout << endl;
 }
 
+// 297. Serialize and Deserialize Binary Tree
+// Encodes a tree to a single string.
+string serialize(TreeNode *root)
+{
+    if (root == nullptr)
+        return "n,"; //n for null
+
+    return to_string(root->val) + "," + serialize(root->left) + serialize(root->right);
+}
+
+// Decodes your encoded data to tree.
+int idx = 0;
+TreeNode *deserialize(string data)
+{
+    if (idx == data.size() || data[idx] == 'n')
+    {
+        if (data[idx] == 'n')
+        {
+            idx += 2;
+        }
+        return nullptr;
+    }
+
+    int val = 0, sign = 0; //0=+ve , 1=-ve
+    //get the sign: +ve or -ve
+    if (data[idx] == '-')
+    {
+        sign = 1;
+        idx++;
+    }
+
+    //get the node value
+    while (data[idx] != ',')
+        val = val * 10 + (data[idx++] - '0');
+
+    if (sign == 1)
+        val *= -1;
+
+    TreeNode *root = new TreeNode(val);
+    idx++;
+    root->left = deserialize(data);
+    root->right = deserialize(data);
+
+    return root;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
