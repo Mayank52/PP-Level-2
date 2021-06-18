@@ -1236,7 +1236,9 @@ class Trees {
 		}  
     }
     
-    // 1534 · Convert Binary Search Tree to Sorted Doubly Linked List
+    // 1534 · Convert Binary Search Tree to Sorted Doubly Linked List (LintCode)
+    TreeNode head = null;
+    TreeNode tail = null;
     public void treeToDoublyList_(TreeNode root) {
         if (root == null)
             return;
@@ -1305,8 +1307,82 @@ class Trees {
     2. Merge both sorted DLLs   -> O(n+m)
     3. Convert sorted DLL to BST    -> O(n+m)
     */
-    public void mergeBST(TreeNode root){
+    TreeNode head, tail;
+    public void treeToDoublyList_(TreeNode root) {
+        if (root == null)
+            return;
+
+        treeToDoublyList_(root.left);
+
+        if (head == null) {
+            head = root;
+        } else {
+            tail.right = root;
+            root.left = tail;
+        }
+
+        tail = root;
+
+        treeToDoublyList_(root.right);
+    }
+    public TreeNode mergeTwoLists(TreeNode l1, TreeNode l2) {
+        TreeNode head = new TreeNode(-1);
+        TreeNode curr = head;
+        TreeNode curr1 = l1;
+        TreeNode curr2 = l2;
         
+        while(curr1 != null && curr2 != null){
+            TreeNode nextNode;
+            if(curr1.val < curr2.val){
+                nextNode = curr1;
+                curr1 = curr1.right;
+            }
+            else{
+                nextNode = curr1;
+                curr2 = curr2.right;
+            }
+            
+            curr.right = nextNode;
+            nextNode.left = curr;
+            curr = nextNode;
+        }
+        while(curr1 != null){
+            TreeNode nextNode = curr1;
+            curr1 = curr1.right;
+
+            curr.right = nextNode;
+            nextNode.left = curr;
+            curr = nextNode;
+        }
+        while(curr2 != null){
+            TreeNode nextNode = curr2;
+            curr2 = curr2.right;
+
+            curr.right = nextNode;
+            nextNode.left = curr;
+            curr = nextNode;
+        }
+
+        return head.right;
+    }
+    public TreeNode mergeBST(TreeNode root1, TreeNode root2){
+        //convert first BST to DLL
+        head = null;
+        tail = null;
+        treeToDoublyList_(root1);
+        TreeNode head1 = head;
+        
+        //convert second BST to DLL
+        head = null;
+        tail = null;
+        treeToDoublyList_(root2);
+        TreeNode head2 = head;
+
+        //merge the two lists
+        TreeNode newRoot = mergeTwoLists(head1, head2);
+
+        //convert sorted list to BST
+        return sortedListToBST(newRoot);
     }
 
     // 1305. All Elements in Two Binary Search Trees
@@ -1314,8 +1390,65 @@ class Trees {
     Same as merge two BST
     You have to return the merged List instead of converting it to BST
     */
+    TreeNode head, tail;
+    public void treeToDoublyList_(TreeNode root) {
+        if (root == null)
+            return;
+
+        treeToDoublyList_(root.left);
+
+        if (head == null) {
+            head = root;
+        } else {
+            tail.right = root;
+            root.left = tail;
+        }
+
+        tail = root;
+
+        treeToDoublyList_(root.right);
+    }
+    public void mergeTwoLists(TreeNode l1, TreeNode l2, List<Integer> sortedList) {
+        TreeNode curr1 = l1;
+        TreeNode curr2 = l2;
+
+        while (curr1 != null && curr2 != null) {
+            if (curr1.val < curr2.val) {
+                sortedList.add(curr1.val);
+                curr1 = curr1.right;
+            } else {
+                sortedList.add(curr2.val);
+                curr2 = curr2.right;
+            }
+        }
+        while (curr1 != null) {
+            sortedList.add(curr1.val);
+            curr1 = curr1.right;
+        }
+        while (curr2 != null) {
+            sortedList.add(curr2.val);
+            curr2 = curr2.right;
+        }
+    }
     public List<Integer> getAllElements(TreeNode root1, TreeNode root2) {
+        //convert first BST to DLL
+        head = null;
+        tail = null;
+        treeToDoublyList_(root1);
+        TreeNode head1 = head;
         
+        //convert second BST to DLL
+        head = null;
+        tail = null;
+        treeToDoublyList_(root2);
+        TreeNode head2 = head;
+
+        List<Integer> sortedList = new ArrayList<>();
+
+        //merge the two lists
+        mergeTwoLists(head1, head2, sortedList);
+
+        return sortedList;
     }
 
     // 235. Lowest Common Ancestor of a Binary Search Tree
@@ -1419,6 +1552,63 @@ class Trees {
         return ans;
     }
 
+    // Clone a Binary Tree With Random Pointer (GFG)
+    // https://practice.geeksforgeeks.org/problems/clone-a-binary-tree/1
+    public static void insert(Tree root) {
+        if (root == null)
+            return;
+
+        Tree newNode = new Tree(root.data);
+        newNode.left = root.left;
+        root.left = newNode;
+
+        insert(root.left.left);
+        insert(root.right);
+    }
+    public static void assignRandomPointers(Tree root) {
+        if (root == null)
+            return;
+
+        if (root.random != null)
+            root.left.random = root.random.left;
+
+        assignRandomPointers(root.left.left);
+        assignRandomPointers(root.right);
+    }
+    public static Tree extract(Tree root) {
+        if (root == null)
+            return null;
+
+        Tree leftRoot = extract(root.left.left);
+        Tree rightRoot = extract(root.right);
+
+        Tree newNode = root.left;
+        root.left = root.left.left;
+
+        newNode.left = leftRoot;
+        newNode.right = rightRoot;
+
+        return newNode;
+    }
+    public static Tree cloneTree(Tree tree) {
+        // add code here.
+        insert(tree);
+        assignRandomPointers(tree);
+        return extract(tree);
+    }
+    
+    // 375 · Clone Binary Tree (Lintcode)
+    public TreeNode cloneTree(TreeNode root) {
+        // write your code here
+        if (root == null)
+            return null;
+
+        TreeNode newRoot = new TreeNode(root.val);
+        newRoot.left = cloneTree(root.left);
+        newRoot.right = cloneTree(root.right);
+
+        return newRoot;
+    }
 
     public static void main(String[] args) throws IOException {
 
