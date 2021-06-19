@@ -490,8 +490,102 @@ TreeNode *deserialize(string data)
 }
 
 // https://codeforces.com/contest/1534/problem/D
+/*
+Approach:
+1. Consider 1 as root. And print ? 1 as first query.
+2. Then from the distance array find which node is at even level from 1 and which is at odd level.
+    Node 1 is at level 0 which is even.
+3. Either the nodes at even or odd level will definately be <=n/2.
+4. So, print those nodes one by one as queries.
+5. For each distance array, for all distance = 1, mark an edge.
 
+This way we will get all the edges. We can use an adjacency matrix to mark edges.
+Ans print the lower half diagonal to avoid printing same edges twice.
+*/
+void makeTree(vector<int> &level, int n, vector<vector<int>> &graph, bool isEven)
+{
+    for (int i = isEven ? 1 : 0; i < level.size(); i++)
+    {
+        cout << "? " << level[i] << endl;
+        // cout.flush();
 
+        //for all nodes get the distance array
+        for (int j = 0; j < n; j++)
+        {
+            int dist;
+            cin >> dist;
+
+            // mark edges for distance = 1
+            if (dist == 1)
+            {
+                graph[level[i]][j + 1] = 1;
+                graph[j + 1][level[i]] = 1;
+            }
+        }
+    }
+}
+void printTree(vector<vector<int>> &graph)
+{
+    cout << "!" << endl;
+    for (int i = 0; i < graph.size(); i++)
+    {
+        for (int j = 0; j <= i; j++)
+        {
+            if (graph[i][j] == 1)
+                cout << i << " " << j << endl;
+        }
+    }
+}
+void lostTree()
+{
+    int n;
+    cin >> n;
+
+    cout << "? " << 1 << endl;
+    // cout.flush();
+
+    vector<int> evenLevel, oddLevel;
+    vector<vector<int>> graph(n + 1, vector<int>(n + 1));
+
+    evenLevel.push_back(1);
+
+    for (int i = 0; i < n; i++)
+    {
+        int dist;
+        cin >> dist;
+
+        //for node 1, mark add edge in adjacency matrix for all nodes at distance 1
+        if (dist == 1)
+        {
+            graph[1][i + 1] = 1;
+            graph[i + 1][1] = 1;
+        }
+
+        // get all even level nodes from 1
+        if (dist % 2 == 0)
+        {
+            if (i > 0)
+                evenLevel.push_back(i + 1);
+        }
+        //get all odd level nodes from 1
+        else
+        {
+            oddLevel.push_back(i + 1);
+        }
+    }
+
+    // make the tree using level with less nodes
+    if (evenLevel.size() <= oddLevel.size())
+    {
+        makeTree(evenLevel, n, graph, true);
+    }
+    else
+    {
+        makeTree(oddLevel, n, graph, false);
+    }
+
+    printTree(graph);
+}
 
 int main()
 {
