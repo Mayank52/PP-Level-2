@@ -12,6 +12,8 @@ class AVLTree {
         }
     };
 
+    // AVL Tree Insertion
+    // https://practice.geeksforgeeks.org/problems/avl-tree-insertion/1#
     public Node ll(Node root) {
         if (root == null)
             return null;
@@ -44,6 +46,7 @@ class AVLTree {
         return B;
     }
 
+    // While checking rotation check LR before LL and RL before RR
     public Node checkRotation(Node root) {
         if (root == null)
             return null;
@@ -56,17 +59,20 @@ class AVLTree {
         int bal = lh - rh;
 
         if (bal == 2) {
-            if (root.left.left != null) { // ll
-                return ll(root);
-            } else { // lr
+            int leftBal = height(root.left.left) - height(root.left.right);
+            if (leftBal == -1) { // lr
                 root.left = rr(root.left);
                 return ll(root);
+            } else { // ll
+                return ll(root);
+
             }
         } else if (bal == -2) {
-            if (root.right.right != null) { // rl
+            int rightBal = height(root.right.left) - height(root.right.right);
+            if (rightBal == 1) { // rl
+                root.right = ll(root.right);
                 return rr(root);
             } else { // rr
-                root.right = ll(root.right);
                 return rr(root);
             }
         }
@@ -88,7 +94,7 @@ class AVLTree {
         node.height = Math.max(lh, rh) + 1;
     }
 
-    public Node addNode(Node node, int data) {
+    public Node insertToAVL(Node node, int data) {
         if (node == null)
             return new Node(data);
 
@@ -100,24 +106,34 @@ class AVLTree {
         return checkRotation(node);
     }
 
-    public void display(Node node) {
-        if (node == null)
-            return;
+    // AVL Tree Deletion
+    // https://practice.geeksforgeeks.org/problems/avl-tree-deletion/1
+    public Node deleteNode_(Node root, int key) {
+        if (root == null)
+            return null;
 
-        display(node.left);
-        System.out.print(node.data + " ");
-        display(node.right);
+        if (key < root.data)
+            root.left = deleteNode_(root.left, key);
+        else if (key > root.data)
+            root.right = deleteNode_(root.right, key);
+        else {
+            if (root.left == null || root.right == null)
+                return root.left == null ? root.right : root.left;
+
+            Node leftChild = root.left;
+            while (leftChild.right != null)
+                leftChild = leftChild.right;
+
+            root.data = leftChild.data;
+            root.left = deleteNode_(root.left, leftChild.data);
+        }
+
+        return checkRotation(root);
     }
 
-    public Node insertToAVL(Node node, int data) {
-        // code here
-        Node ans = addNode(node, data);
-
-        display(ans);
-        System.out.println();
-
-        return ans;
-
+    public Node deleteNode(Node root, int key) {
+        // code here.
+        return deleteNode_(root, key);
     }
 
     public static void main(String[] args) {
