@@ -284,8 +284,52 @@ int numBusesToDestination(vector<vector<int>> &routes, int source, int target)
 }
 
 // 785. Is Graph Bipartite?
+bool isBipartite(vector<vector<int>> &graph, int src, vector<int> &vis)
+{
+    list<vector<int>> que; //{node, color}
+
+    que.push_back({src, 1}); //color: 0 or 1
+    vis[src] = 1;
+
+    while (que.size() != 0)
+    {
+        vector<int> rnode = que.front();
+        que.pop_front();
+
+        int u = rnode[0];
+        int color = rnode[1];
+
+        for (int v : graph[u])
+        {
+            if (vis[v] != -1)
+            {
+                if (vis[v] == color)
+                    return false;
+            }
+            else
+            {
+                int newColor = (color + 1) % 2;
+                vis[v] = newColor;
+                que.push_back({v, newColor});
+            }
+        }
+    }
+
+    return true;
+}
 bool isBipartite(vector<vector<int>> &graph)
 {
+    vector<int> vis(graph.size(), -1);
+    for (int i = 0; i < graph.size(); i++)
+    {
+        if (vis[i] == -1)
+        {
+            if (!isBipartite(graph, i, vis))
+                return false;
+        }
+    }
+
+    return true;
 }
 
 int main()
