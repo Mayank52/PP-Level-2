@@ -336,7 +336,7 @@ bool isBipartite(vector<vector<int>> &graph)
     return true;
 }
 
-// MST - Minimum Spanning Tree (Prims Algorithm)
+// MST - Minimum Spanning Tree (Prims Algorithm) (SPOJ)
 long long primsAlgo(vector<vector<pair>> &graph)
 {
     long long ans = 0;
@@ -410,7 +410,7 @@ int minCostConnectPoints(vector<vector<int>> &points)
         if (vis[u])
             continue;
 
-        //mark visited, and add weigth to ans   
+        //mark visited, and add weight to ans
         vis[u] = true;
         ans += w;
 
@@ -431,6 +431,52 @@ int minCostConnectPoints(vector<vector<int>> &points)
     }
 
     return ans;
+}
+
+// 778. Swim in Rising Water
+int swimInWater(vector<vector<int>> &grid)
+{
+    int n = grid.size();
+
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq; // {max, i, j}
+    vector<vector<bool>> vis(n, vector<bool>(n));
+
+    int dir[4][2] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+
+    pq.push({grid[0][0], 0, 0});
+    vis[0][0] = true;
+
+    while (pq.size() > 0)
+    {
+        vector<int> rnode = pq.top();
+        pq.pop();
+
+        int w = rnode[0];
+        int i = rnode[1];
+        int j = rnode[2];
+
+        for (int d = 0; d < 4; d++)
+        {
+            int x = i + dir[d][0];
+            int y = j + dir[d][1];
+
+            if (x == n - 1 && y == n - 1)
+                return max(grid[x][y], w);
+
+            if (x >= 0 && y >= 0 && x < n && y < n && !vis[x][y])
+            {
+                pq.push({max(grid[x][y], w), x, y});
+                vis[x][y] = true;
+            }
+        }
+    }
+
+    return -1;
+}
+
+// 542. 01 Matrix
+vector<vector<int>> updateMatrix(vector<vector<int>> &mat)
+{
 }
 
 int main()
