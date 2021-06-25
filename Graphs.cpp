@@ -2,7 +2,11 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
 #include <list>
+#include <queue>
+#include <limits.h>
+#define pair pair<int, int>
 
 using namespace std;
 
@@ -332,10 +336,107 @@ bool isBipartite(vector<vector<int>> &graph)
     return true;
 }
 
+// MST - Minimum Spanning Tree (Prims Algorithm)
+long long primsAlgo(vector<vector<pair>> &graph)
+{
+    long long ans = 0;
+
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+    vector<bool> vis(graph.size());
+
+    pq.push({0, 1}); //{weight, node}
+
+    while (pq.size() > 0)
+    {
+        vector<int> rnode = pq.top();
+        pq.pop();
+
+        int u = rnode[1];
+        int w = rnode[0];
+
+        if (vis[u])
+            continue;
+
+        vis[u] = true;
+        ans += w;
+
+        for (pair v : graph[u])
+        {
+            if (!vis[v.first])
+                pq.push({v.second, v.first});
+        }
+    }
+
+    return ans;
+}
+void mst()
+{
+    int n, m;
+    cin >> n >> m;
+
+    vector<vector<pair>> graph(n + 1);
+    for (int i = 0; i < m; i++)
+    {
+        int u, v, w;
+        cin >> u >> v >> w;
+
+        graph[u].push_back({v, w});
+        graph[v].push_back({u, w});
+    }
+
+    cout << primsAlgo(graph) << endl;
+}
+
+// 1584. Min Cost to Connect All Points
+int minCostConnectPoints(vector<vector<int>> &points)
+{
+    int count = points.size();
+    int ans = 0;
+
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+    vector<bool> vis(points.size());
+
+    pq.push({0, 0}); //{weight, node}
+
+    while (pq.size() > 0)
+    {
+        vector<int> rnode = pq.top();
+        pq.pop();
+
+        int u = rnode[1];
+        int w = rnode[0];
+
+        //if already visited, then skip current node
+        if (vis[u])
+            continue;
+
+        //mark visited, and add weigth to ans   
+        vis[u] = true;
+        ans += w;
+
+        //decrease remaining edge count
+        count--;
+        if (count == 0)
+            return ans;
+
+        // for this point, add closest point into pq
+        for (int v = 0; v < points.size(); v++)
+        {
+            if (!vis[v])
+            {
+                int w = abs(points[u][0] - points[v][0]) + abs(points[u][1] - points[v][1]);
+                pq.push({w, v});
+            }
+        }
+    }
+
+    return ans;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
-
+    mst();
     return 0;
 }
