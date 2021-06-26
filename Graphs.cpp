@@ -475,8 +475,58 @@ int swimInWater(vector<vector<int>> &grid)
 }
 
 // 542. 01 Matrix
+/*
+Approach: BFS
+Add all zeroes into queue.
+Then use BFS
+For each element popped from queue check its adjacent elements
+If it is 1 then its distance will be current cell's distance + 1
+Then add it into queue
+*/
 vector<vector<int>> updateMatrix(vector<vector<int>> &mat)
 {
+    int n = mat.size();
+    int m = mat[0].size();
+
+    vector<vector<bool>> vis(n, vector<bool>(m));
+    vector<vector<int>> res(n, vector<int>(m));
+    queue<vector<int>> que;
+
+    // push all 0s into que, and their ans in distance array will be 0
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            if (mat[i][j] == 0)
+            {
+                vis[i][j] = true;
+                que.push({i, j, 0});
+            }
+        }
+    }
+
+    int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+    while (que.size() > 0)
+    {
+        vector<int> rnode = que.front();
+        que.pop();
+
+        //for each element in queue distance for its adjacent 1 will be its distance + 1
+        for (int d = 0; d < 4; d++)
+        {
+            int x = rnode[0] + dir[d][0];
+            int y = rnode[1] + dir[d][1];
+
+            if (x >= 0 && y >= 0 && x < n && y < m && !vis[x][y] && mat[x][y] == 1)
+            {
+                vis[x][y] = true;
+                res[x][y] = rnode[2] + 1;
+                que.push({x, y, rnode[2] + 1});
+            }
+        }
+    }
+
+    return res;
 }
 
 int main()
