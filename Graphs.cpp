@@ -529,6 +529,11 @@ vector<vector<int>> updateMatrix(vector<vector<int>> &mat)
     return res;
 }
 
+//Bellman Ford
+void bellmanFordAlgo(vector<vector<int>> graph){
+    
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
