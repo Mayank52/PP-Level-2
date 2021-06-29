@@ -529,9 +529,68 @@ vector<vector<int>> updateMatrix(vector<vector<int>> &mat)
     return res;
 }
 
+// 1162. As Far from Land as Possible
+/*
+Approach:
+Similar to 01 matrix
+Push all 1s into queue with distance 0
+Now for the top of queue push all its adjacent 0s into queue
+And ans is the last level in BFS as it will be the maximum distance from nearest 1
+*/
+int maxDistance(vector<vector<int>> &grid)
+{
+    int n = grid.size();
+    int m = grid[0].size();
+
+    list<vector<int>> que; //{distance, i, j}
+
+    // push all 1s into que with 0 distance
+    for (int i = 0; i < grid.size(); i++)
+    {
+        for (int j = 0; j < grid[0].size(); j++)
+        {
+            if (grid[i][j] == 1)
+                que.push_back({i, j});
+        }
+    }
+
+    // no water or land, return -1
+    if (que.size() == 0 || que.size() == n * m)
+        return -1;
+
+    int dist = 0;
+    while (que.size() > 0)
+    {
+        int size = que.size();
+
+        while (size-- > 0)
+        {
+            vector<int> rnode = que.front();
+            que.pop_front();
+
+            int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+            for (int d = 0; d < 4; d++)
+            {
+                int x = rnode[0] + dir[d][0];
+                int y = rnode[1] + dir[d][1];
+
+                if (x >= 0 && y >= 0 && x < grid.size() && y < grid[0].size() && grid[x][y] == 0)
+                {
+                    grid[x][y] = 1;
+                    que.push_back({x, y});
+                }
+            }
+        }
+
+        dist++;
+    }
+
+    return dist - 1;
+}
+
 //Bellman Ford
-void bellmanFordAlgo(vector<vector<int>> graph){
-    
+void bellmanFordAlgo(vector<vector<int>> graph)
+{
 }
 
 int main()
