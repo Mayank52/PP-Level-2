@@ -593,6 +593,96 @@ void bellmanFordAlgo(vector<vector<int>> graph)
 {
 }
 
+// Topological sort (Kahn's Algo)
+vector<int> topoSort(int V, vector<int> adj[])
+{
+    int n = V;
+    vector<int> indegree(n, 0);
+    vector<int> res;
+
+    for (int i = 0; i < n; i++)
+        for (int v : adj[i])
+            indegree[v]++;
+
+    list<int> que;
+    for (int i = 0; i < indegree.size(); i++)
+        if (indegree[i] == 0)
+            que.push_back(i);
+
+    while (que.size() > 0)
+    {
+        int rnode = que.front();
+        que.pop_front();
+
+        res.push_back(rnode);
+
+        for (int v : adj[rnode])
+        {
+            indegree[v]--;
+            if (indegree[v] == 0)
+            {
+                que.push_back(v);
+            }
+        }
+    }
+
+    return res;
+}
+
+// 210. Course Schedule II
+vector<int> kahnAlgo(vector<vector<int>> &graph)
+{
+    int n = graph.size();
+    vector<int> indegree(n, 0);
+    vector<int> res;
+
+    for (int i = 0; i < n; i++)
+        for (int v : graph[i])
+            indegree[v]++;
+
+    list<int> que;
+    for (int i = 0; i < indegree.size(); i++)
+        if (indegree[i] == 0)
+            que.push_back(i);
+
+    while (que.size() > 0)
+    {
+        int rnode = que.front();
+        que.pop_front();
+
+        res.push_back(rnode);
+
+        for (int v : graph[rnode])
+        {
+            indegree[v]--;
+            if (indegree[v] == 0)
+            {
+                que.push_back(v);
+            }
+        }
+    }
+
+    return res;
+}
+vector<int> findOrder(int numCourses, vector<vector<int>> &prerequisites)
+{
+    int n = numCourses;
+
+    vector<vector<int>> graph(n);
+    for (int i = 0; i < prerequisites.size(); i++)
+    {
+        int u = prerequisites[i][1];
+        int v = prerequisites[i][0];
+        graph[u].push_back(v);
+    }
+
+    vector<int> res = kahnAlgo(graph);
+
+    if (res.size() != n)
+        return {};
+    return res;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
