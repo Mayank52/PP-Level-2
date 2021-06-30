@@ -5,6 +5,7 @@
 #include <set>
 #include <list>
 #include <queue>
+#include <stack>
 #include <limits.h>
 #define pair pair<int, int>
 
@@ -593,7 +594,174 @@ void bellmanFordAlgo(vector<vector<int>> graph)
 {
 }
 
-// Topological sort (Kahn's Algo)
+// Strongly Connected Components (Kosaraju's Algo) (GFG)
+stack<int> st;
+void dfs(vector<vector<int>> &graph, int src, vector<bool> &vis)
+{
+    vis[src] = true;
+
+    for (int v : graph[src])
+    {
+        if (!vis[v])
+            dfs(graph, v, vis);
+    }
+
+    st.push(src);
+}
+int kosaraju(int V, vector<int> adj[])
+{
+    //code here
+    int n = V;
+    vector<vector<int>> graph(n);
+    vector<bool> vis(n);
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int v : adj[i])
+        {
+            graph[i].push_back(v);
+        }
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (!vis[i])
+            dfs(graph, i, vis);
+    }
+
+    vector<vector<int>> revGraph(n);
+    vector<bool> nVis(n);
+    for (int i = 0; i < n; i++)
+    {
+        for (int v : adj[i])
+        {
+            revGraph[v].push_back(i);
+        }
+    }
+
+    int count = 0;
+    while (st.size() > 0)
+    {
+        int src = st.top();
+        st.pop();
+
+        if (!nVis[src])
+        {
+            dfs(revGraph, src, nVis);
+            count++;
+        }
+    }
+
+    return count;
+}
+
+// Mother Vertex
+/*
+Approach:
+1. Use Step 1 of Kosaraju Algo to build the stack
+2. Now the top element of stack can be the mother vertex or their is no mother vertex
+3. Verify if top element is mother vertex
+*/
+stack<int> st;
+int count = 0;
+void dfs(vector<int> adj[], int src, vector<bool> &vis)
+{
+    count++;
+    vis[src] = true;
+
+    for (int v : adj[src])
+    {
+        if (!vis[v])
+            dfs(adj, v, vis);
+    }
+
+    st.push(src);
+}
+int findMotherVertex(int V, vector<int> adj[])
+{
+    //build the stack
+    vector<bool> vis(V);
+    for (int i = 0; i < V; i++)
+    {
+        if (!vis[i])
+            dfs(adj, i, vis);
+    }
+
+    //top of stack can be a mother vertex
+    int vtx = st.top();
+
+    //verify
+    count = 0;
+    vis.assign(V, false);
+    dfs(adj, vtx, vis);
+
+    return count == V ? vtx : -1;
+}
+
+// 1034. Coloring A Border
+/*
+Approach:
+Use DFS
+Make 4 calls to each adjacent cell from each cell
+Count the number of adjacent cells with same color
+If count < 4, then it is on border, so change its color
+
+Keep a visited array, while checking adjacent cells,
+1. If it has already been visited, then just increase the count because it must have the same color
+2. If it has same color, and not been visited,then call for that cell, and increase count
+
+We cannot just check the color of adjacent cell, as we are changing the color of border cells
+So, they will give the wrong answer.
+*/
+void dfs(vector<vector<int>> &grid, int sr, int sc, int color, vector<vector<bool>> &vis)
+{
+    int n = grid.size();
+    int m = grid[0].size();
+
+    int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+    vis[sr][sc] = true;
+    int count = 0;
+
+    for (int d = 0; d < 4; d++)
+    {
+        int x = sr + dir[d][0];
+        int y = sc + dir[d][1];
+
+        if (x >= 0 && y >= 0 && x < n && y < m)
+        {
+            //if it already been visited, then just increase the count
+            if (vis[x][y])
+                count++;
+
+            //if it has same color, then go to that cell
+            else if (grid[x][y] == grid[sr][sc])
+            {
+                dfs(grid, x, y, color, vis);
+                count++;
+            }
+        }
+    }
+
+    // if count < 4, this cell is on border
+    if (count < 4)
+    {
+        grid[sr][sc] = color;
+    }
+}
+vector<vector<int>> colorBorder(vector<vector<int>> &grid, int r0, int c0, int color)
+{
+    vector<vector<bool>> vis;
+    dfs(grid, r0, c0, color, vis);
+
+    return grid;
+}
+
+// 934. Shortest Bridge
+int shortestBridge(vector<vector<int>> &grid)
+{
+}
+
+// Topological sort (Kahn's Algo) (GFG)
 vector<int> topoSort(int V, vector<int> adj[])
 {
     int n = V;
@@ -681,6 +849,64 @@ vector<int> findOrder(int numCourses, vector<vector<int>> &prerequisites)
     if (res.size() != n)
         return {};
     return res;
+}
+
+// 207. Course Schedule
+vector<int> kahnAlgo(vector<vector<int>> &graph)
+{
+    int n = graph.size();
+    vector<int> indegree(n, 0);
+    vector<int> res;
+
+    for (int i = 0; i < n; i++)
+        for (int v : graph[i])
+            indegree[v]++;
+
+    list<int> que;
+    for (int i = 0; i < indegree.size(); i++)
+        if (indegree[i] == 0)
+            que.push_back(i);
+
+    while (que.size() > 0)
+    {
+        int rnode = que.front();
+        que.pop_front();
+
+        res.push_back(rnode);
+
+        for (int v : graph[rnode])
+        {
+            indegree[v]--;
+            if (indegree[v] == 0)
+            {
+                que.push_back(v);
+            }
+        }
+    }
+
+    return res;
+}
+bool canFinish(int numCourses, vector<vector<int>> &prerequisites)
+{
+    int n = numCourses;
+
+    vector<vector<int>> graph(n);
+    for (int i = 0; i < prerequisites.size(); i++)
+    {
+        int u = prerequisites[i][1];
+        int v = prerequisites[i][0];
+        graph[u].push_back(v);
+    }
+
+    vector<int> res = kahnAlgo(graph);
+
+    return res.size() == n;
+}
+
+// 892 · Alien Dictionary (Lintcode)
+string alienOrder(vector<string> &words)
+{
+    // Write your code here
 }
 
 int main()
