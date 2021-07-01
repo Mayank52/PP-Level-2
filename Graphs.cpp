@@ -906,13 +906,443 @@ bool canFinish(int numCourses, vector<vector<int>> &prerequisites)
 // 892 · Alien Dictionary (Lintcode)
 string alienOrder(vector<string> &words)
 {
-    // Write your code here
+    unordered_map<char, unordered_set<char>> graph;
+    unordered_map<char, int> indegree;
+
+    for (int i = 0; i < words.size(); i++)
+    {
+        for (char ch : words[i])
+            indegree[ch] = 0;
+    }
+
+    for (int i = 0; i < words.size() - 1; i++)
+    {
+        string word1 = words[i];
+        string word2 = words[i + 1];
+
+        int len = min(word1.size(), word2.size());
+        int idx = 0;
+        while (idx < len)
+        {
+            char u = word1[idx];
+            char v = word2[idx];
+            if (u != v)
+            {
+                indegree[v]++;
+                graph[u].insert(v);
+                break;
+            }
+            else
+                idx++;
+        }
+    }
+
+    // for (auto node : graph)
+    // {
+    //     cout << node.first << " -> ";
+    //     for (auto v : node.second)
+    //     {
+    //         cout << v << " ";
+    //     }
+    //     cout << endl;
+    // }
+
+    // cout << endl;
+
+    // for (auto node : indegree)
+    // {
+    //     cout << node.first << " -> " << node.second << endl;
+    // }
+
+    queue<char> que;
+    string res = "";
+    for (auto node : indegree)
+    {
+        if (node.second == 0)
+            que.push(node.first);
+    }
+
+    while (que.size() > 0)
+    {
+        char rnode = que.front();
+        que.pop();
+
+        res += rnode;
+
+        for (char v : graph[rnode])
+        {
+            if (indegree[v] > 0)
+            {
+                indegree[v]--;
+                if (indegree[v] == 0)
+                    que.push(v);
+            }
+        }
+    }
+
+    return res;
+}
+
+// Disjoint Set Union (DSU)
+vector<int> par;
+vector<int> size;
+
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+
+void merge(int x, int y)
+{
+    int p1 = find(x);
+    int p2 = find(y);
+
+    if (p1 != p2)
+    {
+        if (size[p1] > size[p2])
+        {
+            par[p2] = p1;
+            size[p1] += size[p2];
+        }
+        else
+        {
+            par[p1] = p2;
+            size[p2] += size[p1];
+        }
+    }
+}
+
+// 434 · Number of Islands II (Lintcode)
+struct Point
+{
+    int x;
+    int y;
+    Point() : x(0), y(0) {}
+    Point(int a, int b) : x(a), y(b) {}
+};
+vector<int> par;
+vector<int> size;
+int count = 0;
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+void merge(int x, int y)
+{
+    int p1 = find(x);
+    int p2 = find(y);
+
+    if (p1 != p2)
+    {
+        count--;
+        if (size[p1] > size[p2])
+        {
+            par[p2] = p1;
+            size[p1]++;
+        }
+        else
+        {
+            par[p1] = p2;
+            size[p2]++;
+        }
+    }
+}
+vector<int> numIslands2(int n, int m, vector<Point> &operators)
+{
+    // write your code here
+    par.resize(n * m, -1);
+    size.resize(n * m);
+    count = 0;
+
+    vector<int> res;
+
+    int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+
+    for (Point pt : operators)
+    {
+        int i = pt.x;
+        int j = pt.y;
+
+        int cell = i * m + j;
+
+        if (par[cell] != -1)
+        {
+            res.push_back(count);
+            continue;
+        }
+
+        // initialize parent, size for the this cell and increase count by 1
+        par[cell] = cell;
+        size[cell] = 1;
+        count++;
+
+        for (int d = 0; d < 4; d++)
+        {
+            int x = i + dir[d][0];
+            int y = j + dir[d][1];
+
+            int newCell = x * m + y;
+
+            if (x >= 0 && y >= 0 && x < n && y < m && par[newCell] != -1)
+            {
+                merge(cell, newCell);
+            }
+        }
+
+        res.push_back(count);
+    }
+
+    return res;
+}
+
+// 959. Regions Cut By Slashes
+vector<int> par;
+vector<int> size;
+int count = 0;
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+void merge(int x, int y)
+{
+    int p1 = find(x);
+    int p2 = find(y);
+
+    if (p1 != p2)
+    {
+        if (size[p1] >= size[p2])
+        {
+            par[p2] = p1;
+            size[p1] += size[p2];
+        }
+        else
+        {
+            par[p1] = p2;
+            size[p2] += size[p1];
+        }
+    }
+    else
+    {
+        count++;
+    }
+}
+int regionsBySlashes(vector<string> &grid)
+{
+    int n = grid.size();
+    int dots = n + 1;
+
+    par.resize(dots * dots);
+    size.resize(dots * dots, 1);
+
+    for (int i = 0; i < par.size(); i++)
+        par[i] = i;
+
+    // put all points on border in one set
+    for (int i = 0; i <= n; i++)
+    {
+        for (int j = 0; j <= n; j++)
+        {
+            if (i == 0 || j == 0 || i == n || j == n)
+            {
+                int cell = i * dots + j;
+                if (cell != 0)
+                    merge(0, cell);
+            }
+        }
+    }
+
+    // initial count is 1
+    count = 1;
+
+    // get the count for the slashes added
+    for (int i = 0; i < grid.size(); i++)
+    {
+
+        for (int j = 0; j < grid[i].size(); j++)
+        {
+            if (grid[i][j] == '/')
+            {
+                int cell1 = (i + 1) * dots + j;
+                int cell2 = i * dots + (j + 1);
+
+                merge(cell1, cell2);
+            }
+
+            else if (grid[i][j] == '\\')
+            {
+                int cell1 = i * dots + j;
+                int cell2 = (i + 1) * dots + (j + 1);
+
+                merge(cell1, cell2);
+            }
+        }
+    }
+
+    return count;
+}
+
+// 855 · Sentence Similarity II
+/*
+Approach:
+Use DSU
+First make the sets using the pairs
+Now for each sentence, check if both words belong to same set
+If they dont belong to same set, return false
+Else return true
+*/
+unordered_map<string, string> par;
+unordered_map<string, int> size;
+string find(string &u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+void merge(string &u, string &v)
+{
+    string p1 = find(u);
+    string p2 = find(v);
+
+    if (p1 != p2)
+    {
+        if (size[p1] < size[p2])
+        {
+            par[p1] = p2;
+            size[p2]++;
+        }
+        else
+        {
+            par[p2] = p1;
+            size[p1]++;
+        }
+    }
+}
+bool areSentencesSimilarTwo(vector<string> &words1, vector<string> &words2, vector<vector<string>> &pairs)
+{
+    if (words1.size() != words2.size())
+        return false;
+
+    for (string &word : words1)
+    {
+        par[word] = word;
+        size[word] = 1;
+    }
+    for (string &word : words2)
+    {
+        par[word] = word;
+        size[word] = 1;
+    }
+
+    for (vector<string> &pr : pairs)
+        merge(pr[0], pr[1]);
+
+    for (int i = 0; i < words1.size(); i++)
+    {
+        string word1 = words1[i];
+        string word2 = words2[i];
+
+        if (par[word1] != par[word2])
+            return false;
+    }
+
+    return true;
+}
+
+// 990. Satisfiability of Equality Equations
+/*
+Approach : DSU
+Iterate the equations twice
+First make sets using all == equations
+Then in second iteration, check if any a!=b equation has same parents for a and b
+If they have same parents, then return false
+*/
+unordered_map<char, char> par;
+unordered_map<char, int> size;
+char find(char u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+void merge(char x, char y)
+{
+    char p1 = find(x);
+    char p2 = find(y);
+
+    if (p1 != p2)
+    {
+        if (size[p1] > size[p2])
+        {
+            par[p2] = p1;
+            size[p1]++;
+        }
+        else
+        {
+            par[p1] = p2;
+            size[p2]++;
+        }
+    }
+}
+bool equationsPossible(vector<string> &equations)
+{
+    // make sets using only == equations
+    for (string eq : equations)
+    {
+        char x = eq[0];
+        char y = eq[3];
+        char equality = eq[1];
+
+        if (par.find(x) == par.end())
+        {
+            par[x] = x;
+            size[x] = 1;
+        }
+        if (par.find(y) == par.end())
+        {
+            par[y] = y;
+            size[y] = 1;
+        }
+
+        if (equality == '=')
+        {
+            merge(x, y);
+        }
+    }
+
+    // check for != equations
+    for (string eq : equations)
+    {
+        char x = eq[0];
+        char y = eq[3];
+        char equality = eq[1];
+
+        if (equality == '!')
+        {
+            char p1 = find(x);
+            char p2 = find(y);
+
+            if (p1 == p2)
+                return false;
+        }
+    }
+
+    return true;
 }
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
-    mst();
     return 0;
 }
