@@ -904,24 +904,34 @@ bool canFinish(int numCourses, vector<vector<int>> &prerequisites)
 }
 
 // 892 · Alien Dictionary (Lintcode)
+/*
+Approach: Kahn's Algo (Topological Sort)
+For the words array, build a directed graph
+Then use kahn algo, to find the answer
+*/
 string alienOrder(vector<string> &words)
 {
+    int n = words.size();
+
     unordered_map<char, unordered_set<char>> graph;
     unordered_map<char, int> indegree;
 
-    for (int i = 0; i < words.size(); i++)
+    // initialize indegree for all nodes
+    for (int i = 0; i < n; i++)
     {
         for (char ch : words[i])
             indegree[ch] = 0;
     }
 
-    for (int i = 0; i < words.size() - 1; i++)
+    // build the graph
+    for (int i = 0; i < n - 1; i++)
     {
         string word1 = words[i];
         string word2 = words[i + 1];
 
         int len = min(word1.size(), word2.size());
         int idx = 0;
+        bool flag = false;
         while (idx < len)
         {
             char u = word1[idx];
@@ -930,41 +940,38 @@ string alienOrder(vector<string> &words)
             {
                 indegree[v]++;
                 graph[u].insert(v);
+                flag = true;
                 break;
             }
-            else
-                idx++;
+
+            idx++;
         }
+
+        // if the current word is before next word, but nothing in it is smaller then next word
+        // and its length is also not less, then dictionary is invalid
+        if (idx == len && word1.size() > word2.size())
+            return "";
     }
 
-    // for (auto node : graph)
-    // {
-    //     cout << node.first << " -> ";
-    //     for (auto v : node.second)
-    //     {
-    //         cout << v << " ";
-    //     }
-    //     cout << endl;
-    // }
 
-    // cout << endl;
+    //Kahn's Algo to find answer
 
-    // for (auto node : indegree)
-    // {
-    //     cout << node.first << " -> " << node.second << endl;
-    // }
+    // Lintcode wants the lexicographically smaller answer from possible answers
+    // So, PQ is used, otherwise normal queue can be used
 
-    queue<char> que;
+    priority_queue<char, vector<char>, greater<int>> que;
     string res = "";
     for (auto node : indegree)
     {
         if (node.second == 0)
+        {
             que.push(node.first);
+        }
     }
 
     while (que.size() > 0)
     {
-        char rnode = que.front();
+        char rnode = que.top();
         que.pop();
 
         res += rnode;
@@ -980,7 +987,9 @@ string alienOrder(vector<string> &words)
         }
     }
 
-    return res;
+    // if the res does not include all nodes, then there is a cycle
+    // so return ""
+    return res.size() == indegree.size() ? res : "";
 }
 
 // Disjoint Set Union (DSU)
