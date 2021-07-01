@@ -757,8 +757,107 @@ vector<vector<int>> colorBorder(vector<vector<int>> &grid, int r0, int c0, int c
 }
 
 // 934. Shortest Bridge
+/*
+Approach: BFS
+Mark 1 island with a color, like 2
+While marking using DFS, add its border into a queue
+
+Now, use this queue, and apply BFS
+Check 4 directions for each cell, 
+    if it is zero, push into queue and mark visited
+    if it is 1, you have reached the second island
+    
+Keep a level count of the BFS
+When you reach the second island, that level is the answer
+*/
+queue<vector<int>> que;
+void dfs(vector<vector<int>> &grid, int sr, int sc)
+{
+    int n = grid.size();
+    int m = grid[0].size();
+
+    grid[sr][sc] = 2;
+
+    int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+    int count = 0;
+
+    for (int d = 0; d < 4; d++)
+    {
+        int x = sr + dir[d][0];
+        int y = sc + dir[d][1];
+
+        if (x >= 0 && y >= 0 && x < n && y < m && grid[x][y] == 1)
+        {
+            dfs(grid, x, y);
+            count++;
+        }
+    }
+
+    if (count < 4)
+        que.push({sr, sc});
+}
 int shortestBridge(vector<vector<int>> &grid)
 {
+    int n = grid.size();
+    int m = grid[0].size();
+
+    // mark one island as 2, and store its boundary in a queue
+    bool flag = false;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            if (grid[i][j] == 1)
+            {
+                dfs(grid, i, j);
+                flag = true;
+                break;
+            }
+        }
+
+        if (flag)
+            break;
+    }
+
+    // Use BFS, until you reach a 1, then the level of BFS is the answer
+    int lvl = 0;
+    while (que.size() > 0)
+    {
+        int size = que.size();
+
+        while (size-- > 0)
+        {
+            vector<int> rcell = que.front();
+            que.pop();
+
+            int currColor = rcell[2];
+            int sr = rcell[0];
+            int sc = rcell[1];
+
+            int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+
+            for (int d = 0; d < 4; d++)
+            {
+                int x = sr + dir[d][0];
+                int y = sc + dir[d][1];
+
+                if (x >= 0 && y >= 0 && x < n && y < m)
+                {
+                    if (grid[x][y] == 0)
+                    {
+                        que.push({x, y});
+                        grid[x][y] = 2;
+                    }
+                    else if (grid[x][y] == 1)
+                        return lvl;
+                }
+            }
+        }
+
+        lvl++;
+    }
+
+    return 0;
 }
 
 // Topological sort (Kahn's Algo) (GFG)
@@ -952,7 +1051,6 @@ string alienOrder(vector<string> &words)
         if (idx == len && word1.size() > word2.size())
             return "";
     }
-
 
     //Kahn's Algo to find answer
 
