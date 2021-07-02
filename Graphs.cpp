@@ -11,6 +11,59 @@
 
 using namespace std;
 
+// 997. Find the Town Judge
+/*
+Approach: 
+Find the indegree and outdegree of each node
+The node with indegree == n-1 && outdegree == 0 is the answer
+
+We dont need outdegree seperately, we can just +1 and -1 in indegree itself
+*/
+int findJudge(int n, vector<vector<int>> &trust)
+{
+    vector<int> indegree(n + 1);
+
+    for (vector<int> &e : trust)
+    {
+        indegree[e[1]]++;
+        indegree[e[0]]--;
+    }
+
+    for (int i = 1; i <= n; i++)
+    {
+        if (indegree[i] == n - 1)
+            return i;
+    }
+
+    return -1;
+}
+
+// 1557. Minimum Number of Vertices to Reach All Nodes
+/*
+Approach:
+We have to find nodes with indegree = 0
+Because they cannot be reached from any other node. So, they must be in the answer
+Other nodes with >0 indegree means, they can all be reached from other nodes
+*/
+vector<int> findSmallestSetOfVertices(int n, vector<vector<int>> &edges)
+{
+    vector<int> indegree(n);
+    vector<int> res;
+
+    for (vector<int> &e : edges)
+    {
+        indegree[e[1]]++;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (indegree[i] == 0)
+            res.push_back(i);
+    }
+
+    return res;
+}
+
 // 200. Number of Islands
 void dfs(vector<vector<char>> &grid, int sr, int sc)
 {
@@ -1445,6 +1498,68 @@ bool equationsPossible(vector<string> &equations)
     }
 
     return true;
+}
+
+// 684. Redundant Connection
+/*
+Approach : DSU
+For each edge:
+    If they have have different parents, then merge
+    If same parents, then they both have been merged already, it is a redundant edge
+*/
+vector<int> par;
+vector<int> size;
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+void merge(int p1, int p2)
+{
+    if (size[p1] < size[p2])
+    {
+        par[p1] = p2;
+        size[p2] += size[p1];
+    }
+    else
+    {
+        par[p2] = p1;
+        size[p1] += size[p2];
+    }
+}
+vector<int> findRedundantConnection(vector<vector<int>> &edges)
+{
+    int n = edges.size() + 1;
+    par.resize(n);
+    size.resize(n, 1);
+
+    for (int i = 0; i < n; i++)
+    {
+        par[i] = i;
+    }
+
+    vector<int> res(2);
+
+    for (int i = 0; i < edges.size(); i++)
+    {
+        int u = edges[i][0];
+        int v = edges[i][1];
+
+        int p1 = find(u);
+        int p2 = find(v);
+
+        if (p1 == p2)
+        {
+            res[0] = u;
+            res[1] = v;
+        }
+        else
+            merge(p1, p2);
+    }
+
+    return res;
 }
 
 int main()
