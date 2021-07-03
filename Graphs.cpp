@@ -11,6 +11,7 @@
 
 using namespace std;
 
+// Extra Questions==============================================================
 // 997. Find the Town Judge
 /*
 Approach: 
@@ -64,6 +65,108 @@ vector<int> findSmallestSetOfVertices(int n, vector<vector<int>> &edges)
     return res;
 }
 
+// 1319. Number of Operations to Make Network Connected
+/*
+Approach: DSU
+Count the number of connected components, redundant edges in graph
+Ans = number of components - 1
+
+Eg: To connect 3 different components of a graph you need 3 - 1 = 2 edges
+
+So, redundant edges gives the extra available edges, and if
+reduntantEdgeCount >= componentCount - 1
+*/
+vector<int> par;
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+    return par[u] = find(par[u]);
+}
+int makeConnected(int n, vector<vector<int>> &connections)
+{
+    par.resize(n);
+
+    // Initially componentCount = no. of nodes
+    int redundantEdgeCount = 0, componentCount = n;
+
+    for (int i = 0; i < n; i++)
+        par[i] = i;
+
+    for (vector<int> &e : connections)
+    {
+        int u = e[0];
+        int v = e[1];
+
+        int p1 = find(e[0]);
+        int p2 = find(e[1]);
+
+        // increase redundant edge count
+        if (p1 == p2)
+        {
+            redundantEdgeCount++;
+        }
+        // merge two sets, reduce component count
+        else
+        {
+            par[p1] = p2;
+            componentCount--;
+        }
+    }
+
+    if (redundantEdgeCount >= componentCount - 1)
+        return componentCount - 1;
+    else
+        return -1;
+}
+
+// 1514. Path with Maximum Probability
+/*
+Approach: Dijsktra's Algo
+*/
+double maxProbability(int n, vector<vector<int>> &edges, vector<double> &succProb, int start, int end)
+{
+    vector<double> res(n);
+    vector<vector<vector<double>>> graph(n);
+    vector<bool> vis(n);
+
+    for (int i = 0; i < edges.size(); i++)
+    {
+        double u = edges[i][0];
+        double v = edges[i][1];
+        double w = succProb[i];
+
+        graph[u].push_back({v, w});
+        graph[v].push_back({u, w});
+    }
+
+    priority_queue<vector<double>, vector<vector<double>>> pq;
+    pq.push({1.0, start * 1.0});
+
+    while (pq.size() > 0)
+    {
+        vector<double> rnode = pq.top();
+        pq.pop();
+
+        double u = rnode[1];
+        double p = rnode[0];
+
+        res[u] = max(res[u], p);
+        vis[u] = true;
+
+        for (vector<double> &e : graph[u])
+        {
+            if (!vis[e[0]])
+            {
+                pq.push({e[1] * p, e[0]});
+            }
+        }
+    }
+
+    return res[end];
+}
+
+// PP List Questions================================================================
 // 200. Number of Islands
 void dfs(vector<vector<char>> &grid, int sr, int sc)
 {
