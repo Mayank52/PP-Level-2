@@ -166,6 +166,52 @@ double maxProbability(int n, vector<vector<int>> &edges, vector<double> &succPro
     return res[end];
 }
 
+// 1466. Reorder Routes to Make All Paths Lead to the City Zero
+/*
+Approach: DFS
+Make a adjacency list, and mark the direction for each edge
+0-> towards node ,1-> away from node
+Now since we have to make each path reach 0, and the graph is a tree
+So, just consider 0 as root, and in dfs from 0 
+count all edges where the edge points away from parent towards child
+*/
+int count = 0;
+void dfs(vector<vector<pair>> &graph, int src, vector<bool> &vis)
+{
+    vis[src] = true;
+
+    for (pair &e : graph[src])
+    {
+        int v = e.first;
+        int dir = e.second;
+        if (!vis[v])
+        {
+            if (dir == 1)
+                count++;
+
+            dfs(graph, v, vis);
+        }
+    }
+}
+int minReorder(int n, vector<vector<int>> &connections)
+{
+    vector<vector<pair>> graph(n);
+    vector<bool> vis(n);
+
+    for (vector<int> &e : connections)
+    {
+        int u = e[0];
+        int v = e[1];
+
+        graph[u].push_back({v, 1});
+        graph[v].push_back({u, 0});
+    }
+
+    dfs(graph, 0, vis);
+
+    return count;
+}
+
 // PP List Questions================================================================
 // 200. Number of Islands
 void dfs(vector<vector<char>> &grid, int sr, int sc)
