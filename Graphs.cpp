@@ -212,6 +212,59 @@ int minReorder(int n, vector<vector<int>> &connections)
     return count;
 }
 
+// 947. Most Stones Removed with Same Row or Column
+/*
+Approach : Union Find
+Use the coords x, y as two different nodes, and use union find
+To avoid overlap between equal values of row, col like {0, 1}, and {1, 0}
+use x and ~y
+
+If we use the just use x and y in parent map, then in
+{{0, 1}, {1, 0}}
+the values of row and col will overlap, and it will give answer 1,
+but ans is 0, as no stone can be removed.
+
+*/
+unordered_map<int, int> par;
+int count = 0;
+int find(int u)
+{
+    // if not present in map, then add to map and increase set count
+    if (par.find(u) == par.end())
+    {
+        count++;
+        return par[u] = u;
+    }
+
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+int removeStones(vector<vector<int>> &stones)
+{
+    int n = stones.size();
+
+    for (vector<int> &coords : stones)
+    {
+        int u = coords[0];
+        int v = ~coords[1];
+
+        //find parents of both row and col
+        int p1 = find(u);
+        int p2 = find(v);
+
+        // merge two sets, decrease count
+        if (p1 != p2)
+        {
+            par[p1] = p2;
+            count--;
+        }
+    }
+
+    return n - count;
+}
+
 // PP List Questions================================================================
 // 200. Number of Islands
 void dfs(vector<vector<char>> &grid, int sr, int sc)
