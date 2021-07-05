@@ -1764,6 +1764,83 @@ vector<int> findRedundantConnection(vector<vector<int>> &edges)
     return res;
 }
 
+// 924. Minimize Malware Spread
+vector<int> par;
+vector<int> size;
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+void merge(int u, int v)
+{
+    int p1 = find(u);
+    int p2 = find(v);
+
+    if (p1 != p2)
+    {
+        if (size[p1] < size[p2])
+        {
+            par[p1] = par[p2];
+            size[p2] += size[p1];
+        }
+        else
+        {
+            par[p2] = par[p1];
+            size[p1] += size[p2];
+        }
+    }
+}
+int minMalwareSpread(vector<vector<int>> &graph, vector<int> &initial)
+{
+    int n = graph.size();
+
+    sort(initial.begin(), initial.end());
+
+    for (int i = 0; i < n; i++)
+    {
+        par.push_back(i);
+        size.push_back(1);
+    }
+
+    for (int u = 0; u < graph.size(); u++)
+    {
+        for (int v = u + 1; v < graph[0].size(); v++)
+        {
+            if (graph[u][v] == 1)
+            {
+                merge(u, v);
+            }
+        }
+    }
+
+    unordered_map<int, int> mp;
+
+    for (int i = 0; i < initial.size(); i++)
+    {
+        int p = find(initial[i]);
+        mp[p]++;
+    }
+
+    int ans = initial[0], maxSize = 0;
+
+    for (int i = 0; i < initial.size(); i++)
+    {
+        int p = find(initial[i]);
+        int parSize = size[p];
+
+        if (parSize > maxSize && mp[p] == 1)
+        {
+            maxSize = parSize;
+            ans = initial[i];
+        }
+    }
+
+    return ans;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
