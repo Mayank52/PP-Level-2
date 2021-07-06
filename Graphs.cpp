@@ -1765,6 +1765,18 @@ vector<int> findRedundantConnection(vector<vector<int>> &edges)
 }
 
 // 924. Minimize Malware Spread
+/*
+Approach : Union Find
+First use DSU and and make the parent and size array using the given graph
+Then iterate over the initial array and make a map of {parent : infected count}
+Then iterate over the initial array again and if the infected count of its parent is 1 then update the ans
+if its set size is greater , but if the infected count is >1 then removing that vertex wont help.
+So, it cant be the answer.
+
+So, we first make the sets
+Then we try to find the node with max set size, and it is the only infected node in its set.
+If no such node, then removing any node will have the same the effect.
+*/
 vector<int> par;
 vector<int> size;
 int find(int u)
@@ -1805,6 +1817,7 @@ int minMalwareSpread(vector<vector<int>> &graph, vector<int> &initial)
         size.push_back(1);
     }
 
+    //make the parent and size array
     for (int u = 0; u < graph.size(); u++)
     {
         for (int v = u + 1; v < graph[0].size(); v++)
@@ -1816,6 +1829,7 @@ int minMalwareSpread(vector<vector<int>> &graph, vector<int> &initial)
         }
     }
 
+    // for each infected node, in the map update the parent: infected count
     unordered_map<int, int> mp;
 
     for (int i = 0; i < initial.size(); i++)
@@ -1824,6 +1838,7 @@ int minMalwareSpread(vector<vector<int>> &graph, vector<int> &initial)
         mp[p]++;
     }
 
+    // now for each infected node, update the answer
     int ans = initial[0], maxSize = 0;
 
     for (int i = 0; i < initial.size(); i++)
@@ -1831,6 +1846,7 @@ int minMalwareSpread(vector<vector<int>> &graph, vector<int> &initial)
         int p = find(initial[i]);
         int parSize = size[p];
 
+        // if its set size is greater, and it is the only infected node in its set, then it is the answer
         if (parSize > maxSize && mp[p] == 1)
         {
             maxSize = parSize;
