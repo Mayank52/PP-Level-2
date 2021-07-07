@@ -1373,7 +1373,7 @@ But actual ans is 7 10, 18 5 7
 
 So, only way is to check all possible L,M size subarrays
 Correct Approach : O(n)
-Make a prefixMax, suufixMax where each element is the max window sum of size min(L, M) ending at that index
+Make a prefixMax, suffixMax where each element is the max window sum of size min(L, M) ending at that index
 Then for each window of size max(L, M) , add the max of the max(prefixSum on left, suffixSum on right)
 Update overall max for each index
 */
