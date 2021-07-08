@@ -844,9 +844,50 @@ int maxDistance(vector<vector<int>> &grid)
     return dist - 1;
 }
 
-//Bellman Ford
-void bellmanFordAlgo(vector<vector<int>> graph)
+// Negative weight cycle (GFG) (Bellman Ford Algo)
+/*
+Approach:
+Bellman Ford algo
+*/
+int isNegativeWeightCycle(int n, vector<vector<int>> edges)
 {
+    // Code here
+    vector<int> dist(n, INT_MAX);
+    dist[0] = 0;
+
+    //make distance array for all nodes by iterating over all edges V-1 times
+    for (int i = 0; i < n - 1; i++)
+    {
+        for (int j = 0; j < edges.size(); j++)
+        {
+            int u = edges[j][0];
+            int v = edges[j][1];
+            int w = edges[j][2];
+
+            if (dist[u] == INT_MAX)
+                continue;
+
+            if (dist[u] + w < dist[v])
+                dist[v] = dist[u] + w;
+        }
+    }
+
+    // Check if negative cycle is present by iterating once more
+    for (int j = 0; j < edges.size(); j++)
+    {
+        int u = edges[j][0];
+        int v = edges[j][1];
+        int w = edges[j][2];
+
+        if (dist[u] == INT_MAX)
+            continue;
+
+        // if the distance is < distance already in the distance array, then -ve weight cycle is present
+        if (dist[u] + w < dist[v])
+            return 1;
+    }
+
+    return 0;
 }
 
 // Strongly Connected Components (Kosaraju's Algo) (GFG)
@@ -1975,7 +2016,6 @@ int kSimilarity(string s1, string s2)
 
     return -1;
 }
-
 
 int main()
 {
