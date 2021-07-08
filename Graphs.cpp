@@ -7,6 +7,7 @@
 #include <queue>
 #include <stack>
 #include <limits.h>
+#include <algorithm>
 // #define pair pair<int, int>
 
 using namespace std;
@@ -1805,6 +1806,85 @@ vector<int> findRedundantConnection(vector<vector<int>> &edges)
     return res;
 }
 
+// 685. Redundant Connection II
+vector<int> par;
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+bool merge(int u, int v)
+{
+    int p1 = find(u);
+    int p2 = find(v);
+
+    // both in same set -> cycle present
+    if (p1 == p2)
+        return true;
+
+    // else merge both in same set
+    par[p1] = p2;
+
+    return false;
+}
+vector<int> findRedundantDirectedConnection(vector<vector<int>> &edges)
+{
+    int n = edges.size();
+
+    for (int i = 0; i <= n; i++)
+    {
+        par.push_back(i);
+    }
+
+    vector<int> indegree(n + 1, -1);
+    int bl1 = -1, bl2 = -1;
+
+    for (int i = 0; i < n; i++)
+    {
+        int u = edges[i][0];
+        int v = edges[i][1];
+
+        if (indegree[v] == -1)
+            indegree[v] = i;
+        else
+        {
+            bl1 = i;
+            bl2 = indegree[v];
+            break;
+        }
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (bl1 == i)
+            continue;
+
+        int u = edges[i][0];
+        int v = edges[i][1];
+
+        int p1 = find(u);
+        int p2 = find(v);
+
+        // check if cycle
+        bool hasCycle = merge(u, v);
+
+        if (hasCycle)
+        {
+            // if indegree is not 2
+            if (bl1 == -1)
+                return edges[i];
+            // if indegree is 2
+            else
+                return edges[bl2];
+        }
+    }
+
+    // no cycle, then the answer is edge making indegree 2
+    return edges[bl1];
+}
+
 // 924. Minimize Malware Spread
 /*
 Approach : Union Find
@@ -1898,10 +1978,69 @@ int minMalwareSpread(vector<vector<int>> &graph, vector<int> &initial)
     return ans;
 }
 
+// Kruskal Algo (MST)
+// https://www.spoj.com/problems/MST/
+vector<int> par;
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+long long kruskalAlgo(vector<vector<int>> &edges)
+{
+    int n = edges.size();
+
+    for (int i = 0; i <= n; i++)
+        par.push_back(i);
+
+    // sort edges in increasing order of weight
+    sort(edges.begin(), edges.end());
+
+    long long res = 0;
+
+    // use DSU to make the MST
+    for (vector<int> &edge : edges)
+    {
+        int p1 = find(edge[1]);
+        int p2 = find(edge[2]);
+
+        // if not a cycle, then include in the MST
+        if (p1 != p2)
+        {
+            par[p1] = p2;
+            res += edge[0];
+        }
+    }
+
+    return res;
+}
+void mst()
+{
+    int n, m;
+    cin >> n >> m;
+
+    vector<vector<int>> edges;
+    for (int i = 0; i < m; i++)
+    {
+        int u, v, w;
+        cin >> u >> v >> w;
+
+        edges.push_back({w, u, v});
+    }
+
+    cout << kruskalAlgo(edges) << endl;
+}
+
+// 1168. Optimize Water Distribution in a Village (Premium, not available to submit anywhere)
+void optimizeWater(vector<int> &wells, vector<int> &pipes)
+{
+}
+
 // 773. Sliding Puzzle
 /*
 Approach: BFS
-
 */
 int slidingPuzzle(vector<vector<int>> &board)
 {
@@ -1971,7 +2110,6 @@ int slidingPuzzle(vector<vector<int>> &board)
 // 854. K-Similar Strings
 /*
 Approach: BFS
-
 */
 int kSimilarity(string s1, string s2)
 {
