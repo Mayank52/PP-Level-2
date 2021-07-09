@@ -1744,6 +1744,98 @@ bool equationsPossible(vector<string> &equations)
     return true;
 }
 
+// 399. Evaluate Division
+/*
+Approach : DFS (Path Finding)
+For given equation
+a/b = 2.0,
+b/c = 3.0
+
+We will consider a, b, c as nodes in graph, and 2.0 and 3.0 as weight of their edges
+The graph will be directed and weighted. 
+For eg: For a edges u,v with weight w
+We will make a edge u-v with weight w
+And an edge v-u with weight 1/w
+
+So, each edge u->v represents u/v. So multiplying such edges will be same as 
+u/v * v/w * w/x = u/x
+So, we can get the answers for the queries by just finding the path in graph
+and finding the product of edges on that path.
+
+So weight of 
+a-b edge is 2.0 
+but weight of b-a edge is 1 / 2.0 = 0.5
+
+So for a query like a/c
+We have a graph : a-b-c
+
+For a/c we find a path from a->c in graph and multiply all the weights in that path
+So in this it will be a->b->c = 2.0 x 3.0 = 6.0
+
+*/
+double dfs(unordered_map<string, vector<pair<string, double>>> &graph, string &src, string &dest, unordered_map<string, bool> &vis)
+{
+    if (src == dest)
+        return 1.0;
+
+    vis[src] = true;
+
+    for (pair<string, double> e : graph[src])
+    {
+        if (!vis[e.first])
+        {
+            double ans = dfs(graph, e.first, dest, vis);
+            if (ans > 0)
+                return ans * e.second;
+        }
+    }
+
+    return 0;
+}
+vector<double> calcEquation(vector<vector<string>> &equations, vector<double> &values, vector<vector<string>> &queries)
+{
+    typedef pair<string, double> pair;
+
+    unordered_map<string, vector<pair>> graph;
+
+    // make graph
+    for (int i = 0; i < equations.size(); i++)
+    {
+        string u = equations[i][0];
+        string v = equations[i][1];
+        double w = values[i];
+
+        graph[u].push_back({v, w});
+        graph[v].push_back({u, 1 / w});
+    }
+
+    vector<double> res;
+
+    for (vector<string> &query : queries)
+    {
+        string src = query[0];
+        string dest = query[1];
+
+        // if either of the elements are not in graph, return -1
+        if (graph.find(src) == graph.end() || graph.find(dest) == graph.end())
+        {
+            res.push_back(-1.0);
+            continue;
+        }
+
+        // find the product of edges in the path b/w src->dest
+        unordered_map<string, bool> vis;
+
+        double ans = dfs(graph, src, dest, vis);
+        if (ans > 0)
+            res.push_back(ans);
+        else
+            res.push_back(-1.0);
+    }
+
+    return res;
+}
+
 // 684. Redundant Connection
 /*
 Approach : DSU
@@ -2038,6 +2130,11 @@ void optimizeWater(vector<int> &wells, vector<int> &pipes)
 {
 }
 
+// Articulation Points
+void articulationPoint(vector<vector<int>> &graph)
+{
+}
+
 // 773. Sliding Puzzle
 /*
 Approach: BFS
@@ -2114,7 +2211,10 @@ Approach: BFS
 int kSimilarity(string s1, string s2)
 {
     queue<pair<string, int>> que;
+    unordered_map<string, bool> vis;
+
     que.push({s2, 0});
+    vis[s2] = true;
 
     int k = 0;
 
@@ -2135,6 +2235,30 @@ int kSimilarity(string s1, string s2)
             while (idx < s.size() && s[idx] == s1[idx])
                 idx++;
 
+            // check if we can swap the 2 elements such that both reach correct positions
+            bool flag = false;
+            for (int i = idx + 1; i < s.size(); i++)
+            {
+                if (s[i] == s1[i])
+                    continue;
+
+                if (s[i] == s1[idx] && s[idx] == s1[i])
+                {
+                    string temp = s;
+                    swap(temp[i], temp[idx]);
+                    if (!vis[temp])
+                    {
+                        que.push({temp, idx + 1});
+                        flag = true;
+                        break;
+                    }
+                }
+            }
+
+            if (flag)
+                continue;
+
+            // if we cant swap 2 elements into correct positions, then just find and swap the correct element at current index
             for (int i = idx + 1; i < s.size(); i++)
             {
                 if (s[i] == s1[i])
@@ -2144,7 +2268,8 @@ int kSimilarity(string s1, string s2)
                 {
                     string temp = s;
                     swap(temp[i], temp[idx]);
-                    que.push({temp, idx + 1});
+                    if (!vis[temp])
+                        que.push({temp, idx + 1});
                 }
             }
         }
@@ -2153,6 +2278,173 @@ int kSimilarity(string s1, string s2)
     }
 
     return -1;
+}
+
+// Job Sequencing Problem
+/*
+Approach 1:
+Sort the jobs in decreasing order of profit
+Now for each job find the last available day and assign it to this job
+And include this job in profit
+
+Approach 2: DSU
+We dont use the complete DSU. We only use the find() method and path compression
+to get the last available day faster and merge with the parent of previous day always.
+Use the parent array to store the last day.
+For each Job:
+1. Find its last day
+2. If last day = 0 i.e. no day is available then dont include it
+   Else include this job, and merge its last available day with that day's previous day
+   i.e. we merge it with the previous day of its parent, 
+   and we always make the parent of previous day as its parent
+   This way we can update the last available day.
+
+So, 
+find p1 = parent of current deadline
+then if p1 > 0 i.e we have a day available
+then include this job and
+merge p1 with p1 - 1
+i.e. p2 = find(p1-1)
+and par[p1] = p2
+
+For eg:
+Job id      Deadline    Profit
+A              4         120
+B              1         110
+C              3         100
+D              4         90
+E              5         80
+F              5         10
+
+Initially parent array:
+0 1 2 3 4 5
+
+Profit = 0
+
+Now for job A
+find(4) = 4,    Profit = 120
+Merge 4 with parent of 4 - 1 = par[3] = 3
+So par[] = 0 1 2 3 3 5
+
+Job B:
+find(1) = 1, Profit = 120 + 110
+Merge 1 with parent of 1 - 1 = par[0] = 0
+par[] = 0 0 2 3 3 5
+
+Job C:
+find(3) = 3, Profit = 120 + 110 + 100
+Merge 3 with parent of 3 - 1 = par[2] = 2
+par[] = 0 0 2 2 3 5
+
+Job D:
+p1 = find(4) = 2, Profit = 120 + 110 + 100 + 90
+Merge 2 with parent of 2 - 1 = par[0] = 0
+par[] = 0 0 0 2 2 5
+So, we merge parent of current element i.e. p1 with p1 - 1
+This way we can update the last available day.
+
+Job E:
+find(5) = 5, Profit = 120 + 110 + 100 + 90 + 80
+Merge 5 with parent of 5 - 1 = par[4] = 0
+par[] = 0 0 0 2 0 0
+
+*/
+struct Job
+{
+    int id;     // Job Id
+    int dead;   // Deadline of job
+    int profit; // Profit if job is over before or on deadline
+};
+// Approach 1: Greedy
+vector<int> JobScheduling(Job arr[], int n)
+{   
+    // find the max days available
+    int maxDeadline = 0;
+    for (int i = 0; i < n; i++)
+        maxDeadline = max(maxDeadline, arr[i].dead);
+
+    vector<int> days(maxDeadline + 1);
+
+    // sort in decresing order of profit
+    sort(arr, arr + n, [](Job j1, Job j2)
+         { return j1.profit > j2.profit; });
+
+    int totalProfit = 0, jobCount = 0;
+    for (int i = 0; i < n; i++)
+    {
+        int jobid = arr[i].id;
+        int deadline = arr[i].dead;
+        int profit = arr[i].profit;
+
+        // find any available slot before the current job's deadline, and assign it to this job
+        for (int j = deadline; j > 0; j--)
+        {
+            if (days[j] == 0)
+            {
+                days[j] = jobid;
+                totalProfit += profit;
+                jobCount++;
+                break;
+            }
+        }
+    }
+
+    return {jobCount, totalProfit};
+}
+
+//Approach 2: DSU
+vector<int> par;
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+vector<int> JobScheduling(Job arr[], int n)
+{
+    // find the max days available
+    int maxDeadline = 0;
+    for (int i = 0; i < n; i++)
+        maxDeadline = max(maxDeadline, arr[i].dead);
+
+    // parent array represents the days
+    // each parent means the last day available <= current day
+    par.resize(maxDeadline + 1);
+
+    for (int i = 0; i <= maxDeadline; i++)
+    {
+        par[i] = i;
+    }
+
+    // sort in desc order of profit
+    sort(arr, arr + n, [](Job j1, Job j2)
+         { return j1.profit > j2.profit; });
+
+    int totalProfit = 0, jobCount = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        int jobid = arr[i].id;
+        int deadline = arr[i].dead;
+        int profit = arr[i].profit;
+
+        // find the last available day from current deadline
+        int p1 = find(deadline);
+
+        // if last available day is not 0, then include this job
+        if (p1 != 0)
+        {
+            jobCount++;
+            totalProfit += profit;
+
+            // merge it with its previous day's parent
+            int p2 = find(p1 - 1);
+            par[p1] = p2;
+        }
+    }
+
+    return {jobCount, totalProfit};
 }
 
 int main()
