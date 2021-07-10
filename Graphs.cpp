@@ -2175,9 +2175,11 @@ void dfs(vector<vector<int>> &graph, int src)
             if (par[src] == 0) // actual source
             {
                 srcCount++;
+                // if source has been reached more than 1 time, then it is also an Articulation point
                 if (srcCount >= 2)
                     ap[src] = true;
             }
+            // check if current node is an Articulation Point
             else if (low[v] >= disc[src])
                 ap[src] = true;
 
@@ -2269,6 +2271,7 @@ void articulationBridges(vector<vector<int>> &graph, int src)
             // call for it
             articulationBridges(graph, v);
 
+            // check if this edge is Articulation Bridge
             if (low[v] > disc[src])
                 res.push_back({src, v});
 
@@ -2465,6 +2468,90 @@ vector<int> JobScheduling(Job arr[], int n)
     }
 
     return {jobCount, totalProfit};
+}
+
+// 839. Similar String Groups
+/*
+Approach: DSU
+For all pairs of strings, check if they are similar
+If they only differ at <=2 different positions from each other then they are similar
+If they are similar, then merge them
+
+For the parent array, and merge use indexes instead of string, 
+because their are duplicate strings present in the given array
+
+Eg:
+[abc, abc, abc, abc]
+If you make a hashmap of {string, string}, then it will never find different parents
+so it will never merge.
+So, use indexes for parent array.
+*/
+vector<int> par;
+vector<int> rank;
+int setCount;
+int find(int &u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+void merge(int u, int v)
+{
+    int p1 = find(u);
+    int p2 = find(v);
+
+    if (p1 != p2)
+    {
+        if (rank[p1] < rank[p2])
+            par[p1] = p2;
+        else if (rank[p2] < rank[p1])
+            par[p2] = p1;
+        else
+        {
+            par[p2] = p1;
+            rank[p1]++;
+        }
+
+        setCount--;
+    }
+}
+bool isSimilar(string &s1, string &s2)
+{
+    int count = 0;
+    for (int k = 0; k < s1.size(); k++)
+    {
+        if (s1[k] != s2[k])
+            count++;
+        if (count > 2)
+            return false;
+    }
+
+    return true;
+}
+int numSimilarGroups(vector<string> &strs)
+{
+    int n = strs.size();
+
+    par.resize(n);
+    rank.resize(n, 1);
+    for (int i = 0; i < n; i++)
+    {
+        par[i] = i;
+    }
+
+    setCount = n;
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            if (isSimilar(strs[i], strs[j]))
+                merge(i, j);
+        }
+    }
+
+    return setCount;
 }
 
 // 773. Sliding Puzzle
