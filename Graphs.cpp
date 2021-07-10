@@ -2135,8 +2135,11 @@ void optimizeWater(vector<int> &wells, vector<int> &pipes)
 {
 }
 
-// Articulation Points
+// Articulation Points(Nodes) and Bridges(Edges)
 // https://www.spoj.com/problems/SUBMERGE/ (SPOJ)
+/*
+Approach: Articulation Points
+*/
 vector<int> par;
 vector<int> disc;
 vector<int> low;
@@ -2230,149 +2233,71 @@ void solve()
     }
 }
 
-// 773. Sliding Puzzle
+// 1192. Critical Connections in a Network
 /*
-Approach: BFS
+Approach: Articulation Bridges
 */
-int slidingPuzzle(vector<vector<int>> &board)
+vector<int> par;
+vector<int> disc;
+vector<int> low;
+vector<bool> vis;
+vector<vector<int>> res;
+int discTime = 0;
+int srcCount = 0;
+void articulationBridges(vector<vector<int>> &graph, int src)
 {
-    int n = board.size();
-    int m = board[0].size();
+    low[src] = discTime;
+    disc[src] = discTime;
+    vis[src] = true;
 
-    // convert board to serialized string
-    string puzzle = "";
-    string solvedPuzzle = "123450";
-    int pos;
-    for (int i = 0; i < board.size(); i++)
+    discTime++;
+
+    for (int v : graph[src])
     {
-        for (int j = 0; j < board[0].size(); j++)
+        // if the neighbor is my parent
+        if (par[src] == v)
+            continue;
+        // if neighor visited already
+        else if (vis[v])
+            low[src] = min(low[src], disc[v]);
+        // if not visited
+        else
         {
-            puzzle += (board[i][j] + '0');
-            if (board[i][j] == 0)
-                pos = i * m + j;
+            // mark this node as neighbor's parent
+            par[v] = src;
+
+            // call for it
+            articulationBridges(graph, v);
+
+            if (low[v] > disc[src])
+                res.push_back({src, v});
+
+            low[src] = min(low[src], low[v]);
         }
     }
-
-    // put the serialized directions for each in a 2D board in an array
-    int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
-    vector<vector<int>> graph{{1, 3}, {0, 2, 4}, {1, 5}, {0, 4}, {1, 3, 5}, {2, 4}};
-
-    // Use BFS to get the minimum moves required
-    queue<pair<string, int>> que; //{puzzle, index of empty slot in puzzle}
-    unordered_map<string, bool> vis;
-
-    que.push({puzzle, pos});
-
-    int moves = 0;
-
-    while (que.size() > 0)
-    {
-        int size = que.size();
-        while (size-- > 0)
-        {
-            pair<string, int> rnode = que.front();
-            que.pop();
-
-            string currPuzzle = rnode.first;
-            int pos = rnode.second;
-
-            if (currPuzzle == solvedPuzzle)
-                return moves;
-
-            // swap with 4 directions and push into queue
-            for (int dirIdx : graph[pos])
-            {
-                string newPuzzle = currPuzzle;
-                swap(newPuzzle[pos], newPuzzle[dirIdx]);
-
-                if (!vis[newPuzzle])
-                {
-                    vis[newPuzzle] = true;
-                    que.push({newPuzzle, dirIdx});
-                }
-            }
-        }
-
-        moves++;
-    }
-
-    return -1;
 }
-
-// 854. K-Similar Strings
-/*
-Approach: BFS
-*/
-int kSimilarity(string s1, string s2)
+vector<vector<int>> criticalConnections(int n, vector<vector<int>> &connections)
 {
-    queue<pair<string, int>> que;
-    unordered_map<string, bool> vis;
-
-    que.push({s2, 0});
-    vis[s2] = true;
-
-    int k = 0;
-
-    while (que.size() > 0)
+    vector<vector<int>> graph(n);
+    for (vector<int> &e : connections)
     {
-        int size = que.size();
-        while (size-- > 0)
-        {
-            pair<string, int> rnode = que.front();
-            que.pop();
+        int u = e[0];
+        int v = e[1];
 
-            string s = rnode.first;
-            int idx = rnode.second;
-
-            if (s == s1)
-                return k;
-
-            while (idx < s.size() && s[idx] == s1[idx])
-                idx++;
-
-            // check if we can swap the 2 elements such that both reach correct positions
-            bool flag = false;
-            for (int i = idx + 1; i < s.size(); i++)
-            {
-                if (s[i] == s1[i])
-                    continue;
-
-                if (s[i] == s1[idx] && s[idx] == s1[i])
-                {
-                    string temp = s;
-                    swap(temp[i], temp[idx]);
-                    if (!vis[temp])
-                    {
-                        que.push({temp, idx + 1});
-                        flag = true;
-                        break;
-                    }
-                }
-            }
-
-            if (flag)
-                continue;
-
-            // if we cant swap 2 elements into correct positions, then just find and swap the correct element at current index
-            for (int i = idx + 1; i < s.size(); i++)
-            {
-                if (s[i] == s1[i])
-                    continue;
-
-                if (s[i] == s1[idx])
-                {
-                    string temp = s;
-                    swap(temp[i], temp[idx]);
-                    if (!vis[temp])
-                        que.push({temp, idx + 1});
-                }
-            }
-        }
-
-        k++;
+        graph[u].push_back(v);
+        graph[v].push_back(u);
     }
 
-    return -1;
+    par.assign(n, -1);
+    disc.assign(n, 0);
+    low.assign(n, 0);
+    vis.assign(n, 0);
+    srcCount = 0;
+    discTime = 0;
+
+    articulationBridges(graph, 0);
+
+    return res;
 }
 
 // Job Sequencing Problem
@@ -2540,6 +2465,151 @@ vector<int> JobScheduling(Job arr[], int n)
     }
 
     return {jobCount, totalProfit};
+}
+
+// 773. Sliding Puzzle
+/*
+Approach: BFS
+*/
+int slidingPuzzle(vector<vector<int>> &board)
+{
+    int n = board.size();
+    int m = board[0].size();
+
+    // convert board to serialized string
+    string puzzle = "";
+    string solvedPuzzle = "123450";
+    int pos;
+    for (int i = 0; i < board.size(); i++)
+    {
+        for (int j = 0; j < board[0].size(); j++)
+        {
+            puzzle += (board[i][j] + '0');
+            if (board[i][j] == 0)
+                pos = i * m + j;
+        }
+    }
+
+    // put the serialized directions for each in a 2D board in an array
+    int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+    vector<vector<int>> graph{{1, 3}, {0, 2, 4}, {1, 5}, {0, 4}, {1, 3, 5}, {2, 4}};
+
+    // Use BFS to get the minimum moves required
+    queue<pair<string, int>> que; //{puzzle, index of empty slot in puzzle}
+    unordered_map<string, bool> vis;
+
+    que.push({puzzle, pos});
+
+    int moves = 0;
+
+    while (que.size() > 0)
+    {
+        int size = que.size();
+        while (size-- > 0)
+        {
+            pair<string, int> rnode = que.front();
+            que.pop();
+
+            string currPuzzle = rnode.first;
+            int pos = rnode.second;
+
+            if (currPuzzle == solvedPuzzle)
+                return moves;
+
+            // swap with 4 directions and push into queue
+            for (int dirIdx : graph[pos])
+            {
+                string newPuzzle = currPuzzle;
+                swap(newPuzzle[pos], newPuzzle[dirIdx]);
+
+                if (!vis[newPuzzle])
+                {
+                    vis[newPuzzle] = true;
+                    que.push({newPuzzle, dirIdx});
+                }
+            }
+        }
+
+        moves++;
+    }
+
+    return -1;
+}
+
+// 854. K-Similar Strings
+/*
+Approach: BFS
+*/
+int kSimilarity(string s1, string s2)
+{
+    queue<pair<string, int>> que;
+    unordered_map<string, bool> vis;
+
+    que.push({s2, 0});
+    vis[s2] = true;
+
+    int k = 0;
+
+    while (que.size() > 0)
+    {
+        int size = que.size();
+        while (size-- > 0)
+        {
+            pair<string, int> rnode = que.front();
+            que.pop();
+
+            string s = rnode.first;
+            int idx = rnode.second;
+
+            if (s == s1)
+                return k;
+
+            while (idx < s.size() && s[idx] == s1[idx])
+                idx++;
+
+            // check if we can swap the 2 elements such that both reach correct positions
+            bool flag = false;
+            for (int i = idx + 1; i < s.size(); i++)
+            {
+                if (s[i] == s1[i])
+                    continue;
+
+                if (s[i] == s1[idx] && s[idx] == s1[i])
+                {
+                    string temp = s;
+                    swap(temp[i], temp[idx]);
+                    if (!vis[temp])
+                    {
+                        que.push({temp, idx + 1});
+                        flag = true;
+                        break;
+                    }
+                }
+            }
+
+            if (flag)
+                continue;
+
+            // if we cant swap 2 elements into correct positions, then just find and swap the correct element at current index
+            for (int i = idx + 1; i < s.size(); i++)
+            {
+                if (s[i] == s1[i])
+                    continue;
+
+                if (s[i] == s1[idx])
+                {
+                    string temp = s;
+                    swap(temp[i], temp[idx]);
+                    if (!vis[temp])
+                        que.push({temp, idx + 1});
+                }
+            }
+        }
+
+        k++;
+    }
+
+    return -1;
 }
 
 int main()
