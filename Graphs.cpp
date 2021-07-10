@@ -2126,13 +2126,108 @@ void mst()
 }
 
 // 1168. Optimize Water Distribution in a Village (Premium, not available to submit anywhere)
+/*
+Approach: MST
+Consider the well as a seperate node, and add edges to all other nodes using cost as weight
+Then find the MST using prims or Kruskal
+*/
 void optimizeWater(vector<int> &wells, vector<int> &pipes)
 {
 }
 
 // Articulation Points
-void articulationPoint(vector<vector<int>> &graph)
+// https://www.spoj.com/problems/SUBMERGE/ (SPOJ)
+vector<int> par;
+vector<int> disc;
+vector<int> low;
+vector<bool> ap;
+vector<bool> vis;
+int discTime = 0;
+int srcCount = 0;
+void dfs(vector<vector<int>> &graph, int src)
 {
+    low[src] = discTime;
+    disc[src] = discTime;
+    vis[src] = true;
+
+    discTime++;
+
+    for (int v : graph[src])
+    {
+        // if the neighbor is my parent
+        if (par[src] == v)
+            continue;
+        // if neighor visited already
+        else if (vis[v])
+            low[src] = min(low[src], disc[v]);
+        // if not visited
+        else
+        {
+            // mark this node as neighbor's parent
+            par[v] = src;
+
+            // call for it
+            dfs(graph, v);
+
+            if (par[src] == 0) // actual source
+            {
+                srcCount++;
+                if (srcCount >= 2)
+                    ap[src] = true;
+            }
+            else if (low[v] >= disc[src])
+                ap[src] = true;
+
+            low[src] = min(low[src], low[v]);
+        }
+    }
+}
+void articulationPoints(vector<vector<int>> &graph, int n)
+{
+    par.assign(n + 1, 0);
+    disc.assign(n + 1, 0);
+    low.assign(n + 1, 0);
+    ap.assign(n + 1, 0);
+    vis.assign(n + 1, 0);
+    srcCount = 0;
+    discTime = 0;
+
+    dfs(graph, 1);
+}
+void solve()
+{
+    while (true)
+    {
+        int n, m;
+        cin >> n >> m;
+
+        if (n == 0 && m == 0)
+            return;
+
+        vector<vector<int>> graph(n + 1);
+
+        for (int i = 0; i < m; i++)
+        {
+            int u, v;
+            cin >> u >> v;
+
+            graph[u].push_back(v);
+            graph[v].push_back(u);
+        }
+
+        articulationPoints(graph, n);
+
+        int res = 0;
+        for (int i = 1; i <= n; i++)
+        {
+            if (ap[i])
+            {
+                res++;
+            }
+        }
+
+        cout << res << endl;
+    }
 }
 
 // 773. Sliding Puzzle
@@ -2357,7 +2452,7 @@ struct Job
 };
 // Approach 1: Greedy
 vector<int> JobScheduling(Job arr[], int n)
-{   
+{
     // find the max days available
     int maxDeadline = 0;
     for (int i = 0; i < n; i++)
