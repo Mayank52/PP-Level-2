@@ -2618,7 +2618,7 @@ Also keep a visited so, you dont traverse the same cycle again.
 int minSwaps(vector<int> &nums)
 {
     // Code here
-    int n = nums.size();    
+    int n = nums.size();
 
     // sort the given array, and store the sorted indexes of each element in a map
     vector<int> temp = nums;
@@ -2659,9 +2659,138 @@ int minSwaps(vector<int> &nums)
     return swapCount;
 }
 
+// https://codeforces.com/contest/1534/problem/C
+/*
+Approach: Cycle Detection
+Similar to minimum swaps to sort, here also we have to detect cycles
+
+Say we are at index i
+Element in row1 = ele1
+Element in row2 = ele2
+Swap the elements at current index i.e ele2 comes to row1, ele1 goes to row2
+This will cause duplicates in both rows since the elements we swapped would already be present there. 
+So, for row 1 find the index of the other copy of the ele2 in row1
+Then swap column at that index and repeat until the you find a copy of ele1 in row2 and swap it back to row1.
+
+So, each cycle is gives us 1 configuration
+So count number of such cycles.
+Then your answer = 2 ^ cycleCount
+
+Because we can combine different cycles to generate different configurations.
+We basically have n cycles [c1, c2, c3, c4....cn]
+So, we can take any subset of these and it will give a different configuration
+And number of subsets = 2^n
+
+For eg: 
+Row 1:   2 6 5 1 4 3 7 8
+Row 2:   3 8 7 5 1 2 4 6
+Indexes: 0 1 2 3 4 5 6 7
+
+First cycle will be at i = 0,
+swap(2, 3) at i = 0
+Then swap(3, 2) at i = 5
+
+Second cycle at i = 1
+swap(6, 8) at i=1
+Then, swap(8, 6) at i = 7
+
+Third Cycle at i = 2
+swap(5, 7)  at i = 2
+swap(7, 4) at i = 6
+swap(4, 1) at i = 4
+swap(1, 5) at i = 3
+
+These are the 3 cycles present
+Now, we form 2^3 = 8 different configurations using 3 cycles
+*/
+const long MOD = 1e9 + 7;
+long long modPow(long long a, long long b)
+{
+    if (a == 0)
+        return 0;
+    if (b == 0)
+        return 1;
+
+    long long smallAns = (modPow(a, b / 2));
+
+    smallAns = ((smallAns % MOD) * (smallAns % MOD)) % MOD;
+
+    return b % 2 == 0 ? smallAns : ((smallAns % MOD * a % MOD) % MOD);
+}
+long long countCycles(vector<vector<int>> &arr)
+{
+    int n = arr[0].size();
+
+    vector<bool> vis(n);
+    unordered_map<int, int> mp1;
+
+    for (int i = 0; i < n; i++)
+        mp1[arr[0][i]] = i;
+
+    long long count = 0;
+    for (int i = 0; i < n; i++)
+    {
+        if (vis[i])
+            continue;
+
+        count++;
+
+        vis[i] = true;
+        int ele1 = arr[0][i];
+        int ele2 = arr[1][i];
+
+        int j = mp1[ele2];
+
+        while (arr[1][j] != ele1)
+        {
+            vis[j] = true;
+            ele2 = arr[1][j];
+            j = mp1[ele2];
+
+            swap(arr[0][j], arr[1][j]);
+        }
+
+        vis[j] = true;
+        swap(arr[0][j], arr[1][j]);
+    }
+
+    return count;
+}
+
+void littleAlawanPuzzle()
+{
+    int t;
+    cin >> t;
+
+    while (t-- > 0)
+    {
+        int n;
+        cin >> n;
+
+        vector<vector<int>> arr(2, vector<int>(n));
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < n; j++)
+                cin >> arr[i][j];
+
+        long cycleCount = countCycles(arr);
+        long res = modPow(2, cycleCount);
+
+        cout << res << endl;
+    }
+}
+
 // 773. Sliding Puzzle
 /*
 Approach: BFS
+Push the initial board into queue.
+Now pop the front of queue.
+For the this board, we swap the 0 with all its adjacent elements
+If the new board has not occured before then push it into que.
+Then we continue like this until we get the solved board.
+
+Answer will be the level count when we get the solved board
+
+Since array size is 2x3 always, so we can hardcode the direction array, and solved puzzle configuration.
 */
 int slidingPuzzle(vector<vector<int>> &board)
 {
