@@ -1939,11 +1939,11 @@ vector<int> findRedundantDirectedConnection(vector<vector<int>> &edges)
         int v = edges[i][1];
 
         if (indegree[v] == -1)
-            indegree[v] = i;
+            indegree[v] = i; // indegree is 1, and store the edge making the indegree 1
         else
         {
-            bl1 = i;
-            bl2 = indegree[v];
+            bl1 = i;           // blacklist 1 = second edge that causes the indegree 2
+            bl2 = indegree[v]; // blackklist 2 = first edge that made indegree 1 initially
             break;
         }
     }
@@ -1962,12 +1962,14 @@ vector<int> findRedundantDirectedConnection(vector<vector<int>> &edges)
         // check if cycle
         bool hasCycle = merge(u, v);
 
+        // cycle present
         if (hasCycle)
         {
-            // if indegree is not 2
+            // if indegree is not 2, then the edge causing the cycle is redundant
             if (bl1 == -1)
                 return edges[i];
-            // if indegree is 2
+            // if indegree is 2, then the second edge that was blacklisted is redundant
+            // because the first blacklist was already removed
             else
                 return edges[bl2];
         }
@@ -2552,6 +2554,109 @@ int numSimilarGroups(vector<string> &strs)
     }
 
     return setCount;
+}
+
+// Euler Path and Circuit
+// Possible Path (https://practice.geeksforgeeks.org/problems/castle-run3644/1)
+/*
+Approach : Euler Circuit
+It is an undirected graph. So, find the degree of all nodes. 
+If the degree is even for all then it is a euler circuit and answer is true.
+*/
+int isPossible(vector<vector<int>> paths)
+{
+    int n = paths.size();
+
+    vector<int> degree(n, 0);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            if (paths[i][j] == 1)
+            {
+                degree[i]++;
+                degree[j]++;
+            }
+        }
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (degree[i] % 2 != 0)
+            return 0;
+    }
+
+    return 1;
+}
+
+// Minimum Swaps to Sort (https://practice.geeksforgeeks.org/problems/minimum-swaps/1)
+/*
+Approach : Cycle Detection
+1. Sort the array and find the sorted indexes of each element
+2. Now if elements have been swapped, then if we start putting each element back in its place
+then cycles will be formed.
+
+Eg: 
+Array:  7 16 14 17 6 9 5 3 18
+Sorted: 3 5 6 7 9 14 16 17 18
+Index:  0 1 2 3 4 5 6 7  8 9
+
+So for i = 0, i.e. 7
+Its correct position is index = 3
+So we go to i = 3.
+Now at 3 is 17 which should be at 8
+So go to 8.
+Now at 8 is 3 which should be at 0
+Go to 0. So, a cycle has been formed
+
+0 -> 3 -> 8 -> 0
+So minimum swaps for each cycle is size - 1 = 4 - 1 = 3
+
+This way find all cycles and add the count to total swaps.
+Also keep a visited so, you dont traverse the same cycle again.
+*/
+int minSwaps(vector<int> &nums)
+{
+    // Code here
+    int n = nums.size();    
+
+    // sort the given array, and store the sorted indexes of each element in a map
+    vector<int> temp = nums;
+
+    sort(temp.begin(), temp.end());
+
+    unordered_map<int, int> mp;
+    vector<bool> vis(n);
+
+    for (int i = 0; i < n; i++)
+        mp[temp[i]] = i;
+
+    int swapCount = 0;
+    for (int i = 0; i < n; i++)
+    {
+        if (vis[i])
+            continue;
+
+        vis[i] = true;
+        int correctPos = mp[nums[i]];
+
+        // until you complete the cycle and come back to the same index
+        // keep going to the correct index of the current element
+        int count = 0;
+        while (correctPos != i)
+        {
+            vis[correctPos] = true;
+
+            int num = nums[correctPos];
+            correctPos = mp[num];
+
+            count++;
+        }
+
+        swapCount += count;
+    }
+
+    return swapCount;
 }
 
 // 773. Sliding Puzzle
