@@ -2556,39 +2556,6 @@ int numSimilarGroups(vector<string> &strs)
     return setCount;
 }
 
-// Euler Path and Circuit
-// Possible Path (https://practice.geeksforgeeks.org/problems/castle-run3644/1)
-/*
-Approach : Euler Circuit
-It is an undirected graph. So, find the degree of all nodes. 
-If the degree is even for all then it is a euler circuit and answer is true.
-*/
-int isPossible(vector<vector<int>> paths)
-{
-    int n = paths.size();
-
-    vector<int> degree(n, 0);
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = i + 1; j < n; j++)
-        {
-            if (paths[i][j] == 1)
-            {
-                degree[i]++;
-                degree[j]++;
-            }
-        }
-    }
-
-    for (int i = 0; i < n; i++)
-    {
-        if (degree[i] % 2 != 0)
-            return 0;
-    }
-
-    return 1;
-}
-
 // Minimum Swaps to Sort (https://practice.geeksforgeeks.org/problems/minimum-swaps/1)
 /*
 Approach : Cycle Detection
@@ -2756,7 +2723,6 @@ long long countCycles(vector<vector<int>> &arr)
 
     return count;
 }
-
 void littleAlawanPuzzle()
 {
     int t;
@@ -2931,6 +2897,139 @@ int kSimilarity(string s1, string s2)
     }
 
     return -1;
+}
+
+// Find the Maximum Flow (Ford Fulkerson and Edmond's Karp Algo)
+int solve(int N, int M, vector<vector<int>> Edges)
+{
+    // code here
+}
+
+// Euler Path and Circuit
+// Possible Path (https://practice.geeksforgeeks.org/problems/castle-run3644/1)
+/*
+Approach : Find if Euler Circuit is present
+It is an undirected graph. So, find the degree of all nodes. 
+If the degree is even for all then it is a euler circuit and answer is true.
+*/
+int isPossible(vector<vector<int>> paths)
+{
+    int n = paths.size();
+
+    vector<int> degree(n, 0);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            if (paths[i][j] == 1)
+            {
+                degree[i]++;
+                degree[j]++;
+            }
+        }
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (degree[i] % 2 != 0)
+            return 0;
+    }
+
+    return 1;
+}
+
+// 332. Reconstruct Itinerary (Eulerian Path)
+/*
+Approach: Find the Euler Path
+*/
+//Using Min PQ to maintain the lexicographical order
+vector<string> path;
+unordered_map<string, priority_queue<string, vector<string>, greater<string>>> graph;
+void eulerianPath(string &src)
+{
+    while (graph[src].size() > 0)
+    {
+        string rnode = graph[src].top();
+        graph[src].pop();
+
+        eulerianPath(rnode);
+    }
+
+    path.push_back(src);
+}
+vector<string> findItinerary(vector<vector<string>> &tickets)
+{
+    for (vector<string> &e : tickets)
+    {
+        graph[e[0]].push(e[1]);
+    }
+
+    string src = "JFK";
+    eulerianPath(src);
+
+    reverse(path.begin(), path.end());
+
+    return path;
+}
+
+// Faster: Using a Multiset to maintain lexicographical order
+vector<string> path;
+unordered_map<string, multiset<string>> graph;
+void eulerianPath(string &src)
+{
+    while (graph[src].size() > 0)
+    {
+        string rnode = *graph[src].begin();
+        graph[src].erase(graph[src].begin());
+
+        eulerianPath(rnode);
+    }
+
+    path.push_back(src);
+}
+vector<string> findItinerary(vector<vector<string>> &tickets)
+{
+    for (vector<string> &e : tickets)
+    {
+        graph[e[0]].insert(e[1]);
+    }
+
+    string src = "JFK";
+    eulerianPath(src);
+
+    reverse(path.begin(), path.end());
+
+    return path;
+}
+
+// Floyd Warshall
+/*
+Approach:
+Time: O(V^3)
+*/
+void shortest_distance(vector<vector<int>> &matrix)
+{
+    int n = matrix.size();
+
+    for (int k = 0; k < n; k++)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                if (k == i || k == j)
+                    continue;
+
+                // if there is no edge b/w i,j and there is an edge b/w i,k and k,j
+                // then update i,j
+                if (matrix[i][j] == -1 && matrix[i][k] != -1 && matrix[k][j] != -1)
+                    matrix[i][j] = matrix[i][k] + matrix[k][j];
+                // else if the cost b/w i,j > cost(i,k) + cost(k,j), then update i,j
+                else if (matrix[i][k] != -1 && matrix[k][j] != -1)
+                    matrix[i][j] = min(matrix[i][j], matrix[i][k] + matrix[k][j]);
+            }
+        }
+    }
 }
 
 int main()
