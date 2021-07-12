@@ -3002,7 +3002,7 @@ vector<string> findItinerary(vector<vector<string>> &tickets)
     return path;
 }
 
-// Floyd Warshall
+// Floyd Warshall (GFG)
 /*
 Approach:
 Time: O(V^3)
@@ -3030,6 +3030,88 @@ void shortest_distance(vector<vector<int>> &matrix)
             }
         }
     }
+}
+
+// 1579. Remove Max Number of Edges to Keep Graph Fully Traversable
+vector<int> par1;
+vector<int> par2;
+int count1, count2;
+int find(int u, vector<int> &par)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u], par);
+}
+bool merge1(int u, int v)
+{
+    int p1 = find(u, par1);
+    int p2 = find(v, par1);
+
+    if (p1 == p2)
+        return true;
+
+    par1[p1] = p2;
+    count1--;
+
+    return false;
+}
+bool merge2(int u, int v)
+{
+    int p1 = find(u, par2);
+    int p2 = find(v, par2);
+
+    if (p1 == p2)
+        return true;
+
+    par2[p1] = p2;
+    count2--;
+
+    return false;
+}
+int maxNumEdgesToRemove(int n, vector<vector<int>> &edges)
+{
+    int totalEdges = edges.size();
+
+    sort(edges.begin(), edges.end(), greater<vector<int>>());
+
+    for (int i = 0; i <= n; i++)
+    {
+        par1.push_back(i);
+        par2.push_back(i);
+    }
+
+    count1 = n;
+    count2 = n;
+
+    int removedEdges = 0;
+
+    for (vector<int> &e : edges)
+    {
+        int u = e[1];
+        int v = e[2];
+        int color = e[0];
+
+        if (color == 3)
+        {
+            bool flag1 = merge1(u, v);
+            bool flag2 = merge2(u, v);
+            if (flag1 && flag2)
+                removedEdges++;
+        }
+        else if (color == 1)
+        {
+            if (merge1(u, v))
+                removedEdges++;
+        }
+        else if (color == 2)
+        {
+            if (merge2(u, v))
+                removedEdges++;
+        }
+    }
+
+    return (count1 == 1 && count2 == 1) ? removedEdges : -1;
 }
 
 int main()
