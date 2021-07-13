@@ -2908,7 +2908,7 @@ int solve(int N, int M, vector<vector<int>> Edges)
 // Euler Path and Circuit
 // Possible Path (https://practice.geeksforgeeks.org/problems/castle-run3644/1)
 /*
-Approach : Find if Euler Circuit is present
+Approach : Check if Euler Circuit is present
 It is an undirected graph. So, find the degree of all nodes. 
 If the degree is even for all then it is a euler circuit and answer is true.
 */
@@ -2938,11 +2938,11 @@ int isPossible(vector<vector<int>> paths)
     return 1;
 }
 
-// 332. Reconstruct Itinerary (Eulerian Path)
+// 332. Reconstruct Itinerary (Euler Path)
 /*
 Approach: Find the Euler Path
 */
-//Using Min PQ to maintain the lexicographical order
+// Using Min PQ to maintain the lexicographical order
 vector<string> path;
 unordered_map<string, priority_queue<string, vector<string>, greater<string>>> graph;
 void eulerianPath(string &src)
@@ -3114,6 +3114,85 @@ int maxNumEdgesToRemove(int n, vector<vector<int>> &edges)
     return (count1 == 1 && count2 == 1) ? removedEdges : -1;
 }
 
+// 787. Cheapest Flights Within K Stops
+/*
+Approach 1: Dijkstra Algo
+Use a Min PQ (price, node stops)
+We cant use a visited array directly because we may visit the same node with less stops again.
+EG:
+5
+[[0,1,5],[1,2,5],[0,3,2],[3,1,2],[1,4,1],[4,2,1]]
+0
+2
+2
+
+Here we reach the node 1 with less price first but we have already used k stops.
+So, we can reach it again in less stops by a different path. 
+So, instead of a visited, we keep a cost and a stops array.
+and before pushing into PQ, we check if we are reaching that node with either less cost or less stops
+Then only we push it into PQ.
+
+Without this check the complexity is bad. It gives TLE.
+
+Approach 2: Bellman Ford
+
+
+
+*/
+// Approach 1: Dijkstra Algo
+int findCheapestPrice(int n, vector<vector<int>> &flights, int src, int dst, int k)
+{
+    typedef pair<int, int> pair;
+    vector<vector<pair>> graph(n);
+
+    for (int i = 0; i < flights.size(); i++)
+    {
+        int u = flights[i][0];
+        int v = flights[i][1];
+        int w = flights[i][2];
+
+        graph[u].push_back({v, w});
+    }
+
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+    vector<int> cost(n, INT_MAX);
+    vector<int> stops(n, n);
+
+    pq.push({0, src, 0}); //{ price, node, k}
+
+    while (pq.size() > 0)
+    {
+        vector<int> rnode = pq.top();
+        pq.pop();
+
+        int price = rnode[0];
+        int currStop = rnode[1];
+        int stopCount = rnode[2];
+
+        if (currStop == dst)
+        {
+            return price;
+        }
+        else if (stopCount > k)
+            continue;
+
+        for (pair &e : graph[currStop])
+        {
+            if (cost[e.first] > e.second + price || stops[e.first] > stopCount + 1)
+            {
+                cost[e.first] = e.second + price;
+                stops[e.first] = stopCount + 1;
+                pq.push({price + e.second, e.first, stopCount + 1});
+            }
+        }
+    }
+
+    return -1;
+}
+// Approach 2: Bellman Ford
+int findCheapestPrice(int n, vector<vector<int>> &flights, int src, int dst, int k)
+{
+}
 int main()
 {
     ios_base::sync_with_stdio(false);
