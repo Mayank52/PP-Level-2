@@ -3135,9 +3135,11 @@ Then only we push it into PQ.
 Without this check the complexity is bad. It gives TLE.
 
 Approach 2: Bellman Ford
-
-
-
+In Bellman ford, at a time for the k'th iteration we will have the answers for atleast kth distance nodes in the array.
+But we need strictly kth. So, we keep 2 arrays prev, curr.
+We use prev array to update the values, and update them in the curr array.
+Then for the next iteration we make the curr array as prev, and a new curr array.
+For k stops we do this k+1 times because the destination will be at the (k+1)th node.
 */
 // Approach 1: Dijkstra Algo
 int findCheapestPrice(int n, vector<vector<int>> &flights, int src, int dst, int k)
@@ -3192,7 +3194,193 @@ int findCheapestPrice(int n, vector<vector<int>> &flights, int src, int dst, int
 // Approach 2: Bellman Ford
 int findCheapestPrice(int n, vector<vector<int>> &flights, int src, int dst, int k)
 {
+    vector<int> prev(n, INT_MAX);
+    prev[src] = 0;
+    vector<int> curr;
+
+    for (int i = 0; i <= k; i++)
+    {
+        curr.assign(n, INT_MAX);
+        curr[src] = 0;
+
+        // get the minimum distance to all stops at ith distance
+        for (vector<int> &e : flights)
+        {
+            int u = e[0];
+            int v = e[1];
+            int w = e[2];
+
+            if (prev[u] == INT_MAX)
+                continue;
+
+            if (prev[u] + w < curr[v])
+                curr[v] = prev[u] + w;
+        }
+
+        prev = curr;
+    }
+
+    return curr[dst] == INT_MAX ? -1 : curr[dst];
 }
+
+// 803. Bricks Falling When Hit
+/*
+Approach: DSU
+Remove all the bricks given in the query
+To do this mark the bricks that are 1, as 2 and leave 0 as 0
+
+Then use Union Find. Use a 1D parent array of size n*m + 1
+For each cell, convert it to 1D index. The nodes are 1 based.
+We use 0th index as default parent of all 0th row 1s
+So add all 1s in 0th row to same set with 0 as parent.
+Then make sets for all remaining 1s
+
+Now iterate through queries in reverse
+If that brick is 0, then skip it, if it is 2, then it was 1 before
+So, merge it to a set with its adjacent elements.
+Then if this brick was in 0th row, then add it to the set of 0 as well
+
+Then find the difference in size of set 0 before and after adding that brick
+That diff - 1(for this brick), is the number of bricks that would fall if this brick is removed.
+*/
+vector<int> par;
+vector<int> size;
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+void merge(int u, int v)
+{
+    int p1 = find(u);
+    int p2 = find(v);
+
+    if (p1 != p2)
+    {
+        //  if one of u, v is 0, make 0 the parent always
+        if (p1 == 0 || p2 == 0)
+        {
+            if (p1 == 0)
+            {
+                par[p2] = p1;
+                size[p1] += size[p2];
+            }
+            else
+            {
+                par[p1] = p2;
+                size[p2] += size[p1];
+            }
+        }
+        // else merge on basis of size
+        else if (size[p1] < size[p2])
+        {
+            par[p1] = p2;
+            size[p2] += size[p1];
+        }
+        else
+        {
+            par[p2] = p1;
+            size[p1] += size[p2];
+        }
+    }
+}
+vector<int> hitBricks(vector<vector<int>> &grid, vector<vector<int>> &hits)
+{
+    int n = grid.size();
+    int m = grid[0].size();
+
+    int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+    vector<int> res(hits.size());
+
+    for (int i = 0; i <= n * m; i++)
+    {
+        par.push_back(i);
+        size.push_back(1);
+    }
+
+    // remove the bricks given in queries from the grid
+    for (vector<int> &v : hits)
+    {
+        if (grid[v[0]][v[1]] == 1)
+            grid[v[0]][v[1]] = 2;
+    }
+
+    // make the sets of 1s in the 1st row, making 0 as parent
+    for (int j = 0; j < m; j++)
+    {
+        if (grid[0][j] == 1)
+        {
+            int v = j + 1;
+            merge(0, v);
+        }
+    }
+
+    // make the sets of remaining 1s
+    for (int i = 1; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            if (grid[i][j] == 1)
+            {
+                int u = i * m + j + 1;
+                for (int d = 0; d < 4; d++)
+                {
+                    int x = i + dir[d][0];
+                    int y = j + dir[d][1];
+
+                    if (x >= 0 && y >= 0 && x < n && y < m && grid[x][y] == 1)
+                    {
+                        int v = x * m + y + 1;
+                        merge(u, v);
+                    }
+                }
+            }
+        }
+    }
+
+    // solve queries in reverse order
+    for (int k = hits.size() - 1; k >= 0; k--)
+    {
+        int i = hits[k][0];
+        int j = hits[k][1];
+
+        if (grid[i][j] == 2)
+            grid[i][j] = 1;
+        else
+            continue;
+
+        int sizeBeforeMerge = size[0];
+
+        // merge this brick with all its adjacent bricks
+        int u = i * m + j + 1;
+        for (int d = 0; d < 4; d++)
+        {
+            int x = i + dir[d][0];
+            int y = j + dir[d][1];
+
+            if (x >= 0 && y >= 0 && x < n && y < m && grid[x][y] == 1)
+            {
+                int v = x * m + y + 1;
+                merge(u, v);
+            }
+        }
+
+        //merge its set with 0s set if it is in first 0th row
+        if (i == 0)
+            merge(0, u);
+
+        int sizeAfterMerge = size[0];
+
+        int diff = abs(sizeAfterMerge - sizeBeforeMerge) - 1;
+        if (diff > 0)
+            res[k] = diff;
+    }
+
+    return res;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
