@@ -3381,6 +3381,258 @@ vector<int> hitBricks(vector<vector<int>> &grid, vector<vector<int>> &hits)
     return res;
 }
 
+// 1202. Smallest String With Swaps
+/*
+Approach: Union Find
+https://leetcode.com/problems/smallest-string-with-swaps/discuss/388257/C%2B%2B-with-picture-union-find
+
+As given in this discuss, iterate over all pairs, and group them into sets
+Then sort each set individually
+Then put those characters back into the string at their respective postions
+Eg:
+"zdcyxbwa"
+[[0,3],[4,6],[3,4],[1,7],[2,5],[5,7]]
+
+We get the sets:
+1. zyxw -> after sorting it is wxyz
+2. dcba -> after sorting it is abcd
+
+Now put them back in their correct positons
+Like w goes in position of z
+x goes in position of y and so on...
+
+*/
+vector<int> par;
+unordered_map<int, priority_queue<char, vector<char>, greater<char>>> mp; // {parent: Min PQ of chars in that set}
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+void merge(int u, int v)
+{
+    int p1 = find(u);
+    int p2 = find(v);
+
+    if (p1 != p2)
+    {
+        if (mp[p1].size() > mp[p2].size())
+        {
+            par[p2] = p1;
+            while (mp[p2].size() > 0)
+            {
+                char ch = mp[p2].top();
+                mp[p2].pop();
+
+                mp[p1].push(ch);
+            }
+        }
+        else
+        {
+            par[p1] = p2;
+            while (mp[p1].size() > 0)
+            {
+                char ch = mp[p1].top();
+                mp[p1].pop();
+
+                mp[p2].push(ch);
+            }
+        }
+    }
+}
+string smallestStringWithSwaps(string s, vector<vector<int>> &pairs)
+{
+    string res = "";
+
+    // initialize the parent array, and the map
+    for (int i = 0; i < s.size(); i++)
+    {
+        par.push_back(i);
+        mp[i].push(s[i]);
+    }
+
+    // make the sets of all pairs
+    for (int i = 0; i < pairs.size(); i++)
+    {
+        int u = pairs[i][0];
+        int v = pairs[i][1];
+
+        merge(u, v);
+    }
+
+    // for each element in string s,
+    for (int i = 0; i < s.size(); i++)
+    {
+        // get the top of PQ of its parent i.e. the smallest element in its set
+        // and add it to the answer
+        int p = find(i);
+        res += mp[p].top();
+
+        mp[p].pop();
+    }
+
+    return res;
+}
+
+// 1203. Sort Items by Groups Respecting Dependencies
+/*
+Approach: Topological Sort
+1. Make the graph using group and beforeItems array
+
+For node a with beforeItem b
+If the before node and this node are in same group, then add edge before node to this node
+else Get the end node of node b and add a directed edge from b to end node and end node to a
+
+And for its group g, get the group's start and end node
+start node : no. of nodes + 2 * group no.
+end node: no. of nodes + 2 * group no. + 1
+
+If the before node and this node are in same group, then add edge before node to this node
+
+2. Apply Topological sort
+We apply topological sort seperately on each group
+So, to make sure each group's node are together, we start topological sort from the dummy nodes
+So, apply topo sort from start node of each group
+
+Eg:
+Item    Group   Before
+0       -1
+1       -1        6
+2        1        5
+3        0        6
+4        0       3,6
+5        1
+6        0
+7       -1
+
+0 -> 
+1 -> 
+2 -> 11 
+3 -> 4 9 
+4 -> 9 
+5 -> 11 2 
+6 -> 9 4 3 
+7 -> 
+8 -> 6 4 3 
+9 -> 1 
+10 -> 5 2 
+11 -> 
+
+
+Indexes:  0 1 2 3 4 5 6 7 8 9 10 11
+Indegree: 0 1 2 2 3 1 1 0 0 3 0  2
+
+
+0   2 
+1   0
+2   -1
+3
+4
+
+*/
+
+vector<int> res;
+vector<bool> vis;
+vector<int> indegree;
+void topologicalSort(vector<unordered_set<int>> &graph, int src, int n)
+{
+    queue<int> que;
+    que.push(src);
+
+    while (que.size() > 0)
+    {
+        int rnode = que.front();
+        que.pop();
+
+        if (rnode < n)
+        {
+            cout << rnode << " ";
+            res.push_back(rnode);
+            vis[rnode] = true;
+        }
+
+        for (int v : graph[rnode])
+        {
+            if (indegree[v] > 0)
+            {
+                indegree[v]--;
+                if (indegree[v] == 0)
+                    que.push(v);
+            }
+        }
+    }
+}
+
+vector<int> sortItems(int n, int m, vector<int> &group, vector<vector<int>> &beforeItems)
+{
+    int totalNodes = n + 2 * m;
+    vector<unordered_set<int>> graph(totalNodes);
+    indegree.resize(totalNodes);
+    vis.resize(totalNodes);
+
+    for (int i = 0; i < n; i++)
+    {
+        cout << i << " ";
+        int v = i;
+        int currNodeGroup = group[v];
+        if (currNodeGroup != -1)
+        {
+            int groupStart = n + 2 * currNodeGroup;
+            int groupEnd = groupStart + 1;
+
+            graph[groupStart].insert(v);
+            graph[v].insert(groupEnd);
+
+            indegree[v]++;
+            indegree[groupEnd]++;
+        }
+
+        for (int u : beforeItems[i])
+        {
+            int beforeItemGroup = group[u];
+            if (currNodeGroup != -1 && currNodeGroup == beforeItemGroup)
+            {
+                graph[u].insert(v);
+                indegree[v]++;
+            }
+            else
+            {
+                int beforeNodeGroupEnd = n + 2 * group[u] + 1;
+                graph[beforeNodeGroupEnd].insert(v);
+                indegree[v]++;
+            }
+        }
+    }
+
+    for (int i = 0; i < graph.size(); i++)
+    {
+        cout << i << " -> ";
+        for (auto ele : graph[i])
+        {
+            cout << ele << " ";
+        }
+        cout << endl;
+    }
+
+    for (int i = n; i < totalNodes; i += 2)
+    {
+        topologicalSort(graph, i, n);
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (!vis[i] && group[i] == -1)
+        {
+            cout << i << " ";
+            res.push_back(i);
+        }
+    }
+
+    return res.size() == n ? res : vector<int>();
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
