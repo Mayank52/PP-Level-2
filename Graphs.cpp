@@ -3492,9 +3492,8 @@ end node: no. of nodes + 2 * group no. + 1
 If the before node and this node are in same group, then add edge before node to this node
 
 2. Apply Topological sort
-We apply topological sort seperately on each group
-So, to make sure each group's node are together, we start topological sort from the dummy nodes
-So, apply topo sort from start node of each group
+To apply topological sort we we iterate over the indgrees and for each indegree==0
+we call topological sort with that node as source.
 
 Eg:
 Item    Group   Before
@@ -3507,6 +3506,7 @@ Item    Group   Before
 6        0
 7       -1
 
+Graph:
 0 -> 
 1 -> 
 2 -> 11 
@@ -3520,46 +3520,36 @@ Item    Group   Before
 10 -> 5 2 
 11 -> 
 
-
 Indexes:  0 1 2 3 4 5 6 7 8 9 10 11
 Indegree: 0 1 2 2 3 1 1 0 0 3 0  2
-
-
-0   2 
-1   0
-2   -1
-3
-4
-
 */
 
 vector<int> res;
-vector<bool> vis;
 vector<int> indegree;
-void topologicalSort(vector<unordered_set<int>> &graph, int src, int n)
+queue<int> que;
+vector<bool> vis;
+void topologicalSort(vector<unordered_set<int>> &graph, int n, int src)
 {
     queue<int> que;
+    
     que.push(src);
-
+        
     while (que.size() > 0)
     {
         int rnode = que.front();
         que.pop();
-
+        
+        indegree[rnode]--;
         if (rnode < n)
         {
-            cout << rnode << " ";
             res.push_back(rnode);
-            vis[rnode] = true;
         }
 
         for (int v : graph[rnode])
         {
-            if (indegree[v] > 0)
-            {
-                indegree[v]--;
-                if (indegree[v] == 0)
-                    que.push(v);
+            indegree[v]--;
+            if (indegree[v] == 0){
+                que.push(v);
             }
         }
     }
@@ -3571,62 +3561,38 @@ vector<int> sortItems(int n, int m, vector<int> &group, vector<vector<int>> &bef
     vector<unordered_set<int>> graph(totalNodes);
     indegree.resize(totalNodes);
     vis.resize(totalNodes);
-
+    
+    // graph construction
     for (int i = 0; i < n; i++)
     {
-        cout << i << " ";
-        int v = i;
-        int currNodeGroup = group[v];
-        if (currNodeGroup != -1)
+        int currHead = (group[i] == -1) ? i : ( n + 2 * group[i]);
+        int currTail = (group[i] == -1) ? i : ( n + 2 * group[i] + 1);
+        
+        if (group[i] != -1)
         {
-            int groupStart = n + 2 * currNodeGroup;
-            int groupEnd = groupStart + 1;
-
-            graph[groupStart].insert(v);
-            graph[v].insert(groupEnd);
-
-            indegree[v]++;
-            indegree[groupEnd]++;
+            graph[currHead].insert(i);
+            graph[i].insert(currTail);
         }
 
         for (int u : beforeItems[i])
         {
-            int beforeItemGroup = group[u];
-            if (currNodeGroup != -1 && currNodeGroup == beforeItemGroup)
-            {
-                graph[u].insert(v);
-                indegree[v]++;
-            }
-            else
-            {
-                int beforeNodeGroupEnd = n + 2 * group[u] + 1;
-                graph[beforeNodeGroupEnd].insert(v);
-                indegree[v]++;
-            }
+            int beforeItemTail = (group[u] == -1) || (group[u] == group[i]) ? u : (n + 2 * group[u] + 1);
+            int currHead = (group[i] == -1) || (group[u] == group[i]) ? i : (n + 2 * group[i]);
+            
+            graph[beforeItemTail].insert(currHead);
         }
     }
-
-    for (int i = 0; i < graph.size(); i++)
-    {
-        cout << i << " -> ";
-        for (auto ele : graph[i])
-        {
-            cout << ele << " ";
+    for(int i = 0; i < graph.size(); i++){
+        for(int v : graph[i]){
+            indegree[v]++;
         }
-        cout << endl;
-    }
-
-    for (int i = n; i < totalNodes; i += 2)
+    }  
+    
+    // Topological Sort
+    for (int i = 0; i < totalNodes; i++)
     {
-        topologicalSort(graph, i, n);
-    }
-
-    for (int i = 0; i < n; i++)
-    {
-        if (!vis[i] && group[i] == -1)
-        {
-            cout << i << " ";
-            res.push_back(i);
+        if (indegree[i] == 0){
+            topologicalSort(graph, n, i);
         }
     }
 
