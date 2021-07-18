@@ -3476,7 +3476,7 @@ string smallestStringWithSwaps(string s, vector<vector<int>> &pairs)
     return res;
 }
 
-// 1203. Sort Items by Groups Respecting Dependencies
+// 1203. Sort Items by Groups Respecting Dependencies (Not Complete)
 /*
 Approach: Topological Sort
 1. Make the graph using group and beforeItems array
@@ -3523,7 +3523,6 @@ Graph:
 Indexes:  0 1 2 3 4 5 6 7 8 9 10 11
 Indegree: 0 1 2 2 3 1 1 0 0 3 0  2
 */
-
 vector<int> res;
 vector<int> indegree;
 queue<int> que;
@@ -3531,14 +3530,14 @@ vector<bool> vis;
 void topologicalSort(vector<unordered_set<int>> &graph, int n, int src)
 {
     queue<int> que;
-    
+
     que.push(src);
-        
+
     while (que.size() > 0)
     {
         int rnode = que.front();
         que.pop();
-        
+
         indegree[rnode]--;
         if (rnode < n)
         {
@@ -3548,26 +3547,26 @@ void topologicalSort(vector<unordered_set<int>> &graph, int n, int src)
         for (int v : graph[rnode])
         {
             indegree[v]--;
-            if (indegree[v] == 0){
+            if (indegree[v] == 0)
+            {
                 que.push(v);
             }
         }
     }
 }
-
 vector<int> sortItems(int n, int m, vector<int> &group, vector<vector<int>> &beforeItems)
 {
     int totalNodes = n + 2 * m;
     vector<unordered_set<int>> graph(totalNodes);
     indegree.resize(totalNodes);
     vis.resize(totalNodes);
-    
+
     // graph construction
     for (int i = 0; i < n; i++)
     {
-        int currHead = (group[i] == -1) ? i : ( n + 2 * group[i]);
-        int currTail = (group[i] == -1) ? i : ( n + 2 * group[i] + 1);
-        
+        int currHead = (group[i] == -1) ? i : (n + 2 * group[i]);
+        int currTail = (group[i] == -1) ? i : (n + 2 * group[i] + 1);
+
         if (group[i] != -1)
         {
             graph[currHead].insert(i);
@@ -3578,25 +3577,219 @@ vector<int> sortItems(int n, int m, vector<int> &group, vector<vector<int>> &bef
         {
             int beforeItemTail = (group[u] == -1) || (group[u] == group[i]) ? u : (n + 2 * group[u] + 1);
             int currHead = (group[i] == -1) || (group[u] == group[i]) ? i : (n + 2 * group[i]);
-            
+
             graph[beforeItemTail].insert(currHead);
         }
     }
-    for(int i = 0; i < graph.size(); i++){
-        for(int v : graph[i]){
+    for (int i = 0; i < graph.size(); i++)
+    {
+        for (int v : graph[i])
+        {
             indegree[v]++;
         }
-    }  
-    
+    }
+
     // Topological Sort
     for (int i = 0; i < totalNodes; i++)
     {
-        if (indegree[i] == 0){
+        if (indegree[i] == 0)
+        {
             topologicalSort(graph, n, i);
         }
     }
 
     return res.size() == n ? res : vector<int>();
+}
+
+// 802. Find Eventual Safe States
+/*
+Approach: Cycle Detection in Directed Graph
+The safe nodes are those nodes that are not part of any cycle.
+So, we detect all cycles in graph.
+
+We a visited to store, if current node is:
+1. Unvisited
+2. Visited
+    a. Safe
+    b. Unsafe
+
+For each node if it is visited in the DFS again, then it is part of a cycle
+Then is it is unsafe.
+*/
+bool isSafe(vector<vector<int>> &graph, int src, vector<int> &vis)
+{
+    // if already visited
+    if (vis[src] == 1)
+        return true;
+    if (vis[src] == 2)
+        return false;
+
+    // else initialise current node as unsafe
+    vis[src] = 2;
+
+    for (int v : graph[src])
+    {
+        // if any neighbor is unsafe, then this is also unsafe
+        if (!isSafe(graph, v, vis))
+            return false;
+    }
+
+    // mark current node as safe
+    vis[src] = 1;
+
+    return true;
+}
+vector<int> eventualSafeNodes(vector<vector<int>> &graph)
+{
+    int n = graph.size();
+
+    vector<int> vis(n); // 0: unvisited, 1: safe, 2: unsafe
+
+    for (int i = 0; i < n; i++)
+    {
+        if (vis[i] == 0)
+        {
+            isSafe(graph, i, vis);
+        }
+    }
+
+    vector<int> res;
+    for (int i = 0; i < n; i++)
+    {
+        if (vis[i] == 1)
+        {
+            res.push_back(i);
+        }
+    }
+
+    return res;
+}
+
+// 1627. Graph Connectivity With Threshold
+/*
+Approach: DSU
+For each query we have to check if the two nodes are connected directly or indirectly
+So, Connect each node greater than threshold with all its multiples
+Use Union Find, to make sets of all these nodes.
+Then for each query, just check if they belong to the same set
+
+We cannot use gcd to check if they are connected because it only checks direct connections.
+*/
+vector<int> par;
+vector<int> rank;
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+void merge(int u, int v)
+{
+    int p1 = find(u);
+    int p2 = find(v);
+
+    if (p1 != p2)
+    {
+        if (rank[p1] < rank[p2])
+        {
+            par[p1] = p2;
+        }
+        else if (rank[p2] < rank[p1])
+        {
+            par[p2] = p1;
+        }
+        else
+        {
+            par[p2] = p1;
+            rank[p1]++;
+        }
+    }
+}
+vector<bool> areConnected(int n, int threshold, vector<vector<int>> &queries)
+{
+    par.resize(n + 1);
+    rank.resize(n + 1, 1);
+
+    for (int i = 1; i <= n; i++)
+        par[i] = i;
+
+    // merge every number > threshold with all its multiples
+    for (int u = threshold + 1; u <= n; u++)
+    {
+        int i = 2;
+        while (u * i <= n)
+        {
+            merge(u, u * i);
+            i++;
+        }
+    }
+
+    vector<bool> res(queries.size());
+
+    for (int i = 0; i < queries.size(); i++)
+    {
+        int a = queries[i][0];
+        int b = queries[i][1];
+
+        int p1 = find(a);
+        int p2 = find(b);
+
+        // if the 2 numbers belong to same set, then they are connected
+        if (p1 == p2)
+            res[i] = true;
+    }
+
+    return res;
+}
+
+// 743. Network Delay Time
+/*
+Approach: Dijkstra Algo
+*/
+int networkDelayTime(vector<vector<int>> &times, int n, int k)
+{
+    vector<vector<vector<int>>> graph(n + 1);
+
+    for (vector<int> &e : times)
+    {
+        int u = e[0];
+        int v = e[1];
+        int w = e[2];
+
+        graph[u].push_back({v, w});
+    }
+
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+    vector<int> cost(n + 1, INT_MAX);
+    cost[k] = 0;
+    pq.push({0, k}); // {cost, node}
+
+    while (pq.size() > 0)
+    {
+        vector<int> rnode = pq.top();
+        pq.pop();
+
+        for (vector<int> &e : graph[rnode[1]])
+        {
+            if (cost[e[0]] > rnode[0] + e[1])
+            {
+                pq.push({rnode[0] + e[1], e[0]});
+                cost[e[0]] = rnode[0] + e[1];
+            }
+        }
+    }
+
+    int res = 0;
+    for (int i = 1; i <= n; i++)
+    {
+        if (cost[i] == INT_MAX)
+            return -1;
+
+        res = max(res, cost[i]);
+    }
+
+    return res;
 }
 
 int main()
