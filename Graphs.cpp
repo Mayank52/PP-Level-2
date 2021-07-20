@@ -266,6 +266,46 @@ int removeStones(vector<vector<int>> &stones)
     return n - count;
 }
 
+// 463. Island Perimeter
+/*
+Approach:
+Iterate over the grid
+For each 1 add 4 to the answer
+Then reduce 1 from answer for each of its neighbor that is 1
+*/
+int islandPerimeter(vector<vector<int>> &grid)
+{
+    int n = grid.size();
+    int m = grid[0].size();
+
+    int res = 0;
+    int dir[4][2] = {{0, 1}, {1, 0}, {-1, 0}, {0, -1}};
+
+    for (int i = 0; i < grid.size(); i++)
+    {
+        for (int j = 0; j < grid[0].size(); j++)
+        {
+            if (grid[i][j] == 1)
+            {
+                // add 4 for this block
+                res += 4;
+
+                // subtract 1 for each neighbor
+                for (int d = 0; d < 4; d++)
+                {
+                    int x = i + dir[d][0];
+                    int y = j + dir[d][1];
+
+                    if (x >= 0 && y >= 0 && x < n && y < m && grid[x][y] == 1)
+                        res -= 1;
+                }
+            }
+        }
+    }
+
+    return res;
+}
+
 // PP List Questions================================================================
 // 200. Number of Islands
 void dfs(vector<vector<char>> &grid, int sr, int sc)
