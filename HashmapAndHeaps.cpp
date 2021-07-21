@@ -375,6 +375,53 @@ vector<vector<int>> getSkyline(vector<vector<int>> &buildings)
     return res;
 }
 
+// Pairs of Non Coinciding Points
+/*
+Approach: O(n)
+Given condition:
+Manhattan Distance = Euclidean Distance
+|x2 - x1| + |y2 - y1| = sqrt((x2 - x1)^2 + (y2 - y1)^2)
+=> (|x2 - x1| + |y2 - y1|)^2 = (x2 - x1)^2 + (y2 - y1)^2
+=> (|x2 - x1|)^2  + (|y2 - y1|)^2 + 2*|x2 - x1|*|y2 - y1| = (x2 - x1)^2 + (y2 - y1)^2
+=> 2*|x2 - x1|*|y2 - y1| = 0
+
+On Solving this equation we get,
+(x2 - x1)(y2 - y1) = 0
+So, we have 3 conditions 
+x2 = x1 or 
+y2 = y1 or 
+x2 = x1 and y2 = y1, this condition is not valid as coinciding points are not allowed
+
+We keep 3 maps: x coords, y coords, {x, y} coords
+For each point we do
+res += xmap[x] + ymap[y] - 2 * xymap[{x, y}];
+
+So we add count of elements satisfying first 2 conditions, and
+remove 2 * 3rd condition points as we would have included the count of same twice
+Once from the x coord map, and one from y coord map
+*/
+int numOfPairs(int X[], int Y[], int N)
+{
+    // code here
+    int res = 0;
+    unordered_map<int, int> xmap, ymap;
+    map<pair<int, int>, int> xymap;
+
+    for (int i = 0; i < N; i++)
+    {
+        int x = X[i];
+        int y = Y[i];
+
+        res += xmap[x] + ymap[y] - 2 * xymap[{x, y}];
+
+        xmap[x]++;
+        ymap[y]++;
+        xymap[{x, y}]++;
+    }
+
+    return res;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
