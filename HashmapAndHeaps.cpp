@@ -1,7 +1,10 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <unordered_map>
 #include <map>
+#include <set>
+#include <queue>
 
 using namespace std;
 
@@ -286,8 +289,90 @@ int findMaxConsecutiveOnes(vector<int> &nums)
 }
 
 // 218. The Skyline Problem
+/*
+Approach: Using Max Priority Queue
+
+Algorithm:
+1. For every [start, end, height] divide it into [start, -height], [end, height].
+    In this way make another array of [x coord, height].
+2. Sort this array in increasing order of x coord, if x coord is equal, then in increasing order of height
+3. Then use a Max PQ. Push a 0 into PQ initially, and keep a previous height = 0
+4. Iterate over the sorted array. For every element
+    a. If the height < 0, then it is the starting point
+        Push this height into PQ. But the height is < 0, so we push -height
+    b. If height is > 0 then it is end point. 
+        In this case one building is over, so we remove this height from PQ
+        It will not necessarily, be on top. So, we cant use pop(). Instead we use
+        Java: pq.remove(h) -> O(n)
+        C++: Does not have a way to delelte a specific element, so use a set as a PQ.
+    
+    Also at each iteration, we check if the current top() i.e. the maximum height in PQ
+    is equal to the previous height. If not that means the coord has changed.
+    So, we push the currrent x coord, top() height of PQ, into result and update the
+    previous height = pq.top();
+
+Complexity is O(n ^ 2) because the remove operation in Java is O(n)
+But in C++, multiset, has O(logn) for insertion, removal, find operations
+So, complexity will be O(nlogn)
+
+
+We can use a multiset or set as a PQ
+top() -> min element : *pq.begin(), max element: *pq.rbegin()
+pop() -> min: pq.erase(pq.begin()), max: pq.erase(pq.rbegin())
+
+Also, we can remove a specific element from set using
+pq.erase(pq.find(ele))
+
+But removing a specific element from priority_queue in c++ STL is not possible
+
+According to C++ Reference, the complexity of
+multiset::erase(iterator) -> constant
+multiset::erase(val) -> logarithmic in container size, plus linear in the number of elements removed.
+
+Also erase(val) removes all ocurrences of the element present in the multiset
+*/
 vector<vector<int>> getSkyline(vector<vector<int>> &buildings)
 {
+    vector<pair<int, int>> arr; //{left coord, height}
+    //make the array of [x coord, height]
+    for (vector<int> &building : buildings)
+    {
+        int sp = building[0];
+        int ep = building[1];
+        int h = building[2];
+
+        arr.push_back({sp, -h});
+        arr.push_back({ep, h});
+    }
+
+    // sort in increasing order of x coord
+    sort(arr.begin(), arr.end());
+
+    vector<vector<int>> res;
+    multiset<int> pq;
+    pq.insert(0);
+
+    int prevHeight = 0;
+    for (pair<int, int> &building : arr)
+    {
+        int x = building.first;
+        int h = building.second;
+
+        // starting point of building
+        if (h < 0)
+            pq.insert(-h);
+        // end point of building
+        else
+            pq.erase(pq.find(h));
+
+        if (prevHeight != *pq.rbegin())
+        {
+            res.push_back({x, *pq.rbegin()});
+            prevHeight = *pq.rbegin();
+        }
+    }
+
+    return res;
 }
 
 int main()
