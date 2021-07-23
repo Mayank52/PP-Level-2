@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <map>
 #include <set>
+#include <unordered_set>
 #include <queue>
 
 using namespace std;
@@ -38,6 +39,134 @@ bool hasGroupsSizeX(vector<int> &deck)
     }
 
     return ogcd >= 2;
+}
+
+// Check Arithmetic Progression (https://practice.geeksforgeeks.org/problems/check-arithmetic-progression1842/1)
+/*
+Approach: O(n)
+Find the min and second min
+Then common diff = second min - min
+Put all elements in array into set.
+Now using the AP formula 
+ai = a + i * d
+
+We will check if all these values are in the set
+*/
+bool checkIsAP(int arr[], int n)
+{
+    unordered_set<int> ap;
+    int a = INT_MAX, b = INT_MAX, d;
+
+    for (int i = 0; i < n; i++)
+    {
+        if (arr[i] < a)
+        {
+            b = a;
+            a = arr[i];
+        }
+        else if (arr[i] < b)
+            b = arr[i];
+
+        ap.insert(arr[i]);
+    }
+
+    d = b - a;
+
+    for (int i = 0; i < n; i++)
+    {
+        int ai = a + i * d;
+        if (ap.find(ai) == ap.end())
+            return false;
+    }
+
+    return true;
+}
+
+// 954. Array of Doubled Pairs
+/*
+Approach: O(nlogn)
+Sort the array
+Then for each -ve number we will have to check for its num / 2
+And for +ve its num * 2
+
+Eg:
+[4,-2,2,-4]
+Sort: [-4, -2, 2, 4]
+-4 pairs with -2
+and 2 with 4
+*/
+bool canReorderDoubled(vector<int> &arr)
+{
+    if (arr.size() == 0)
+        return true;
+
+    int n = arr.size();
+
+    sort(arr.begin(), arr.end());
+
+    unordered_map<double, int> mp;
+
+    for (int i = 0; i < n; i++)
+    {
+        mp[arr[i]]++;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (mp[arr[i]] == 0)
+            continue;
+
+        // if +ve check for num * 2
+        if (arr[i] >= 0)
+        {
+            if (mp[arr[i] * 2] == 0)
+                return false;
+            else
+                mp[arr[i] * 2]--;
+        }
+        // if -ve check for num/2
+        else
+        {
+            if (mp[arr[i] / 2.0] == 0)
+                return false;
+            else
+                mp[arr[i] / 2.0]--;
+        }
+
+        mp[arr[i]]--;
+    }
+
+    return true;
+}
+
+// Tricky Sorting Cost (https://practice.geeksforgeeks.org/problems/morning-assembly3038/1)
+/*
+Approach: O(n)
+We have to find the longest increasing subsequence
+Then the answer would be arr.size() - len of subseq
+Because the elements of that subsequence are already in relatively correct order
+So, these are the elements that dont need to be moved.
+As, if we just put the other elements at start or end one at time
+then the elements of subsequence will automatically be at the correct position
+
+Eg:
+[4, 3, 1, 2, 5, 6, 8 ,7]
+Here longest seq = 4 5 6 7
+So, if we all elements except these
+
+*/
+int sortingCost(int N, int arr[])
+{
+    unordered_map<int, int> mp;
+    int maxLen = 0;
+
+    for (int i = 0; i < N; i++)
+    {
+        mp[arr[i]] = mp[arr[i] - 1] + 1;
+        maxLen = max(maxLen, mp[arr[i]]);
+    }
+
+    return N - maxLen;
 }
 
 // 560. Subarray Sum Equals K
