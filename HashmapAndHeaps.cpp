@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <math.h>
 #include <algorithm>
 #include <unordered_map>
 #include <map>
@@ -320,9 +321,173 @@ int leastBricks(vector<vector<int>> &wall)
 }
 
 // 871. Minimum Number of Refueling Stops
+/*
+Approach: O(nlogn)
+Use Max Priority Queue
+We keep going and when we dont have enough fuel for the next station, 
+then we see which of the stations till now have the max fuel
+and we refuel using that fuel
+
+So, For each station we push its fuel into the PQ.
+At each station find out the fuel left after reaching that station
+If fuel < 0, then refuel with top of PQ until you have > 0 fuel
+Then go to the next station.
+
+At the end if we dont have  enough fuel, and the PQ is also empty
+then answer is -1.
+*/
 int minRefuelStops(int target, int startFuel, vector<vector<int>> &stations)
 {
-    
+    priority_queue<int, vector<int>> pq;
+
+    int count = 0, prevPos = 0;
+    for (int i = 0; i < stations.size(); i++)
+    {
+        // find the fuel left after reaching this station
+        startFuel -= (stations[i][0] - prevPos);
+        prevPos = stations[i][0];
+
+        // if you have < 0 fuel left, then refuel
+        while (startFuel < 0 && pq.size() > 0)
+        {
+            startFuel += pq.top();
+            pq.pop();
+
+            count++;
+        }
+
+        // if still no fuel, then return -1
+        if (startFuel < 0)
+            return -1;
+
+        // add this station's fuel into the PQ
+        pq.push(stations[i][1]);
+    }
+
+    // refuel if you dont have enough fuel to react destination
+    while (pq.size() > 0 && prevPos + startFuel < target)
+    {
+        startFuel += pq.top();
+        pq.pop();
+
+        count++;
+    }
+
+    return prevPos + startFuel >= target ? count : -1;
+}
+
+// https://codeforces.com/contest/1526/problem/C2
+/*
+Approach: O(nlogn)
+Use Min PQ
+We want to maximise the number of potions
+So, we keep drinking the potion until the health becomes < 0
+Now, as we want maximum, so we check if there is a potion till now 
+that we can remove, to include the current potion
+
+To do this, we keep a PQ in which we have only the negative potions as they are the only
+ones we should replace as we want the max potions.
+Top of PQ will have the most -ve potion
+
+If after including the current potion, health became -ve, then we have 2 choices:
+1. If the top of PQ is more -ve like this potion is -9 and top is -18, then we should replace it with this one
+2. If this is more -ve like this potions is -9 and top is -4, then we should not include this and keep the previous one
+
+Because, we want max count, so removing more than 1 to include 1 with not give the right answer
+*/
+void potionsHardVersion()
+{
+    int n;
+    cin >> n;
+
+    vector<int> potions(n);
+    for (int i = 0; i < n; i++)
+        cin >> potions[i];
+
+    priority_queue<int, vector<int>, greater<int>> pq;
+
+    long long health = 0, count = 0;
+    for (int i = 0; i < n; i++)
+    {
+        // if inlcuding this potion makes health -ve
+        if (health + potions[i] < 0)
+        {
+            // if the top is more -ve then replace it with this, since we just replace so count remains same
+            if (pq.size() > 0 && pq.top() < potions[i])
+            {
+                health -= pq.top();
+                pq.pop();
+
+                health += potions[i];
+                pq.push(potions[i]);
+            }
+        }
+        // else just include this one
+        else
+        {
+            health += potions[i];
+            count++;
+
+            if (potions[i] < 0)
+                pq.push(potions[i]);
+        }
+    }
+
+    cout << count << endl;
+}
+
+// 781. Rabbits in Forest
+/*
+Approach: O(n)
+If a rabbit says there are x rabbit with same color, 
+then total rabbits with that color = x + 1 
+(1 for the rabbit that gave the answer)
+
+Now for each answer we maintain the count of how many rabbits gave that answer
+Eg:
+Given: [1,1,2,3,3,3,3,3,4,5]
+
+So, if rabbit 4 says, there are 3 rabbit with same color
+Then total rabbits with that color = 4
+
+So, we can say that 4 rabbits giving answer 3 will have the same color
+If a 5th rabbit says 3, then it will have different color, as previous 4 is already complete
+So, if 5 rabbits say answer 3, there are 2 groups with 4 rabbits
+So, total rabbits for those 2 groups combined will be 4 * 2 = 8
+So, the answer 3 -> means group size 4
+Count of that answer = 5
+So, number of groups =  ceil(5 / 4) = 2
+So, total number of rabbits = ceil(5 / 4) * 4 = 8
+So, we count the number of times the same answer is given
+
+Then for each answer, the number of rabbits = ceil( count of answer / (answer + 1) ) * (answer + 1)
+
+Eg:
+Given: [1,1,2,3,3,3,3,3,4,5]
+Total Rabbits with that color (answer + 1): [2,2,3,4,4,4,4,4,5,6]
+Here the map of {answer + 1: count} will be
+2 : 2 -> ans += 2
+3 : 1 -> ans += 3
+4 : 5 -> ans += 4 + 4
+5 : 1 -> ans+= 5
+6 : 1 -> ans += 6
+*/
+int numRabbits(vector<int> &answers)
+{
+    unordered_map<double, int> mp;
+
+    for (int ans : answers)
+    {
+        mp[ans + 1]++;
+    }
+
+    int res = 0;
+    for (auto ele : mp)
+    {
+        res += ceil(ele.second / ele.first) * ele.first;
+    }
+
+    return res;
 }
 
 // https://codeforces.com/contest/1520/problem/D#

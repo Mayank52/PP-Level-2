@@ -2946,7 +2946,44 @@ int solve(int N, int M, vector<vector<int>> Edges)
 }
 
 // Euler Path and Circuit
-// Possible Path (https://practice.geeksforgeeks.org/problems/castle-run3644/1)
+// Eulerian Path in an Undirected Graph
+/*
+Approach:
+For a Euler Path in undirected Graph:
+1. Either all nodes have even degrees (Euler Circuit)
+OR
+2. N-2 Nodes have even Degrees, 2 nodes have odd degrees
+*/
+int eulerPath(int N, vector<vector<int>> graph)
+{
+    int n = N;
+
+    vector<int> degree(n, 0);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            if (graph[i][j] == 1)
+            {
+                degree[i]++;
+                degree[j]++;
+            }
+        }
+    }
+
+    int oddCount = 0;
+    for (int i = 0; i < n; i++)
+    {
+        if (degree[i] % 2 != 0)
+            oddCount++;
+
+        if (oddCount > 2)
+            return 0;
+    }
+
+    return 1;
+}
+// Possible Path (https://practice.geeksforgeeks.org/problems/castle-run3644/1) (Not Correctly Submitted)
 /*
 Approach : Check if Euler Circuit is present
 It is an undirected graph. So, find the degree of all nodes. 
@@ -2959,11 +2996,11 @@ int isPossible(vector<vector<int>> paths)
     vector<int> degree(n, 0);
     for (int i = 0; i < n; i++)
     {
-        for (int j = i + 1; j < n; j++)
+        for (int j = 0; j < n; j++)
         {
             if (paths[i][j] == 1)
             {
-                degree[i]++;
+                // degree[i]++;
                 degree[j]++;
             }
         }
