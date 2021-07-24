@@ -191,6 +191,140 @@ int subarraySum(vector<int> &nums, int k)
     return count;
 }
 
+// 1001. Grid Illumination
+/*
+Approach: Time: O(length of lamps array + length of queries array), Space: O(n^2)
+Preprocessing: O(length of lamps array)
+Query: O(8) = O(1)
+
+In the given question, the cell whose lamp is turned ON is different and
+the cell that is illuminated is different. Cells are illuminated if its own lamp is on
+or one of the lamps in its 8 directions is on.
+If a cell is illuminated, it does not mean that its lamp is on.
+For each qeury we have to tell if the cell is illuminated, and then if its lamp is on we turn it off
+And we also turn off lamps in its 8 adjacent cells.
+
+Keep 5 hashmaps for: 
+row: r
+column: c
+diagonal 1 (left to right diagonal):  r + c
+diagonal 2 (right to left diagonal) : r - c 
+cells: r * n + c
+
+In the row, col, diag1, diag2, we keep the count of lamps turned ON in that row, col, diag1, diag2
+In the cells map, we keep true or false, if the lamp in that cell is ON(true) or OFF(false)
+
+Then for each query just check if the count in the row, col, diag1, diag2, is > 0
+Then there is a lamp ON in one of those directions. So, it is illuminated.
+Then turn off its own and adjacent lamps.
+*/
+unordered_map<long long, long long> rows, cols, diag1, diag2;
+unordered_map<long long, bool> cells;
+void turnOn(long long r, long long c, int n)
+{
+    // increase count for ON lamps
+    rows[r]++;
+    cols[c]++;
+    diag1[r + c]++;
+    diag2[r - c]++;
+    cells[r * n + c] = true;
+}
+void turnOff(long long r, long long c, int n)
+{
+    // decrease count for ON lamps
+    if (rows[r] > 0)
+        rows[r]--;
+    if (cols[c] > 0)
+        cols[c]--;
+    if (diag1[r + c] > 0)
+        diag1[r + c]--;
+    if (diag2[r - c] > 0)
+        diag2[r - c]--;
+    if (cells[r * n + c])
+        cells[r * n + c] = false;
+}
+vector<int> gridIllumination(int n, vector<vector<int>> &lamps, vector<vector<int>> &queries)
+{
+    // turn on given lamps
+    for (int i = 0; i < lamps.size(); i++)
+    {
+        long long r = lamps[i][0];
+        long long c = lamps[i][1];
+
+        // there may be duplicate values in lamps, so dont count the same lamp twice
+        if (!cells[r * n + c])
+            turnOn(r, c, n);
+    }
+
+    vector<int> res;
+    int dir[8][2] = {{0, 1}, {1, 0}, {-1, 0}, {0, -1}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1}};
+
+    for (vector<int> &q : queries)
+    {
+        long long r = q[0];
+        long long c = q[1];
+
+        // this cell is illuminated
+        if (rows[r] || cols[c] || diag1[r + c] || diag2[r - c])
+        {
+            res.push_back(1);
+
+            // turn off this lamp
+            if (cells[r * n + c])
+                turnOff(r, c, n);
+
+            // turn OFF neighboring lamps, if they are ON
+            for (int d = 0; d < 8; d++)
+            {
+                long long x = r + dir[d][0];
+                long long y = c + dir[d][1];
+
+                if (x >= 0 && y >= 0 && x < n && y < n && cells[x * n + y])
+                {
+                    turnOff(x, y, n);
+                }
+            }
+        }
+        // not illuminated
+        else
+            res.push_back(0);
+    }
+
+    return res;
+}
+
+// 554. Brick Wall
+/*
+Approach: O(n * m), O(m)
+Count the number of gaps for each column
+Then the minimum number of bricks crossed = number of rows of bricks - max gap count
+*/
+int leastBricks(vector<vector<int>> &wall)
+{
+    unordered_map<int, int> gapCount;
+    int maxCount = 0;
+
+    for (int i = 0; i < wall.size(); i++)
+    {
+        int col = 0; // column number for the current gap
+        for (int j = 0; j < wall[i].size() - 1; j++)
+        {
+            col += wall[i][j];
+            gapCount[col]++;
+
+            maxCount = max(maxCount, gapCount[col]);
+        }
+    }
+
+    return wall.size() - maxCount;
+}
+
+// 871. Minimum Number of Refueling Stops
+int minRefuelStops(int target, int startFuel, vector<vector<int>> &stations)
+{
+    
+}
+
 // https://codeforces.com/contest/1520/problem/D#
 /*
 Approach: O(N)
