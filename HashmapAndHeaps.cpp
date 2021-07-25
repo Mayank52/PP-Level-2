@@ -732,7 +732,7 @@ Algorithm:
         In this case one building is over, so we remove this height from PQ
         It will not necessarily, be on top. So, we cant use pop(). Instead we use
         Java: pq.remove(h) -> O(n)
-        C++: Does not have a way to delelte a specific element, so use a set as a PQ.
+        C++: Does not have a way to delete a specific element, so use a set as a PQ.
     
     Also at each iteration, we check if the current top() i.e. the maximum height in PQ
     is equal to the previous height. If not that means the coord has changed.
@@ -848,6 +848,181 @@ int numOfPairs(int X[], int Y[], int N)
     }
 
     return res;
+}
+
+// Length of the largest subarray with contiguous elements
+// https://www.pepcoding.com/resources/data-structures-and-algorithms-in-java-levelup/hashmap-and-heaps/largest-subarray-with-contiguous-elements-official/ojquestion
+/*
+Approach: O(n^2)
+For every contiguous subarray, we check if 
+max of subarray - min subarray + 1 == length of subarray
+
+This shows that all elements in that subarray are contiguous.
+They might be shuffled among themselves
+This means that we can sort that subarray by shuffling the elements in that subarrray.
+Eg:
+10 12 11
+
+Here 
+12(max) - 10(min) + 1 = 3 
+length of subarray = 3
+
+So, this is a possible answer
+
+To handle duplicates like 10 12 12
+We keep this subarray in a hashset.
+If the element is already present in hashset, then break
+
+*/
+int largestSubarray(vector<int> &arr)
+{
+    int n = arr.size();
+
+    int maxLen = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        // make a hashset for each subarray
+        unordered_set<int> subarr;
+        int minNum = arr[i], maxNum = arr[i];
+
+        for (int j = i; j < n; j++)
+        {
+            // element already seen, then break
+            if (subarr.find(arr[j]) != subarr.end())
+                break;
+
+            // else add it to the subarray
+            subarr.insert(arr[j]);
+            minNum = min(minNum, arr[j]);
+            maxNum = max(maxNum, arr[j]);
+
+            // if the subarray has all contiguous elements
+            if (maxNum - minNum + 1 == subarr.size())
+                maxLen = max(maxLen, maxNum - minNum + 1);
+        }
+    }
+
+    return maxLen;
+}
+
+// 767. Reorganize String
+string reorganizeString(string s)
+{
+    string res = "";
+
+    vector<int> freq(26);
+    for (int i = 0; i < s.size(); i++)
+    {
+        freq[s[i] - 'a']++;
+    }
+
+    typedef pair<int, char> pair;
+
+    priority_queue<pair> pq;
+
+    for (int i = 0; i < 26; i++)
+    {
+        if (freq[i] > 0)
+        {
+            char ch = i + 'a';
+            pq.push({freq[i], ch});
+        }
+    }
+
+    pair pr = pq.top();
+    pq.pop();
+
+    res += pr.second;
+    if (pr.first - 1 > 0)
+        pq.push({pr.first - 1, pr.second});
+
+    while (pq.size() > 0)
+    {
+        pair pr = pq.top();
+        pq.pop();
+
+        if (res[res.size() - 1] != pr.second)
+        {
+            res += pr.second;
+
+            if (pr.first - 1 > 0)
+                pq.push({pr.first - 1, pr.second});
+        }
+        else if (pq.size() > 0)
+        {
+            pair pr2 = pq.top();
+            pq.pop();
+
+            res += pr2.second;
+
+            pq.push(pr);
+
+            if (pr2.first - 1 > 0)
+                pq.push({pr2.first - 1, pr2.second});
+        }
+        else
+            return "";
+    }
+
+    return res;
+}
+
+// Check if frequencies can be equal
+// https://practice.geeksforgeeks.org/problems/check-frequencies4211/1#
+/*
+Approach: O(n)
+Count all the character frequencies
+Find the number of characters with same frequency
+
+Cases:
+
+*/
+bool sameFreq(string s)
+{
+    vector<int> freq(26);
+
+    // calculate the character frequencies
+    for (int i = 0; i < s.size(); i++)
+    {
+        freq[s[i] - 'a']++;
+    }
+
+    // find how many different characters have that frequency
+    int freq1 = -1, freq2 = -1;
+    unordered_map<int, int> count;
+    for (int i = 0; i < 26; i++)
+    {
+        if (freq[i] > 0)
+        {
+            if (freq1 == -1 || freq[i] == freq1)
+            {
+                freq1 = freq[i];
+                count[freq1]++;
+            }
+            else if (freq2 == -1 || freq[i] == freq2)
+            {
+                freq2 = freq[i];
+                count[freq2]++;
+            }
+            else
+                return false;
+        }
+    }
+
+    // if only one frequency i.e. all characters have same frequence
+    if (freq1 == -1 || freq2 == -1)
+        return true;
+    // if both frequencies have > 1 type of characters, Eg: aabbcccddd
+    if (count[freq1] > 1 && count[freq2] > 1)
+        return false;
+
+    // the difference between frequence with more than 1 characters - smaller should be 1 (aaabbbcccc)
+    // or the smaller character frequency should be 1 (aaaabaaa)
+    if (count[freq1] >= count[freq2])
+        return freq2 - freq1 == 1 || freq2 == 1;
+    else
+        return freq1 - freq2 == 1 || freq1 == 1;
 }
 
 int main()
