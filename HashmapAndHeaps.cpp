@@ -1087,6 +1087,111 @@ void modeOfFrequencies()
     }
 }
 
+// 438. Find All Anagrams in a String
+/*
+Approach: O(n)
+Make a frequency map of string p
+Then using Sliding window of size p.size()
+For every window, get the frequency map of string s
+if both maps are equal, then it is an anagram
+*/
+vector<int> findAnagrams(string s, string p)
+{
+    if (p.size() > s.size())
+        return {};
+
+    int n = s.size();
+    int m = p.size();
+
+    vector<int> res;
+    vector<int> freq1(26), freq2(26);
+
+    // make frequency map of p string
+    for (int i = 0; i < m; i++)
+    {
+        freq1[p[i] - 'a']++;
+    }
+
+    int count = 0;
+    // frequency of 1st window of s
+    for (int i = 0; i < m; i++)
+    {
+        freq2[s[i] - 'a']++;
+
+        if (freq2[s[i] - 'a'] <= freq1[s[i] - 'a'])
+            count++;
+    }
+
+    if (count == m)
+        res.push_back(0);
+
+    // other windows
+    for (int i = m; i < n; i++)
+    {
+        // inlcude current element
+        freq2[s[i] - 'a']++;
+        if (freq2[s[i] - 'a'] <= freq1[s[i] - 'a'])
+            count++;
+
+        // exclude (i - m) element
+        freq2[s[i - m] - 'a']--;
+        if (freq2[s[i - m] - 'a'] < freq1[s[i - m] - 'a'])
+            count--;
+
+        if (count == p.size())
+            res.push_back(i - m + 1);
+    }
+
+    return res;
+}
+
+// Anagram Palindrome
+/*
+Approach: O(n)
+For a anagram that is a palindrome, 2 Cases:
+1. the frequency of all n - 1 characters should be even, 1 should be odd
+Eg: aacbbbcaa
+OR
+2. the frequency of n are even
+Eg: aabbaa
+*/
+int isPossible(string S)
+{
+    vector<int> freq(26);
+    for (char ch : S)
+        freq[ch - 'a']++;
+
+    int oddCount = 0;
+    for (int f : freq)
+    {
+        if (f % 2 != 0)
+            oddCount++;
+        if (oddCount > 1)
+            return 0;
+    }
+
+    return 1;
+}
+
+// 76. Minimum Window Substring
+string minWindow(string s, string t)
+{
+    vector<int> sfreq(26), tfreq(26);
+
+    for(char ch : t)
+        tfreq[ch - 'a']++;
+
+    int i = 0, j = 0, count = 0;
+    while(j < s.size()){
+        sfreq[s[j] - 'a']++;
+
+        if(sfreq[s[j] - 'a'] <= tfreq[s[j] - 'a'])
+            count++;
+
+        
+    }
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
