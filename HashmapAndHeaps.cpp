@@ -976,6 +976,11 @@ Count all the character frequencies
 Find the number of characters with same frequency
 
 Cases:
+1. All characters have same frequency, no need to remove anything
+2. One character has 1 more frequency than others, rest all have same frequency
+    EG: aabbccc -> remove c
+3. One character has only one frequency, rest have same
+    Eg: aaabbbc -> remove c
 
 */
 bool sameFreq(string s)
@@ -1023,6 +1028,63 @@ bool sameFreq(string s)
         return freq2 - freq1 == 1 || freq2 == 1;
     else
         return freq1 - freq2 == 1 || freq1 == 1;
+}
+
+// Mode of Frequencies (https://www.codechef.com/LTIME87B/problems/MODEFREQ/)
+/*
+Approach: O(n)
+Find the frequency of each element
+Then find frequency of each frequency
+Find the mode of that
+*/
+int freqMode(vector<int> &arr)
+{
+    int n = arr.size();
+
+    unordered_map<int, int> freq;
+
+    for (int i = 0; i < n; i++)
+    {
+        freq[arr[i]]++;
+    }
+
+    unordered_map<int, int> freqCount;
+
+    for (auto ele : freq)
+    {
+        freqCount[ele.second]++;
+    }
+
+    int maxFreq = 0, res;
+    for (auto ele : freqCount)
+    {
+        if (ele.second > maxFreq)
+        {
+            maxFreq = ele.second;
+            res = ele.first;
+        }
+        else if (ele.second == maxFreq)
+            res = min(res, ele.first);
+    }
+
+    return res;
+}
+void modeOfFrequencies()
+{
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        int n;
+        cin >> n;
+
+        vector<int> arr(n);
+
+        for (int i = 0; i < n; i++)
+            cin >> arr[i];
+
+        cout << freqMode(arr) << endl;
+    }
 }
 
 int main()
