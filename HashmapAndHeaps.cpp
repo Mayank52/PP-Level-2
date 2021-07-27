@@ -907,10 +907,28 @@ int largestSubarray(vector<int> &arr)
 }
 
 // 767. Reorganize String
+/*
+Approach: O(nlogn) Priority Queue
+Make a frequency map of each character in the given string
+Push all the elements of map into a Max PQ as {freq, char}
+Also keep a queue for blacklist characters
+In our case, the element just added to the res is blacklisted so that consecutive characters are not same
+
+Now add the top element of PQ into res
+Then push the blacklisted element back into PQ
+And the element that was just popped is pushed into blacklist
+
+At the end if PQ is empty but there is still a blacklist element then ans is not possible
+else return the ans
+
+This method can be used even if K number of elements cannot be consecutive
+We just keep the blacklist as a queue of size K
+*/
 string reorganizeString(string s)
 {
     string res = "";
 
+    // make frequency map
     vector<int> freq(26);
     for (int i = 0; i < s.size(); i++)
     {
@@ -921,6 +939,7 @@ string reorganizeString(string s)
 
     priority_queue<pair> pq;
 
+    // put the {freq, char} into PQ
     for (int i = 0; i < 26; i++)
     {
         if (freq[i] > 0)
@@ -930,42 +949,31 @@ string reorganizeString(string s)
         }
     }
 
-    pair pr = pq.top();
-    pq.pop();
-
-    res += pr.second;
-    if (pr.first - 1 > 0)
-        pq.push({pr.first - 1, pr.second});
+    queue<pair> bl;
 
     while (pq.size() > 0)
     {
-        pair pr = pq.top();
+        pair rpair = pq.top();
         pq.pop();
 
-        if (res[res.size() - 1] != pr.second)
+        // add the top of PQ into res
+        res += rpair.second;
+
+        // put the previous blacklist element into PQ
+        if (bl.size() > 0)
         {
-            res += pr.second;
-
-            if (pr.first - 1 > 0)
-                pq.push({pr.first - 1, pr.second});
+            pq.push(bl.front());
+            bl.pop();
         }
-        else if (pq.size() > 0)
+
+        // put the current element into blacklist
+        if (rpair.first - 1 > 0)
         {
-            pair pr2 = pq.top();
-            pq.pop();
-
-            res += pr2.second;
-
-            pq.push(pr);
-
-            if (pr2.first - 1 > 0)
-                pq.push({pr2.first - 1, pr2.second});
+            bl.push({rpair.first - 1, rpair.second});
         }
-        else
-            return "";
     }
 
-    return res;
+    return (bl.size() > 0) ? "" : res;
 }
 
 // Check if frequencies can be equal
@@ -1176,20 +1184,41 @@ int isPossible(string S)
 // 76. Minimum Window Substring
 string minWindow(string s, string t)
 {
+    int n = s.size();
+    int m = t.size();
+
     vector<int> sfreq(26), tfreq(26);
 
-    for(char ch : t)
+    for (char ch : t)
         tfreq[ch - 'a']++;
 
-    int i = 0, j = 0, count = 0;
-    while(j < s.size()){
-        sfreq[s[j] - 'a']++;
+    int i = 0, j = 0, matchCount = 0;
+    string res = "";
+    while (true)
+    {
+        // acquire
+        while (matchCount < m && j < n)
+        {
+            sfreq[s[j] - 'a']++;
 
-        if(sfreq[s[j] - 'a'] <= tfreq[s[j] - 'a'])
-            count++;
+            if (sfreq[s[j] - 'a'] <= tfreq[s[j] - 'a'])
+                matchCount++;
+        }
 
-        
+        // release
+        while (i < j)
+        {
+            if (sfreq[s[i] - 'a'] > tfreq[s[i] - 'a'])
+                sfreq[s[i] - 'a']--;
+
+            i++;
+        }
+
+        if (j - i + 1 < res.size())
+            res = s.substr(i, j);
     }
+
+    return res;
 }
 
 int main()
