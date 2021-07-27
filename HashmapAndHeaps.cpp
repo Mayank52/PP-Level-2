@@ -1221,6 +1221,174 @@ string minWindow(string s, string t)
     return res;
 }
 
+// 166. Fraction to Recurring Decimal
+string fractionToDecimal(int numerator, int denominator)
+{
+    // if there is no decimal part
+    if ((long)numerator % denominator == 0)
+        return to_string((long)numerator / denominator);
+
+    string res = "";
+
+    // find the sign -> - or +
+    if (numerator < 0 && denominator > 0 || numerator > 0 && denominator < 0)
+        res += '-';
+
+    // convert numerator and denominator to +ve
+    long num = abs(numerator);
+    long den = abs(denominator);
+
+    // add the before decimal part to result
+    res += to_string(num / den);
+
+    // now find the decimal part
+    unordered_map<int, int> mp; // { rem, index in string}
+    string decimal = "";
+
+    num = num % den;
+    while (num != 0 && mp.find(num) == mp.end())
+    {
+        // put the current remainder in map with its index
+        mp[num] = decimal.size();
+
+        num *= 10;
+
+        decimal += to_string(num / den);
+        num = num % den;
+    }
+
+    if (num == 0)
+        return res + "." + decimal;
+    else
+    {
+        int recIdx = mp[num];
+        decimal = decimal.substr(0, recIdx) + '(' + decimal.substr(recIdx) + ')';
+        return res + "." + decimal;
+    }
+}
+
+// 850 · Employee Free Time
+vector<Interval> employeeFreeTime(vector<vector<int>> &schedule)
+{
+    // Write your code here
+    vector<vector<int>> intervals;
+    for (vector<int> &v : schedule)
+    {
+        for (int i = 0; i < v.size(); i += 2)
+        {
+            intervals.push_back({v[i], v[i + 1]});
+        }
+    }
+
+    sort(intervals.begin(), intervals.end());
+
+    vector<Interval> res;
+
+    int endTime = intervals[0][0];
+    for (vector<int> interval : intervals)
+    {
+        int start = interval[0];
+        int end = interval[1];
+
+        if (endTime < start)
+        {
+            res.push_back(Interval(endTime, start));
+        }
+
+        endTime = end;
+    }
+
+    return res;
+}
+
+// 378. Kth Smallest Element in a Sorted Matrix
+int kthSmallest(vector<vector<int>> &matrix, int k)
+{
+    int n = matrix.size();
+
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+
+    for (int i = 0; i < n; i++)
+    {
+        pq.push({matrix[i][0], i, 0});
+    }
+
+    while (k-- > 1)
+    {
+        vector<int> rem = pq.top();
+        pq.pop();
+
+        int r = rem[1];
+        int c = rem[2] + 1;
+
+        if (c < n)
+        {
+            pq.push({matrix[r][c], r, c});
+        }
+    }
+
+    return pq.top()[0];
+}
+
+// 786. K-th Smallest Prime Fraction
+/*
+Approach: O(nlogn), Priority Queue
+Gives TLE
+*/
+vector<int> kthSmallestPrimeFraction(vector<int> &arr, int k)
+{
+    int n = arr.size();
+
+    priority_queue<vector<double>, vector<vector<double>>, greater<vector<double>>> pq;
+
+    for (int i = 0; i < n - 1; i++)
+    {
+        pq.push({arr[i] * 1.0 / arr[n - 1], i * 1.0, (n - 1) * 1.0});
+    }
+
+    while (k-- > 1)
+    {
+        vector<double> rem = pq.top();
+        pq.pop();
+
+        double i = rem[1];
+        double j = rem[2];
+
+        if (i < j)
+            pq.push({arr[i] * 1.0 / arr[j - 1], i, j - 1});
+    }
+
+    return {arr[pq.top()[1]], arr[pq.top()[2]]};
+}
+
+// 205. Isomorphic Strings
+bool isIsomorphic(string s, string t)
+{
+    unordered_map<char, char> mp;
+    unordered_set<char> vis;
+
+    for (int i = 0; i < s.size(); i++)
+    {
+        // if this element is already mapped
+        if (mp.find(s[i]) != mp.end())
+        {
+            if (mp[s[i]] != t[i])
+                return false;
+        }
+        // if t[i] was already mapped to other element
+        else if (vis.find(t[i]) != vis.end())
+            return false;
+        // else map s[i] to t[i]
+        else
+        {
+            mp[s[i]] = t[i];
+            vis.insert(t[i]);
+        }
+    }
+
+    return true;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
