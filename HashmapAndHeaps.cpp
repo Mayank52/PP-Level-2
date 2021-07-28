@@ -1095,6 +1095,185 @@ void modeOfFrequencies()
     }
 }
 
+// 908 · Line Reflection
+/*
+Approach: O(n)
+We can find the mirror by directly finding the mid point of the leftmost x coord and rightmost x coord
+mirror = (minx + maxx) / 2
+
+Because for a mirror parallel to y axis, the leftmost point will definetley be mapped to the right most point
+
+Then for all remaining coords check if their reflection point in that mirror exists in the array
+If not then there is no mirror.
+
+To find mirror just do
+mirror = (minx + maxx)
+
+So mirror will have 2 * mirror value
+So that we dont have to deal with double values
+
+Then while checking for each point just use that value
+Store all points in a hashmap, then for each point in array
+For each coord (x, y), we have
+(x1 + x2)/2 = mirror
+
+So, x2 = 2*mirror - x1
+And we already found mirror*2 value
+Just check if mirror - x1 is in map, and the y coord is also same for that point.
+*/
+bool isReflected(vector<vector<int>> &points)
+{
+    if (points.size() == 0)
+        return true;
+
+    int n = points.size();
+
+    // find the min and max x coord
+    int minx = points[0][0];
+    int maxx = points[0][0];
+
+    for (vector<int> &p : points)
+    {
+        if (p[0] < minx)
+            minx = p[0];
+        else if (p[0] > maxx)
+            maxx = p[0];
+    }
+
+    // candidate for mirror
+    int mirror = minx + maxx;
+
+    // verify
+    unordered_map<int, int> coords; // {x : y}
+    for (vector<int> &p : points)
+    {
+        coords[p[0]] = p[1];
+    }
+
+    for (vector<int> &p : points)
+    {
+        // if the mirror of x does not exist
+        // or the y coord of the reflection is different
+        if (coords.find(mirror - p[0]) == coords.end() || coords[mirror - p[0]] != p[1])
+            return false;
+    }
+
+    return true;
+}
+
+// 380. Insert Delete GetRandom O(1)
+class RandomizedSet
+{
+public:
+    /** Initialize your data structure here. */
+    unordered_map<int, int> mp;
+    vector<int> arr;
+
+    RandomizedSet()
+    {
+    }
+
+    /** Inserts a value to the set. Returns true if the set did not already contain the specified element. */
+    bool insert(int val)
+    {
+        if (mp.find(val) != mp.end())
+            return false;
+
+        arr.push_back(val);
+        mp[val] = arr.size() - 1;
+
+        return true;
+    }
+
+    /** Removes a value from the set. Returns true if the set contained the specified element. */
+    bool remove(int val)
+    {
+        if (mp.find(val) == mp.end())
+            return false;
+
+        int remIdx = mp[val];
+
+        arr[remIdx] = arr[arr.size() - 1];
+        mp[arr[remIdx]] = remIdx;
+
+        arr.pop_back();
+        mp.erase(val);
+
+        return true;
+    }
+
+    /** Get a random element from the set. */
+    int getRandom()
+    {
+        int idx = (rand() % arr.size());
+
+        return arr[idx];
+    }
+};
+
+// 381. Insert Delete GetRandom O(1) - Duplicates allowed
+class RandomizedCollection
+{
+public:
+    /** Initialize your data structure here. */
+    unordered_map<int, unordered_set<int>> mp;
+    vector<int> arr;
+
+    RandomizedCollection()
+    {
+    }
+
+    /** Inserts a value to the collection. Returns true if the collection did not already contain the specified element. */
+    bool insert(int val)
+    {
+        // if(mp.find(val) != mp.end())
+        //     return false;
+
+        arr.push_back(val);
+        mp[val].insert(arr.size() - 1);
+
+        return mp[val].size() > 1 ? false : true;
+    }
+
+    /** Removes a value from the collection. Returns true if the collection contained the specified element. */
+    bool remove(int val)
+    {
+        if (mp.find(val) == mp.end())
+            return false;
+
+        int remIdx = *(mp[val].begin());
+
+        if (remIdx == arr.size() - 1)
+        {
+            arr.pop_back();
+            mp[val].erase(remIdx);
+        }
+        else
+        {
+            arr[remIdx] = arr[arr.size() - 1];
+            mp[arr[remIdx]].erase(arr.size() - 1);
+
+            arr.pop_back();
+            mp[val].erase(remIdx);
+
+            mp[arr[remIdx]].insert(remIdx);
+        }
+
+        if (mp[val].size() == 0)
+            mp.erase(val);
+
+        return true;
+    }
+
+    /** Get a random element from the collection. */
+    int getRandom()
+    {
+        int idx = (rand() % arr.size());
+
+        return arr[idx];
+    }
+};
+
 // 438. Find All Anagrams in a String
 /*
 Approach: O(n)
