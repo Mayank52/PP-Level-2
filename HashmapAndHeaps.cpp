@@ -1162,6 +1162,29 @@ bool isReflected(vector<vector<int>> &points)
 }
 
 // 380. Insert Delete GetRandom O(1)
+/*
+Approach: O(1) for each operation
+Use a Hashmap, vector
+In hashmap we store {element : index}
+
+In array we just store the elements in the order they are inserted
+
+For insert: O(1)
+Add element : index to map, and push_back to vector
+
+For random: O(1)
+use rand() % arr.size() to get random index and return that element from array
+
+For Remove: O(1)
+We have to remove from both array and map.
+Get the index of element to be removed from map = remIdx
+In array swap element at remIdx with last element
+Update the index of the new element at remIdx in map
+Then remove the last element
+And remove the given element from map
+
+This exact order is important because their might be only one element in the array.
+*/
 class RandomizedSet
 {
 public:
@@ -1191,11 +1214,14 @@ public:
         if (mp.find(val) == mp.end())
             return false;
 
+        // get index of element to be removed
         int remIdx = mp[val];
 
+        // swap with last element, and update its index in map
         arr[remIdx] = arr[arr.size() - 1];
         mp[arr[remIdx]] = remIdx;
 
+        // remove the element from array, and map
         arr.pop_back();
         mp.erase(val);
 
@@ -1212,6 +1238,31 @@ public:
 };
 
 // 381. Insert Delete GetRandom O(1) - Duplicates allowed
+/*
+Approach: O(1) for each operation
+Use a Hashmap, vector
+In hashmap we store {element : set of indexes}
+
+In array we just store the elements in the order they are inserted
+
+For insert: O(1)
+Add element : insert index to set of the element in map, and push_back to vector
+
+For random: O(1)
+use rand() % arr.size() to get random index and return that element from array
+
+For Remove: O(1)
+We have to remove from both array and map.
+Get the index of element to be removed from map = remIdx
+In array swap element at remIdx with last element
+Remove the remIdx from set of removed element, 
+and remove the last index from set of the element which was swapped to remIdx
+Then insert the remIdx to the set of new element at remIdx
+Then remove the last element from array
+And remove the given element from map if its set is now empty
+
+This exact order is important because the value of element at remIdx and last index may be same.
+*/
 class RandomizedCollection
 {
 public:
@@ -1271,6 +1322,77 @@ public:
         int idx = (rand() % arr.size());
 
         return arr[idx];
+    }
+};
+
+// 710. Random Pick with Blacklist
+/*
+Approach: Hashmap
+Preprocessing: O(n)
+Pick() : O(1)
+
+We keep a hashmap of all blacklisted values : their replacement
+So, first we add all blacklist values to map
+Then we map those values to a safe value
+
+We keep a pointer at the end
+Then for each blacklist value, we reduce the pointer until we reach a safe value.
+Then map this blacklist value to that value and reduce the pointer by 1 to next value
+
+While picking we only pick from the first n - blacklist.size() values, as every value after that is now blacklisted
+And the safe values after n - blacklist.size() are mapped to the blacklist values before this
+So, in a sense we swapped all safe values after this with blacklisted values before this
+
+Then while picking, if random gives a blacklisted value, we return its replacement
+
+Eg:
+given n = 9
+So values : 0 1 2 3 4 5 6 7 8
+blacklist: 3 5 7 8 2
+map:
+3 : 6
+5 : -1
+7 : -1
+8 : -1
+2 : 4
+*/
+class Solution
+{
+public:
+    unordered_map<int, int> mp; //{blackListed Element : Replacement}
+    int size;
+
+    Solution(int n, vector<int> &blacklist)
+    {
+        size = n - blacklist.size();
+
+        // add all blacklist values to a map
+        for (int val : blacklist)
+            mp[val] = -1;
+
+        int j = n - 1;
+        for (int val : blacklist)
+        {
+            // if value in safe range
+            if (val < size)
+            {
+                // find the safe value from end
+                while (mp.find(j) != mp.end())
+                    j--;
+
+                // map this value to that safe value;
+                mp[val] = j;
+                j--;
+            }
+        }
+    }
+
+    int pick()
+    {
+        int idx = rand() % size;
+
+        // if this value is blacklisted, then return the mapped safe value, else return this value
+        return mp.find(idx) != mp.end() ? mp[idx] : idx;
     }
 };
 
@@ -1360,7 +1482,7 @@ int isPossible(string S)
     return 1;
 }
 
-// 76. Minimum Window Substring
+// 76. Minimum Window Substring(Todo)
 string minWindow(string s, string t)
 {
     int n = s.size();
@@ -1395,6 +1517,233 @@ string minWindow(string s, string t)
 
         if (j - i + 1 < res.size())
             res = s.substr(i, j);
+    }
+
+    return res;
+}
+
+// 49. Group Anagrams
+/*
+Approach 1: O(m * n)
+Make a map of, {frequency map of string : list of strings with same map}
+Then just add them all into the res as same groups
+
+Approach 2: O(mlogm * n)
+For the key of map we can use the sorted string as well.
+
+Both the frequency map, sorted string will be same for all anagrams
+
+We can also just store the index of that group in map in value
+instead of array of strings in that group
+Then directly push into that index in the result.
+*/
+vector<vector<string>> groupAnagrams(vector<string> &strs)
+{
+    map<vector<int>, vector<string>> map;
+
+    // make map {frequency map : array of strings}
+    for (string &str : strs)
+    {
+        vector<int> freq(26);
+        for (char ch : str)
+            freq[ch - 'a']++;
+
+        map[freq].push_back(str);
+    }
+
+    // add to result
+    vector<vector<string>> res;
+    for (auto ele : map)
+    {
+        res.push_back(ele.second);
+    }
+
+    return res;
+}
+vector<vector<string>> groupAnagrams(vector<string> &strs)
+{
+    unordered_map<string, int> map;
+    vector<vector<string>> res;
+
+    // make a map of {sorted string: index in result array}
+    for (string &str : strs)
+    {
+        string temp = str;
+        sort(temp.begin(), temp.end());
+
+        // if first string of this group, add the index to map,and add new list to result
+        if (map.find(temp) == map.end())
+        {
+            map[temp] = res.size();
+            res.push_back({str});
+        }
+        // else add to result at the index given by map
+        else
+        {
+            res[map[temp]].push_back(str);
+        }
+    }
+
+    return res;
+}
+
+// 3. Longest Substring Without Repeating Characters
+int lengthOfLongestSubstring(string s)
+{
+    unordered_map<char, int> map; // {char : index}
+    int res = 0, start = 0;
+
+    for (int i = 0; i < s.size(); i++)
+    {
+        if (map.find(s[i]) != map.end())
+            start = max(start, map[s[i]] + 1);
+
+        map[s[i]] = i;
+        res = max(res, i - start + 1);
+    }
+
+    return res;
+}
+
+// 813 · Find Anagram Mappings
+vector<int> anagramMappings(vector<int> &A, vector<int> &B)
+{
+    // Write your code here
+    unordered_map<int, int> map;
+
+    for (int i = 0; i < B.size(); i++)
+    {
+        map[B[i]] = i;
+    }
+
+    vector<int> res(A.size());
+    for (int i = 0; i < A.size(); i++)
+    {
+        res[i] = map[A[i]];
+    }
+
+    return res;
+}
+
+// Check if two strings are k-anagrams or not
+/*
+Approach: O(n)
+Make frequency map for strings
+Now iterate over frequency map, where ever, the freq1[i] > freq2[i]
+add the diff to totalDiff
+If totalDiff <= k, then return true else false
+*/
+bool areKAnagrams(string str1, string str2, int k)
+{
+    if (str1.size() != str2.size())
+        return false;
+
+    int freq1[26] = {0}, freq2[26] = {0};
+
+    for (int i = 0; i < str1.size(); i++)
+    {
+        freq1[str1[i] - 'a']++;
+        freq2[str2[i] - 'a']++;
+    }
+
+    int diff = 0;
+    for (int i = 0; i < 26; i++)
+    {
+        if (freq1[i] > freq2[i])
+            diff += (freq1[i] - freq2[i]);
+    }
+
+    return diff <= k;
+}
+
+// Smallest subarray with all occurrences of a most frequent element
+/*
+Approach: O(n)
+Make a map of {val : freq, start index, end index}
+So, we find the frequency, first index, last index of each element
+
+We also find the max frequecy.
+In case multiple elemets have same frequency, we take the element with smaller subarray
+i.e. (end - start + 1) should be smaller
+*/
+vector<int> smallestSubsegment(int a[], int n)
+{
+    // Complete the function
+    unordered_map<int, vector<int>> map; // {val : freq, start index, end index}
+    int maxFreq = 0, val;                // max frequency, element with max frequency
+
+    for (int i = 0; i < n; i++)
+    {
+        // first occurence of this element
+        if (map.find(a[i]) == map.end())
+        {
+            map[a[i]] = {1, i, i};
+        }
+        // else update the freq, end index of this element
+        else
+        {
+            map[a[i]][0]++;
+            map[a[i]][2] = i;
+        }
+
+        // if current element has freq > max frequency
+        if (map[a[i]][0] > maxFreq)
+        {
+            maxFreq = map[a[i]][0];
+            val = a[i];
+        }
+        // if current element has freq = max frequency, check the length of subarray
+        else if (map[a[i]][0] == maxFreq)
+        {
+            int currLen = map[a[i]][2] - map[a[i]][1] + 1;
+            int prevLen = map[val][2] - map[val][1] + 1;
+            if (currLen < prevLen)
+            {
+                val = a[i];
+            }
+        }
+    }
+
+    // add the elements in the subarray [start, end] of element with max frequency
+    vector<int> res;
+    for (int i = map[val][1]; i <= map[val][2]; i++)
+        res.push_back(a[i]);
+
+    return res;
+}
+
+// 697. Degree of an Array
+/*
+Approach: O(n)
+Same as above
+Instead of the subarray, we just need the length
+So, just store freq, start in map
+Whenever the current frequency is > or = update the
+end index will be the current index itself
+*/
+int findShortestSubArray(vector<int> &nums)
+{
+    int n = nums.size();
+
+    unordered_map<int, vector<int>> map; // {val : freq, start index}
+    int maxFreq = 0, res;
+
+    for (int i = 0; i < n; i++)
+    {
+        // update the value in map
+        if (map.find(nums[i]) == map.end())
+            map[nums[i]] = {1, i};
+        else
+            map[nums[i]][0]++;
+
+        // update the result
+        if (map[nums[i]][0] > maxFreq)
+        {
+            maxFreq = map[nums[i]][0];
+            res = i - map[nums[i]][1] + 1;
+        }
+        else if (map[nums[i]][0] == maxFreq)
+            res = min(res, i - map[nums[i]][1] + 1);
     }
 
     return res;
@@ -1446,7 +1795,7 @@ string fractionToDecimal(int numerator, int denominator)
     }
 }
 
-// 850 · Employee Free Time
+// 850 · Employee Free Time(Todo)
 vector<Interval> employeeFreeTime(vector<vector<int>> &schedule)
 {
     // Write your code here
@@ -1512,7 +1861,7 @@ int kthSmallest(vector<vector<int>> &matrix, int k)
 // 786. K-th Smallest Prime Fraction
 /*
 Approach: O(nlogn), Priority Queue
-Gives TLE
+Passes, but Gives TLE
 */
 vector<int> kthSmallestPrimeFraction(vector<int> &arr, int k)
 {
@@ -1566,6 +1915,91 @@ bool isIsomorphic(string s, string t)
     }
 
     return true;
+}
+
+// 1167. Minimum Time to Build Blocks (Not Available to submit)
+int minBuildTime(vector<int> &blocks, int split)
+{
+    priority_queue<int, vector<int>, greater<int>> pq;
+
+    for (int val : blocks)
+        pq.push(val);
+
+    while (pq.size() > 1)
+    {
+        int rem1 = pq.top();
+        pq.pop();
+
+        int rem2 = pq.top();
+        pq.pop();
+
+        pq.push(split + rem2);
+    }
+
+    return pq.top();
+}
+
+// 480. Sliding Window Median(Todo)
+vector<double> medianSlidingWindow(vector<int> &nums, int k)
+{
+    multiset<int> left;  // max PQ
+    multiset<int> right; // min PQ
+
+    vector<double> res;
+
+    for (int i = 0; i < k; i++)
+    {
+        if (left.size() == 0 || nums[i] < *left.rbegin())
+            left.insert(nums[i]);
+        else
+            right.insert(nums[i]);
+
+        if (left.size() > right.size() + 1)
+        {
+            right.insert(*left.end());
+            left.erase(left.end());
+        }
+        else if (left.size() < right.size())
+        {
+            left.insert(*right.begin());
+            right.erase(right.begin());
+        }
+    }
+
+    if (k % 2 == 0)
+        res.push_back((*left.end() + *right.begin()) / 2);
+    else
+        res.push_back(*left.end());
+
+    for (int i = k; i < nums.size(); i++)
+    {
+        // remove the (i - k)th element
+        left.erase(nums[i - k]);
+
+        // add this element
+        if (nums[i] < *left.rbegin())
+            left.insert(nums[i]);
+        else
+            right.insert(nums[i]);
+
+        if (left.size() > right.size() + 1)
+        {
+            right.insert(*left.end());
+            left.erase(left.end());
+        }
+        else if (left.size() < right.size())
+        {
+            left.insert(*right.begin());
+            right.erase(right.begin());
+        }
+
+        if (k % 2 == 0)
+            res.push_back((*left.end() + *right.begin()) / 2);
+        else
+            res.push_back(*left.end());
+    }
+
+    return res;
 }
 
 int main()
