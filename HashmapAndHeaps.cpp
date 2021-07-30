@@ -1482,44 +1482,79 @@ int isPossible(string S)
     return 1;
 }
 
-// 76. Minimum Window Substring(Todo)
+// 76. Minimum Window Substring
+/*
+Approach: O(n) Sliding Window
+Make a frequency map of string t
+
+We use 2 pointers i, j, and a matchCount for the number of elements in string s that match with string t
+We start both at 0
+Keep moving j forward until, we have the same matchCount
+Then we move i to remove the not required characters.
+So, we move i forward until the matchCount remains the same
+
+With each iteration we update the minimum size of substring
+*/
 string minWindow(string s, string t)
 {
     int n = s.size();
     int m = t.size();
 
-    vector<int> sfreq(26), tfreq(26);
+    if (m > n)
+        return "";
 
-    for (char ch : t)
-        tfreq[ch - 'a']++;
+    unordered_map<char, int> mp1;
+    unordered_map<char, int> mp2;
 
-    int i = 0, j = 0, matchCount = 0;
-    string res = "";
+    for (char c : t)
+        mp1[c]++;
+
+    int i = -1, j = -1;
+    int matchCount = 0;
+    int si = 0, ei = 0, minLen = s.size();
+
     while (true)
     {
-        // acquire
-        while (matchCount < m && j < n)
-        {
-            sfreq[s[j] - 'a']++;
+        bool f1 = false;
+        bool f2 = false;
 
-            if (sfreq[s[j] - 'a'] <= tfreq[s[j] - 'a'])
+        //acquire
+        while (j < n - 1 && matchCount < m)
+        {
+            f1 = true;
+            j++;
+            mp2[s[j]]++;
+            if (mp2[s[j]] <= mp1[s[j]])
                 matchCount++;
         }
 
-        // release
-        while (i < j)
+        //remove
+        while (i < j && matchCount == m)
         {
-            if (sfreq[s[i] - 'a'] > tfreq[s[i] - 'a'])
-                sfreq[s[i] - 'a']--;
+            f2 = true;
 
             i++;
+            mp2[s[i]]--;
+
+            if (mp2[s[i]] < mp1[s[i]])
+                matchCount--;
         }
 
-        if (j - i + 1 < res.size())
-            res = s.substr(i, j);
+        // update the minimum substring
+        if (j - i < minLen)
+        {
+            si = i;
+            ei = j;
+            minLen = j - i;
+        }
+
+        if (!f1 && !f2)
+            break;
     }
 
-    return res;
+    if (i == -1)
+        return "";
+    return s.substr(si, ei - si + 1);
 }
 
 // 49. Group Anagrams
@@ -1796,6 +1831,21 @@ string fractionToDecimal(int numerator, int denominator)
 }
 
 // 850 · Employee Free Time(Todo)
+/*
+Approach 1: o(nlogn)
+Add the given times into an array of intervals
+Then sort the intervals in increasing order of start times
+
+Now iterate over the sorted intervals, keep a max end time till now
+For each interval, if its start time, is less than the current max end time,
+then every employee is free in that time. As every employee who started before this time 
+has ended their work. And no other employee has started anything till now
+So, add this interval [current max end time, current start time] into the result.
+
+Approach 2: O(n)
+
+*/
+// Approach 1
 vector<Interval> employeeFreeTime(vector<vector<int>> &schedule)
 {
     // Write your code here
@@ -1823,13 +1873,27 @@ vector<Interval> employeeFreeTime(vector<vector<int>> &schedule)
             res.push_back(Interval(endTime, start));
         }
 
-        endTime = end;
+        endTime = max(endTime, end);
     }
 
     return res;
 }
+// Approach 2:
+vector<Interval> employeeFreeTime(vector<vector<int>> &schedule)
+{
+}
 
 // 378. Kth Smallest Element in a Sorted Matrix
+/*
+Approach: O(nlogn), Priority Queue
+Similar to merging N sorted Linked Lists
+Use a min PQ
+Add the first element of each row into PQ as {val, row, col}
+Then while k > 1
+Get the top of PQ, and add the next element of that row into PQ
+
+We can also do this column wise
+*/
 int kthSmallest(vector<vector<int>> &matrix, int k)
 {
     int n = matrix.size();
@@ -1917,7 +1981,74 @@ bool isIsomorphic(string s, string t)
     return true;
 }
 
+// 1872 · Minimum Cost to Connect Sticks
+/*
+Approach: O(nlogn)
+To get the minimum x + y every time, we use the minimum x and y
+So put all values in a min PQ
+Then add the top 2 values and add the sum back into PQ
+*/
+int MinimumCost(vector<int> &sticks)
+{
+    priority_queue<int, vector<int>, greater<int>> pq;
+
+    for (int val : sticks)
+        pq.push(val);
+
+    int res = 0;
+
+    while (pq.size() > 1)
+    {
+        int min1 = pq.top();
+        pq.pop();
+
+        int min2 = pq.top();
+        pq.pop();
+
+        res += min1 + min2;
+
+        pq.push(min1 + min2);
+    }
+
+    return res;
+}
+
 // 1167. Minimum Time to Build Blocks (Not Available to submit)
+/*
+Approach: O(nlogn)
+To get the minimum time, we need to add the minimum split time to the maximum value
+As every time we split, the split time will increase, so we want that the value that is already greater, should be
+resolved first so, less split time is added to it.
+So, we solve it in a bottom up manner i.e. solve the minimum value first.
+
+So, similar to previous,  put all values in a min PQ
+Then take the top 2 values. we will add split to the max of two values
+Since its a min PQ, the second value will always be max of the two
+
+Then we add the total time for that i.e. maxValue + split back into PQ
+The last element remaining in PQ is the result
+
+Eg: blocks = [3 7 2 10 3], split = 5
+So, PQ: 2 3 3 7 10
+first we take the minimum 2 :  2 3
+Add max(2, 3) + 5 = 8 into PQ
+
+PQ: 3 7 8 10
+Add max(3, 7) + 5 = 12 into PQ
+
+PQ: 8 10 12
+Add max(8, 10) + 5 = 15 into PQ
+
+PQ: 12 15
+add 15 + 5 = 20 into PQ
+
+Now result is 20
+
+Its the same approach as in Huffman coding
+
+Every time we split a worker the cost is 5, so lower you are in the tree formed, more the cost will be added
+So, we want the lowest values to be at the bottom.
+*/
 int minBuildTime(vector<int> &blocks, int split)
 {
     priority_queue<int, vector<int>, greater<int>> pq;
@@ -2000,6 +2131,38 @@ vector<double> medianSlidingWindow(vector<int> &nums, int k)
     }
 
     return res;
+}
+
+// 209. Minimum Size Subarray Sum
+/*
+Approach: 2 Pointers, O(n)
+Keep i = 0, j = 0
+
+If the currSum < target, move j forward one step
+then until the currSum >= target, keep moving i forward
+*/
+int minSubArrayLen(int target, vector<int> &nums)
+{
+    int n = nums.size();
+
+    int i = 0, j = 0, currSum = 0, minLen = INT_MAX;
+    while (j < n)
+    {
+        if (currSum < target)
+        {
+            currSum += nums[j];
+            j++;
+        }
+
+        while (i < j && currSum >= target)
+        {
+            minLen = min(minLen, j - i);
+            currSum -= nums[i];
+            i++;
+        }
+    }
+
+    return minLen == INT_MAX ? 0 : minLen;
 }
 
 int main()
