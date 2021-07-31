@@ -1830,7 +1830,7 @@ string fractionToDecimal(int numerator, int denominator)
     }
 }
 
-// 850 · Employee Free Time(Todo)
+// 850 · Employee Free Time
 /*
 Approach 1: o(nlogn)
 Add the given times into an array okf intervals
@@ -2130,7 +2130,6 @@ So, in case of n being
     odd: top of max PQ is answer, as it has an extra element
     even: (max PQ top + min PQ top) / 2 is answer
 */
-
 vector<double> medianSlidingWindow(vector<int> &nums, int k)
 {
     multiset<double> left;  // max PQ
