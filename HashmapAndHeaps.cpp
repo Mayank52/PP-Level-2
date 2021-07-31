@@ -364,7 +364,7 @@ int minRefuelStops(int target, int startFuel, vector<vector<int>> &stations)
         pq.push(stations[i][1]);
     }
 
-    // refuel if you dont have enough fuel to react destination
+    // refuel if you dont have enough fuel to reach destination
     while (pq.size() > 0 && prevPos + startFuel < target)
     {
         startFuel += pq.top();
@@ -1833,7 +1833,7 @@ string fractionToDecimal(int numerator, int denominator)
 // 850 · Employee Free Time(Todo)
 /*
 Approach 1: o(nlogn)
-Add the given times into an array of intervals
+Add the given times into an array okf intervals
 Then sort the intervals in increasing order of start times
 
 Now iterate over the sorted intervals, keep a max end time till now
@@ -1842,8 +1842,14 @@ then every employee is free in that time. As every employee who started before t
 has ended their work. And no other employee has started anything till now
 So, add this interval [current max end time, current start time] into the result.
 
-Approach 2: O(n)
-
+Approach 2: O(nlogk)
+Use a min PQ instead of sorting all the intervals
+Then it becomes similar to merging k sorted lists
+Push the first interval of each employee into PQ
+Every time remove the top element and add next interval of that employee into PQ
+The size of PQ remains equal to number of employees = k = schedule.size()
+Keep a max end time till now
+If the max end time till now < current start time, then add {max end time, current start} into result
 */
 // Approach 1
 vector<Interval> employeeFreeTime(vector<vector<int>> &schedule)
@@ -1881,6 +1887,38 @@ vector<Interval> employeeFreeTime(vector<vector<int>> &schedule)
 // Approach 2:
 vector<Interval> employeeFreeTime(vector<vector<int>> &schedule)
 {
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq; // {start, end, i, j}
+
+    for (int i = 0; i < schedule.size(); i++)
+    {
+        pq.push({schedule[i][0], schedule[i][1], i, 0});
+    }
+
+    vector<Interval> res;
+    int endTime = pq.top()[0];
+
+    while (pq.size() > 0)
+    {
+        vector<int> rem = pq.top();
+        pq.pop();
+
+        int start = rem[0];
+        int end = rem[1];
+        int i = rem[2];
+        int j = rem[3];
+
+        if (endTime < start)
+            res.push_back(Interval(endTime, start));
+
+        if (j < schedule[i].size() - 2)
+        {
+            pq.push({schedule[i][j + 2], schedule[i][j + 3], i, j + 2});
+        }
+
+        endTime = max(endTime, end);
+    }
+
+    return res;
 }
 
 // 378. Kth Smallest Element in a Sorted Matrix
@@ -2070,64 +2108,94 @@ int minBuildTime(vector<int> &blocks, int split)
     return pq.top();
 }
 
-// 480. Sliding Window Median(Todo)
+// 480. Sliding Window Median
+/*
+Approach: O(nlogk) (k = size of window, n = size of array)
+Similar to 295. Find Median from Data Stream
+We keep a min PQ(right), and a max PQ(left)
+max PQ contains the left half of the array, and min PQ contains the right half
+
+For every new element, add it to the right half, then add the top of right half to left half.
+This way we can make sure that every element in max PQ is smaller than min PQ
+And remove the (i - k)th element, so now we have only current window elements in the PQs
+In case of odd number of elements we keep one extra element in the max PQ i.e left half
+After adding element, check the size of both PQs and move elements to make size equal
+2 Cases:
+    1. If max PQ's size > min PQ's size + 1
+    Then move the top of max PQ to min PQ
+    2. If min PQ's size > max PQ
+    Then move top of min PQ to max PQ
+
+So, in case of n being 
+    odd: top of max PQ is answer, as it has an extra element
+    even: (max PQ top + min PQ top) / 2 is answer
+*/
+
 vector<double> medianSlidingWindow(vector<int> &nums, int k)
 {
-    multiset<int> left;  // max PQ
-    multiset<int> right; // min PQ
+    multiset<double> left;  // max PQ
+    multiset<double> right; // min PQ
 
     vector<double> res;
 
+    // first window
     for (int i = 0; i < k; i++)
     {
-        if (left.size() == 0 || nums[i] < *left.rbegin())
-            left.insert(nums[i]);
-        else
-            right.insert(nums[i]);
+        // add element to the current window
+        right.insert(nums[i]);
+        left.insert(*right.begin());
+        right.erase(right.begin());
 
+        // make size of left and right equal
         if (left.size() > right.size() + 1)
         {
-            right.insert(*left.end());
-            left.erase(left.end());
+            right.insert(*left.rbegin());
+            left.erase(left.find(*left.rbegin()));
         }
-        else if (left.size() < right.size())
+        else if (right.size() > left.size())
         {
             left.insert(*right.begin());
             right.erase(right.begin());
         }
     }
 
+    // add the median of first window to result
     if (k % 2 == 0)
-        res.push_back((*left.end() + *right.begin()) / 2);
+        res.push_back((*right.begin() + *left.rbegin()) / 2);
     else
-        res.push_back(*left.end());
+        res.push_back(*left.rbegin());
 
+    // other windows
     for (int i = k; i < nums.size(); i++)
     {
-        // remove the (i - k)th element
-        left.erase(nums[i - k]);
+        // add new element
+        right.insert(nums[i]);
+        left.insert(*right.begin());
+        right.erase(right.begin());
 
-        // add this element
-        if (nums[i] < *left.rbegin())
-            left.insert(nums[i]);
+        // remove (i - k)th element
+        if (left.find(nums[i - k]) != left.end())
+            left.erase(left.find(nums[i - k]));
         else
-            right.insert(nums[i]);
+            right.erase(right.find(nums[i - k]));
 
+        // make size of left and right equal
         if (left.size() > right.size() + 1)
         {
-            right.insert(*left.end());
-            left.erase(left.end());
+            right.insert(*left.rbegin());
+            left.erase(left.find(*left.rbegin()));
         }
-        else if (left.size() < right.size())
+        if (right.size() > left.size())
         {
             left.insert(*right.begin());
             right.erase(right.begin());
         }
 
+        // add the median of current window to result
         if (k % 2 == 0)
-            res.push_back((*left.end() + *right.begin()) / 2);
+            res.push_back((*right.begin() + *left.rbegin()) / 2);
         else
-            res.push_back(*left.end());
+            res.push_back(*left.rbegin());
     }
 
     return res;
