@@ -202,7 +202,7 @@ In the given question, the cell whose lamp is turned ON is different and
 the cell that is illuminated is different. Cells are illuminated if its own lamp is on
 or one of the lamps in its 8 directions is on.
 If a cell is illuminated, it does not mean that its lamp is on.
-For each qeury we have to tell if the cell is illuminated, and then if its lamp is on we turn it off
+For each query we have to tell if the cell is illuminated, and then if its lamp is on we turn it off
 And we also turn off lamps in its 8 adjacent cells.
 
 Keep 5 hashmaps for: 
