@@ -527,6 +527,62 @@ queue<int> modifyQueue(queue<int> que, int k)
     return que;
 }
 
+// 402. Remove K Digits
+/*
+Approach: O(n)
+To get the smallest number, we basically replace the digits at higher positions
+with a digit at a lower position which is smaller
+Eg: 45436
+Here it is beneficial to replace 4 at leftmost with 3 from its right
+
+So, using this idea, we use a stack and for each element
+While the top element > current element and k > 0, pop it
+
+Then at the end the stack contains the answer
+*/
+string removeKdigits(string num, int k)
+{
+    stack<char> st;
+    string res = "";
+
+    for (int i = 0; i < num.size(); i++)
+    {
+        // pop until top element > current element and k > 0
+        while (k > 0 && st.size() > 0 && st.top() > num[i])
+        {
+            st.pop();
+            k--;
+        }
+
+        st.push(num[i]);
+    }
+
+    // for remaining k, remove top elements
+    while (k-- > 0)
+        st.pop();
+
+    // put the stack into result string
+    while (st.size() > 0)
+    {
+        res += st.top();
+        st.pop();
+    }
+
+    // remove leading zeroes like "002" should be "2"
+    for (int i = res.size() - 1; i >= 0; i--)
+    {
+        if (res[i] == '0')
+            res.pop_back();
+        else
+            break;
+    }
+
+    // reverse the result to get the answer
+    reverse(res.begin(), res.end());
+
+    return res.size() > 0 ? res : "0";
+}
+
 int main()
 {
     return 0;
