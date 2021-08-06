@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stack>
+#include <queue>
 #include <vector>
 #include <algorithm>
 
@@ -353,6 +354,177 @@ int minAddToMakeValid(string s)
     }
 
     return openCount + closeCount;
+}
+
+// 735. Asteroid Collision
+/*
+Approach: O(n)
+We have 4 cases:
++, -
+-, +
++, +
+-, -
+
+Only in case of +, - will both asteroids collide, in all others, they will never collide
+So, use a stack and for +ve values push into stack
+For -ve values, if the top of stack is positive, then see which has greater value, and push that into stack
+
+In this way whatever is left in the stack at the end is the result.
+*/
+vector<int> asteroidCollision(vector<int> &asteroids)
+{
+    stack<int> st;
+    vector<int> res;
+
+    for (int i = 0; i < asteroids.size(); i++)
+    {
+        // +ve value -> push into stack directly
+        if (asteroids[i] > 0)
+            st.push(asteroids[i]);
+        else
+        {
+            bool destroyed = false;
+            // (+, -) -> collision case
+            while (st.size() > 0 && st.top() > 0)
+            {
+                // top is smaller and destroyed
+                if (st.top() < abs(asteroids[i]))
+                    st.pop();
+                // both equal -> both destroyed
+                else if (st.top() == abs(asteroids[i]))
+                {
+                    st.pop();
+                    destroyed = true;
+                    break;
+                }
+                // current value is smaller, current is destroyed
+                else
+                {
+                    destroyed = true;
+                    break;
+                }
+            }
+
+            // if current survived, then push it into stack
+            if (!destroyed)
+                st.push(asteroids[i]);
+        }
+    }
+
+    // all elements in stack are part of result
+    while (st.size() > 0)
+    {
+        res.push_back(st.top());
+        st.pop();
+    }
+
+    reverse(res.begin(), res.end());
+
+    return res;
+}
+
+// 844. Backspace String Compare
+/*
+Approach 1: O(n), With Stack
+We can just use stacks to find the strings after backspaces, and compare those strings
+
+Approach 2: O(n), Without Stack
+We can keep 2 pointers at the end of each string
+Then we keep a backspace count for both strings
+For each character  if it is a backspace, then increase backspace count
+And if the character is not backspace, but ackspace count > 0, then ignore that character
+
+Then compare the characters, where the pointers stop
+*/
+bool backspaceCompare(string s, string t)
+{
+    int i = s.size() - 1, j = t.size() - 1;
+    int bsCount1 = 0, bsCount2 = 0;
+
+    // run the loop until either string is still remaining, because the only remaining characters might be backspaces
+    while (i >= 0 || j >= 0)
+    {
+        // Keep going back until either this character is a '#' or was removed because of a '#'
+        while (i >= 0 && (bsCount1 > 0 || s[i] == '#'))
+        {
+            if (s[i] == '#')
+                bsCount1++;
+            else
+                bsCount1--;
+
+            i--;
+        }
+
+        while (j >= 0 && (bsCount2 > 0 || t[j] == '#'))
+        {
+            if (t[j] == '#')
+                bsCount2++;
+            else
+                bsCount2--;
+
+            j--;
+        }
+
+        // if the characters are not equal
+        if (i >= 0 && j >= 0 && s[i] != t[j])
+            return false;
+
+        // if one string ended, but other did not
+        if ((i < 0 && j >= 0) || (i >= 0 && j < 0))
+            return false;
+
+        i--;
+        j--;
+    }
+
+    // they are equal
+    return true;
+}
+
+// Reverse First K elements of Queue (https://practice.geeksforgeeks.org/problems/reverse-first-k-elements-of-queue/1#)
+/*
+Approach: O(n)
+1. Push the first k elements into stack and pop them from queue
+2. Push the elements of stack back into queue
+3. For the que.size() - k elements, which have to maintain the same order, pop them from front
+ and push them back into the same queue
+
+ Eg: 1 2 3 4 5 6, K = 3
+ Stack: 1 2 3
+ Queue: 4 5 6
+
+ Then,
+ Stack: Empty
+ Queue: 4 5 6 3 2 1
+
+ Then, 
+ Queue: 3 2 1 4 5 6
+*/
+queue<int> modifyQueue(queue<int> que, int k)
+{
+    //add code here.
+    int remCount = que.size() - k;
+
+    stack<int> st;
+    while (k-- > 0)
+    {
+        st.push(que.front());
+        que.pop();
+    }
+
+    while (st.size() > 0)
+    {
+        que.push(st.top());
+        st.pop();
+    }
+
+    while (remCount-- > 0)
+    {
+        que.push(que.front());
+        que.pop();
+    }
+
+    return que;
 }
 
 int main()
