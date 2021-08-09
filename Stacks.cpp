@@ -3,6 +3,7 @@
 #include <queue>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 
 using namespace std;
 
@@ -581,6 +582,111 @@ string removeKdigits(string num, int k)
     reverse(res.begin(), res.end());
 
     return res.size() > 0 ? res : "0";
+}
+
+// 224. Basic Calculator
+/*
+Approach: Infix Evaluation
+*/
+stack<int> operands;
+stack<char> operators;
+int eval(int val1, int val2, char op)
+{
+    if (op == '+')
+        return val1 + val2;
+    else if (op == '-')
+        return val1 - val2;
+    else if (op == '*')
+        return val1 * val2;
+    else
+        return val1 / val2;
+}
+void performOperation()
+{
+    // pop the top 2 operands and evaluate them with the top operator
+    int val2 = operands.top();
+    operands.pop();
+    int val1 = operands.top();
+    operands.pop();
+    int op = operators.top();
+    operators.pop();
+
+    operands.push(eval(val1, val2, op));
+}
+int calculate(string s)
+{
+    // map to keep precedence of all operators
+    unordered_map<char, int> precedence; 
+    precedence['+'] = 1;
+    precedence['-'] = 1;
+    precedence['*'] = 2;
+    precedence['/'] = 2;
+    precedence['('] = 0;
+
+    if (s[0] == '-')
+        s = '0' + s;
+
+    int i = 0;
+    while (i < s.size())
+    {
+        if (s[i] == ' ')
+        {
+            i++;
+            continue;
+        }
+
+        // number -> push into operands stack
+        if (s[i] >= '0' && s[i] <= '9')
+        {
+            int num = 0;
+            while (i < s.size() && s[i] >= '0' && s[i] <= '9')
+            {
+                num = num * 10 + (s[i] - '0');
+                i++;
+            }
+
+            operands.push(num);
+        }
+        // opening bracket -> push into operators stack
+        else if (s[i] == '(')
+        {
+            operators.push(s[i]);
+            i++;
+        }
+        // closing bracket -> solve everything until the last open bracket
+        else if (s[i] == ')')
+        {
+            while (operators.size() > 0 && operators.top() != '(')
+            {
+                performOperation();
+            }
+
+            // remove the ( bracket
+            operators.pop();
+            i++;
+        }
+        // operators
+        else
+        {
+            // if current operator's precedence <= top of stack operator, solve the top
+            while (operators.size() > 0 && precedence[s[i]] <= precedence[operators.top()])
+            {
+                performOperation();
+            }
+
+            // then push this operator into stack
+            operators.push(s[i]);
+            i++;
+        }
+    }
+
+    // solve the operators remaining in stack
+    while (operators.size() > 0)
+    {
+        performOperation();
+    }
+
+    return operands.top();
 }
 
 int main()
