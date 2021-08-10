@@ -584,6 +584,155 @@ string removeKdigits(string num, int k)
     return res.size() > 0 ? res : "0";
 }
 
+// 155. Min Stack
+/*
+Approach: O(1) for all operations
+Keep a stack, a min value = minVal
+
+Push:
+Instead of pushing the exact val into stack, we push (val - minVal) into stack.
+And if the value we have to push into stack is < minVal
+Then update minVal.
+Also, since it was less, so the value into stack i.e. val - minVal
+would have been -ve.
+So, in the stack all -ve values indicate that the minVal was updated
+And the original value at that top is equal to the minVal
+
+Pop:
+Now as we have pushed (val - minVal) into stack.
+So, to retrieve the original value we do
+If the top value is > 0 ,
+    popped value = top = val - minVal
+    So, val = top + minVal
+Else
+    If the top value is < 0 , then it means that val - minVal < 0,
+    which means this val is the new minimum, So, when it is at the top,
+    then the minVal will have the original val stored.
+    So, val = minVal
+    Also, at this point, we will have to update the minVal
+    top of stack = top = val - previous minVal
+    Here, val = the current minVal
+    So, top = minVal - previous minVal
+    previous minVal = minVal - top
+    So, now our minVal = minVal - top
+    And if we have to return the popped value, 
+    then the return value is the minVal before updating it just now
+
+Top:
+Same as pop
+if(top < 0)
+    val = minVal + top
+else
+    val = minVal
+
+getMin:
+return the minVal value
+*/
+class MinStack
+{
+public:
+    /** initialize your data structure here. */
+    stack<long> st;
+    int minVal = 0;
+
+    MinStack()
+    {
+    }
+
+    void push(int val)
+    {
+        if (st.size() == 0)
+            minVal = val;
+
+        st.push((long)val - minVal);
+        minVal = min(minVal, val);
+    }
+
+    void pop()
+    {
+        if (st.top() < 0)
+            minVal -= st.top();
+
+        st.pop();
+    }
+
+    int top()
+    {
+        if (st.top() > 0)
+            return st.top() + minVal;
+        else
+            return minVal;
+    }
+
+    int getMin()
+    {
+        return minVal;
+    }
+};
+
+// Generate Binary Numbers(https://practice.geeksforgeeks.org/problems/generate-binary-numbers-1587115620/1#)
+/*
+Approach: BFS, O(n) 
+If we make a binary tree with root 1
+And for every left child add 0, and add 1 for every right child
+Then for every node in a full binary tree(rooted at 1), 
+2*i represents its left child
+2*i + 1 represents its right child
+
+This way we can get all binary numbers
+Because mulitplying number by 2 is equivalent to adding a 0 in binary representation
+And mulitplying number by 2 and adding 1 is equivalent to adding a 1 in binary representation
+*/
+vector<string> generate(int N)
+{
+    // Your code here
+    vector<string> res;
+
+    queue<string> que;
+    que.push("1");
+    N--;
+
+    while (que.size() > 0)
+    {
+        string str = que.front();
+        que.pop();
+
+        res.push_back(str);
+
+        if (N-- > 0)
+            que.push(str + '0');
+        if (N-- > 0)
+            que.push(str + '1');
+    }
+
+    return res;
+}
+
+// 946. Validate Stack Sequences
+/*
+Approach: O(n)
+*/
+bool validateStackSequences(vector<int> &pushed, vector<int> &popped)
+{
+    stack<int> st;
+    int j = 0;
+
+    for (int i = 0; i < pushed.size(); i++)
+    {
+        // push current into stack
+        st.push(pushed[i]);
+
+        // before moving to next push, pop all elements that have to be popped
+        while (j < popped.size() && st.size() > 0 && st.top() == popped[j])
+        {
+            st.pop();
+            j++;
+        }
+    }
+
+    return j == popped.size();
+}
+
 // 224. Basic Calculator
 /*
 Approach: Infix Evaluation
@@ -616,7 +765,7 @@ void performOperation()
 int calculate(string s)
 {
     // map to keep precedence of all operators
-    unordered_map<char, int> precedence; 
+    unordered_map<char, int> precedence;
     precedence['+'] = 1;
     precedence['-'] = 1;
     precedence['*'] = 2;
