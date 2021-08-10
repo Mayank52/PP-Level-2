@@ -733,6 +733,100 @@ bool validateStackSequences(vector<int> &pushed, vector<int> &popped)
     return j == popped.size();
 }
 
+// How to efficiently implement k stacks in a single array?(Not available to submit anywhere)
+/*
+Approach:
+Push: O(1)
+Pop: O(1)
+Space: O(n)
+*/
+class KStacksArray
+{
+public:
+    int n = 100;
+    int numberOfStacks = 3;
+    vector<int> arr, next;
+    vector<int> top;
+    int free = 0;
+
+    KStacksArray(int size, int sn)
+    {
+        n = size;
+        numberOfStacks = sn;
+        arr.resize(size);
+        next.resize(size);
+        top.resize(sn);
+    }
+    void push(int val, int stackNo)
+    {
+        int idx = free;
+
+        arr[idx] = val;
+        free = next[idx];
+        next[idx] = top[stackNo];
+        top[stackNo] = idx;
+    }
+    int pop(int stackNo)
+    {
+        int idx = top[stackNo];
+        int rem = arr[idx];
+
+        arr[idx] = 0;
+        top[stackNo] = next[idx];
+        next[idx] = free;
+        free = idx;
+
+        return rem;
+    }
+};
+
+// How to efficiently implement k Queues in a single array?(Not available to submit anywhere)
+/*
+Approach:
+Push: O(1)
+Pop: O(1)
+Space: O(n)
+*/
+class KQueuesArray
+{
+public:
+    int n = 100;
+    int numberOfQueues = 3;
+    vector<int> arr, next;
+    vector<int> top;
+    int free = 0;
+
+    KQueuesArray(int size, int qn)
+    {
+        n = size;
+        numberOfQueues = qn;
+        arr.resize(size);
+        next.resize(size);
+        top.resize(qn);
+    }
+    void push(int val, int stackNo)
+    {
+        int idx = free;
+
+        arr[idx] = val;
+        free = next[idx];
+        next[idx] = top[stackNo];
+        top[stackNo] = idx;
+    }
+    int pop(int stackNo)
+    {
+        int idx = top[stackNo];
+        int rem = arr[idx];
+
+        arr[idx] = 0;
+        top[stackNo] = next[idx];
+        next[idx] = free;
+        free = idx;
+
+        return rem;
+    }
+};
+
 // 224. Basic Calculator
 /*
 Approach: Infix Evaluation
