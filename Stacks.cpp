@@ -584,6 +584,55 @@ string removeKdigits(string num, int k)
     return res.size() > 0 ? res : "0";
 }
 
+// 316. Remove Duplicate Letters
+/*
+Approach: O(n)
+Similar to remove K digits,
+Since we need the lexicographically smallest, we maintain a increasing stack
+So, for each element we pop from stack until the top is > the current element
+Here we the condition for removing elements is that we can remove duplicates
+So, first we find the frequency all elements
+Then when we have to pop we will only remove the top if its freq > 0
+Also, we will not push an element into the stack if it already contains that element
+So, keep a boolean seen to mark the element true when it is pushed into the stack
+*/
+string removeDuplicateLetters(string s)
+{
+    vector<int> freq(26, 0);
+    vector<bool> seen(26, false);
+    stack<char> st;
+
+    for (int i = 0; i < s.size(); i++)
+        freq[s[i] - 'a']++;
+
+    for (int i = 0; i < s.size(); i++)
+    {
+        freq[s[i] - 'a']--;
+        if (seen[s[i] - 'a'])
+            continue;
+
+        while (st.size() != 0 && st.top() > s[i] && freq[st.top() - 'a'] > 0)
+        {
+            seen[st.top() - 'a'] = false;
+            st.pop();
+        }
+
+        st.push(s[i]);
+        seen[s[i] - 'a'] = true;
+    }
+
+    string ans = "";
+    while (st.size() != 0)
+    {
+        ans += st.top();
+        st.pop();
+    }
+
+    reverse(ans.begin(), ans.end());
+
+    return ans;
+}
+
 // 155. Min Stack
 /*
 Approach: O(1) for all operations
@@ -931,6 +980,66 @@ int calculate(string s)
 
     return operands.top();
 }
+
+// 895. Maximum Frequency Stack
+/*
+Approach:
+Push: O(1), Pop: O(1)
+Space: O(n)
+
+We use a frequency map to maintain {val: frequency}
+And a frequencyStack map to maintain {frequency: stack with elements that have this frequency}
+
+Push:
+Update the frequency of the element
+Then in the frequency stack, push this element to the stack of its current frequency
+And update the max frequency
+
+Pop:
+Get the top element of the stack corresponding to max frequency
+Then update its frequency and pop it from the stack of max frequency
+And if the stack of max frequency is now empty
+Then reduce the max frequency by 1
+
+While popping max frequency either remains the same or is reduced by 1
+Because if the element that was just removed was the only element with that frequency
+then its new frequency is the max frequency which is -1 of previous
+And if it was not the only max frequency element, then max frequency remains the same
+*/
+class FreqStack
+{
+public:
+    unordered_map<int, int> freq;
+    unordered_map<int, stack<int>> freqStack;
+    int maxFreq = 0;
+
+    FreqStack()
+    {
+    }
+
+    void push(int val)
+    {
+        freq[val]++;
+
+        freqStack[freq[val]].push(val);
+
+        maxFreq = max(maxFreq, freq[val]);
+    }
+
+    int pop()
+    {
+        int remVal = freqStack[maxFreq].top();
+        freqStack[maxFreq].pop();
+
+        if (freq[remVal] > 0)
+            freq[remVal]--;
+
+        if (freqStack[maxFreq].size() == 0)
+            maxFreq--;
+
+        return remVal;
+    }
+};
 
 int main()
 {
