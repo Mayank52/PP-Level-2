@@ -249,6 +249,11 @@ int maxEnvelopes(vector<vector<int>> &envelopes)
     return dp.size();
 }
 
+// Box Stacking (https://practice.geeksforgeeks.org/problems/box-stacking/1)
+int maxHeight(int height[], int width[], int length[], int n)
+{
+    
+}
 
 // Minimum number of increasing subsequences
 /*
