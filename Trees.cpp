@@ -587,20 +587,143 @@ void lostTree()
     printTree(graph);
 }
 
+// Extra(Not in List)==================================================================================
+// 617. Merge Two Binary Trees
+
 // 617. Merge Two Binary Trees
 TreeNode *mergeTrees(TreeNode *root1, TreeNode *root2)
 {
     if (root1 == nullptr && root2 == nullptr)
         return nullptr;
 
+    // if either node is null, then just return the not null node
     if (root1 == nullptr || root2 == nullptr)
         return root1 ? root1 : root2;
 
+    // else merge the children of both trees, and overlap this node of both trees
     root1->left = mergeTrees(root1->left, root2->left);
     root1->right = mergeTrees(root1->right, root2->right);
     root1->val += root2->val;
 
     return root1;
+}
+
+// 669. Trim a Binary Search Tree
+TreeNode *trimBST(TreeNode *root, int low, int high)
+{
+    if (root == nullptr)
+        return nullptr;
+
+    // if this node is less than range, then return trimmed right node
+    if (root->val < low)
+        return trimBST(root->right, low, high);
+    // if this node is greater than range, then return trimmed left node
+    else if (root->val > high)
+        return trimBST(root->left, low, high);
+    // else trim the left and right childs, and return this node
+    else
+    {
+        root->left = trimBST(root->left, low, high);
+        root->right = trimBST(root->right, low, high);
+        return root;
+    }
+}
+
+// 863. All Nodes Distance K in Binary Tree
+vector<int> res;
+void kDown(TreeNode *root, int k, TreeNode *blockNode)
+{
+    if (root == nullptr || root == blockNode)
+        return;
+
+    if (k == 0)
+        res.push_back(root->val);
+
+    kDown(root->left, k - 1, blockNode);
+    kDown(root->right, k - 1, blockNode);
+}
+int allNodesKAway(TreeNode *root, int k, TreeNode *target)
+{
+    if (root == nullptr)
+        return -1;
+
+    if (root == target)
+    {
+        kDown(root, k, nullptr);
+        return 1;
+    }
+
+    int leftDistance = allNodesKAway(root->left, k, target);
+    if (leftDistance != -1)
+    {
+        kDown(root, k - leftDistance, root->left);
+        return leftDistance + 1;
+    }
+
+    int rightDistance = allNodesKAway(root->right, k, target);
+    if (rightDistance != -1)
+    {
+        kDown(root, k - rightDistance, root->right);
+        return rightDistance + 1;
+    }
+
+    return -1;
+}
+vector<int> distanceK(TreeNode *root, TreeNode *target, int k)
+{
+    allNodesKAway(root, k, target);
+    return res;
+}
+
+// 662. Maximum Width of Binary Tree
+/*
+Approach: O(n)
+To get the max level width, use the binary heap property to find left and right child index
+left Child = 2 * parentIdx
+right Child = 2 * parentIdx + 1
+
+Then for each level find the min idx and max idx
+And width of level = max idx - min idx + 1
+
+Also, to prevent overflow in 2 * parentIdx for deep nodes,
+use parentIdx = parentIdx - left most parent idx of that level
+*/
+int widthOfBinaryTree(TreeNode *root)
+{
+    typedef pair<TreeNode *, long long> pair;
+
+    queue<pair> que;
+    que.push({root, 0});
+
+    long long width = 0, leftMostIdx = 0;
+
+    while (que.size() > 0)
+    {
+        int size = que.size();
+        long long leftMin = LONG_MAX, rightMax = LONG_MIN;
+
+        while (size-- > 0)
+        {
+            pair rpair = que.front();
+            que.pop();
+
+            TreeNode *node = rpair.first;
+            long long idx = rpair.second - leftMostIdx;
+
+            leftMin = min(leftMin, idx);
+            rightMax = max(rightMax, idx);
+
+            if (node->left)
+                que.push({node->left, idx * 2});
+            if (node->right)
+                que.push({node->right, idx * 2 + 1});
+        }
+
+        width = max(width, rightMax - leftMin + 1);
+        leftMostIdx = leftMin;
+    }
+
+    return (int)width;
 }
 
 int main()
