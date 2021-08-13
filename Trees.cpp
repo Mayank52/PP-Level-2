@@ -206,6 +206,12 @@ TreeNode *inorderSuccessor(TreeNode *root, TreeNode *p)
 // 222. Count Complete Tree Nodes
 /*
 Approach : O(h*2h)
+Since it is a Complete Tree,
+In a Complete tree, of height h, the number of nodes = 2 ^ h - 1
+
+So, for each node we check if the height of its left and right child is equal
+If it is equal then it is a complete tree and directly return 2 ^ h - 1
+Else do the same thing for its left and right child
 */
 int getLeftHeight(TreeNode *root)
 {
@@ -238,12 +244,12 @@ int countNodes(TreeNode *root) //O(h)
     int rh = getRightHeight(root); //O(h)
 
     if (lh == rh)
-        return (1 << lh) - 1;
+        return (1 << lh) - 1;   // 2 ^ lh - 1
 
     return countNodes(root->left) + countNodes(root->right) + 1;
 }
 
-// 900 · Closest Binary Search Tree Value
+// 900 · Closest Binary Search Tree Value (Lintcode)
 /*
 Approach: O(h)
 Use the find target in BST approach.
@@ -291,8 +297,6 @@ If current element cant beat the front element then, no element after it can do 
 Approach 3:
 For balanced BST,we can get less than O(n)
 */
-
-int leftCount = 0, rightCount = 0;
 //Approach 1:
 void closestKValues(TreeNode *root, double target, int k, priority_queue<vector<double>, vector<vector<double>>> &pq)
 {
@@ -300,12 +304,6 @@ void closestKValues(TreeNode *root, double target, int k, priority_queue<vector<
         return;
 
     closestKValues(root->left, target, k, pq);
-
-    if (root->val > target)
-        rightCount++;
-
-    if (rightCount == k)
-        return;
 
     if (pq.size() < k)
     {

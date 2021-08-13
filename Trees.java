@@ -607,9 +607,16 @@ class Trees {
     }
 
     // 878 · Boundary of Binary Tree
+    /*
+    Approach:
+    1. Add the left boundary to res, and save the lefmost node
+    2. Add the leaf nodes of the left subtree of root, but dont add the leftmost node again
+    3. Add the leaf nodes of the right subtree of root
+    4. Add the right boundary, but dont add the rightmost node, as it would have already
+        been added by the leaf nodes of right subtree
+    */
     public TreeNode leftMostNode = null;
     public TreeNode rightMostNode = null;
-
     public void leftBoundary(TreeNode node, List<Integer> res) {
         if (node == null)
             return;
@@ -623,7 +630,6 @@ class Trees {
         else
             leftMostNode = node;
     }
-
     public void rightBoundary(TreeNode node, List<Integer> res) {
         if (node == null)
             return;
@@ -638,7 +644,6 @@ class Trees {
         if (node != rightMostNode)
             res.add(node.val);
     }
-
     public void leafNodes(TreeNode node, List<Integer> res) {
         if (node == null)
             return;
@@ -654,7 +659,6 @@ class Trees {
         if (node.right != null)
             leafNodes(node.right, res);
     }
-
     public List<Integer> boundaryOfBinaryTree(TreeNode root) {
         // write your code here
         if (root == null)
@@ -674,14 +678,14 @@ class Trees {
 
     // 1145. Binary Tree Coloring Game
     /*
-     * To win you have to choose a one of 3 nodes: parent of x, left child of x,
-     * right of x You can only win if 1 of # conditions is true: 1. Count of nodes
-     * in left subtree of x node > totalNodes/2 2. Count of nodes in right subtree
-     * of x node > totalNodes/2 3. Count of nodes in rest of the tree i.e. n -
-     * leftCount - rightCount - 1(for node x) > totalNodes/2
+    Approach:  
+    To win you have to choose a one of 3 nodes: parent of x, left child of x, right of x 
+    You can only win if 1 of following conditions is true: 
+    1. Count of nodes in left subtree of x node > totalNodes/2 
+    2. Count of nodes in right subtree of x node > totalNodes/2 
+    3. Count of nodes in rest of the tree i.e. n - leftCount - rightCount - 1(for node x) > totalNodes/2
      */
     public boolean res = false;
-
     public int countNodes(TreeNode node, int n, int x) {
         if (node == null)
             return 0;
@@ -696,7 +700,6 @@ class Trees {
 
         return leftCount + rightCount + 1;
     }
-
     public boolean btreeGameWinningMove(TreeNode root, int n, int x) {
         res = false;
         countNodes(root, n, x);
@@ -1579,15 +1582,20 @@ class Trees {
         if (root == null)
             return null;
 
+        // get the new left and right child of new node
         Tree leftRoot = extract(root.left.left);
         Tree rightRoot = extract(root.right);
 
+        // extract the new node of current node
         Tree newNode = root.left;
+        // restore the original left child
         root.left = root.left.left;
 
+        // attach the new node's left and right childs   
         newNode.left = leftRoot;
         newNode.right = rightRoot;
 
+        // return the new node
         return newNode;
     }
     public static Tree cloneTree(Tree tree) {
