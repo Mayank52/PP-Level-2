@@ -1572,7 +1572,11 @@ class Trees {
         if (root == null)
             return;
 
+        // if this node has a random pointer
         if (root.random != null)
+            // the new node(clone) is this node's left, 
+            // the clone of the node its random pointer is pointing to, is that node's left
+            // because we inserted all new nodes in the original node's left
             root.left.random = root.random.left;
 
         assignRandomPointers(root.left.left);

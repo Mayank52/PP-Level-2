@@ -250,9 +250,55 @@ int maxEnvelopes(vector<vector<int>> &envelopes)
 }
 
 // Box Stacking (https://practice.geeksforgeeks.org/problems/box-stacking/1)
+/*
+Approach: LIS O(n ^ 2)
+We will add all 6 combinations of {l, w, h} into an array
+Here, we consider arr[0] = height, arr[1] = width, arr[2] = length
+
+Then we do LIS for the length and width same as the russian doll envelope
+And find the sequence with max height
+
+Also, out of 6 combinations, we only need 3
+We will make 3 combinations with l < w, and 3 with w < l
+We can take either the ones with l < w or w < l
+As these 2 can never stack on top of each other, so we only need 3 combinations
+either of l < w or w < l.
+*/
 int maxHeight(int height[], int width[], int length[], int n)
 {
-    
+    vector<vector<int>> arr;
+
+    for (int i = 0; i < n; i++)
+    {
+        arr.push_back({height[i], min(width[i], length[i]), max(width[i], length[i])});
+        arr.push_back({width[i], min(height[i], length[i]), max(height[i], length[i])});
+        arr.push_back({length[i], min(width[i], height[i]), max(width[i], height[i])});
+    }
+
+    sort(arr.begin(), arr.end(), [](vector<int> &v1, vector<int> &v2)
+         {
+             if (v1[1] == v2[1])
+                 return v1[2] > v2[2];
+             else
+                 return v1[1] < v2[1];
+         });
+
+    vector<int> dp(arr.size());
+    int res = 0;
+
+    for (int i = 0; i < arr.size(); i++)
+    {
+        dp[i] = arr[i][0];
+        for (int j = i - 1; j >= 0; j--)
+        {
+            if (arr[i][2] > arr[j][2])
+                dp[i] = max(dp[i], dp[j] + arr[i][0]);
+        }
+
+        res = max(res, dp[i]);
+    }
+
+    return res;
 }
 
 // Minimum number of increasing subsequences
@@ -295,6 +341,82 @@ int minNumberofIncSubseq(vector<int> &nums)
     }
 
     return dp.size();
+}
+
+// 1235. Maximum Profit in Job Scheduling
+// Approach 1: O(n^2)
+int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &profit)
+{
+    int n = startTime.size();
+
+    vector<vector<int>> arr(n);
+    for (int i = 0; i < n; i++)
+        arr[i] = {startTime[i], endTime[i], profit[i]};
+
+    sort(arr.begin(), arr.end());
+
+    vector<int> dp(n);
+    int res = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        dp[i] = arr[i][2];
+        for (int j = i - 1; j >= 0; j--)
+        {
+            if (arr[i][0] >= arr[j][1])
+                dp[i] = max(dp[i], dp[j] + arr[i][2]);
+        }
+
+        res = max(res, dp[i]);
+    }
+
+    return res;
+}
+// Approach 2: O(nlogn)(Not Complete)
+int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &profit)
+{
+    int n = startTime.size();
+
+    vector<vector<int>> arr(n);
+    for (int i = 0; i < n; i++)
+        arr[i] = {startTime[i], endTime[i], profit[i]};
+
+    sort(arr.begin(), arr.end());
+
+    vector<int> dp;
+    int res = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        int lo = 0, hi = dp.size();
+
+        while (lo < hi)
+        {
+            int mid = lo + (hi - lo) / 2;
+
+            if (dp[lo] < dp[mid])
+        }
+
+        res = max(res, dp[i]);
+    }
+
+    return res;
+}
+
+// Inlcude/Exclude================================================================================
+// 514 · Paint Fence
+int numWays(int n, int k)
+{
+   int sameCount = 0;
+   int diffCount = 0;
+
+   for(int i = 1; i <= n; i++){
+       // paint this fence same as last fence
+       
+
+       // paint this fence different than last fence
+
+   }
 }
 
 int main()
