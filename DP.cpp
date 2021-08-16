@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <limits.h>
 
 using namespace std;
 
@@ -403,20 +404,175 @@ int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &pro
     return res;
 }
 
-// Inlcude/Exclude================================================================================
+// Inlcude/Exclude(P & C)================================================================================
 // 514 · Paint Fence
+/*
+Approach: O(n)
+Keep 2 counts: 
+1. Number of ways to paint 2 fences with same color
+2. Number of ways to paint 2 fences with different color
+
+Number of ways to paint current fence:
+1. Same as last fence: ways to paint last fence different color than its previous fence
+As more than 2 fences cannot have same color. So, if we paint this fence same as last, then it will the same as painting 
+last fence different than its previous fence.
+
+2. Different than last fence: total ways to paint last fence * (k - 1)
+To color, this fence different we can color it with k - 1  colors, i.e. every color except the one last
+fence was painted with.
+So, the count for this is the total ways to paint last fence * (k - 1)
+
+Base Case:
+For the first fence you can paint it with any of the k colors, so ways = k
+For 2nd fence, to paint it same as last will be k
+and to paint it different, for every paint we have k - 1 choices to paint different
+So for k paints we have k * k - 1 choices.
+*/
 int numWays(int n, int k)
 {
-   int sameCount = 0;
-   int diffCount = 0;
+    // for 1st fence
+    if (n == 1)
+        return k;
 
-   for(int i = 1; i <= n; i++){
-       // paint this fence same as last fence
-       
+    // for 2nd fence
+    int sameCount = k;
+    int diffCount = k * (k - 1);
 
-       // paint this fence different than last fence
+    // every fence after that
+    for (int i = 2; i < n; i++)
+    {
+        int a = sameCount, b = diffCount;
 
-   }
+        // paint this fence same as last fence
+        sameCount = b;
+
+        // paint this fence different than last fence
+        diffCount = (a + b) * (k - 1);
+    }
+
+    return sameCount + diffCount;
+}
+
+// Consecutive 1's not allowed
+/*
+Approach: O(n)
+We keep track of 
+1. Number of sequences ending with 1 = oneCount
+1. Number of sequences ending with 0 = zeroCount
+
+Now for current index, 
+Number of ways to add 1 here = Number of ways to put a zero at previous index = zeroCount
+Number of ways to add 0 here = We can add 0 after any sequence, so = oneCount + zeroCount
+
+This forms a fibonacci sequence: 0 1 1 2 3 5 8....
+Here the number of ways to make a sequecne of length 1 = 2 (Either 0 or 1)
+So in this case the sequence starts from n = 3 of fibonacci sequence
+
+So, for the given n, we have to find the (n + 2)th number of the fibonacci sequence
+As the nth zeroCount would be the ans
+
+*/
+long MOD = 1e9 + 7;
+long long countStrings(int n)
+{
+    long long oneCount = 1;
+    long long zeroCount = 1;
+
+    for (int i = 1; i < n; i++)
+    {
+        long long a = oneCount, b = zeroCount;
+
+        oneCount = b;
+        zeroCount = (a % MOD + b % MOD) % MOD;
+    }
+
+    return (oneCount % MOD + zeroCount % MOD) % MOD;
+}
+
+// Nth Fibonacci Number(logn)
+/*
+Approach: O(logn)
+If we have to find just the nth number in the fibonacci sequence, then it is possible to do it 
+in O(logn).
+
+The fibonacci sequence can be represented using the matrix:
+M = 1 1
+    1 0
+
+nth number in the series = M^n
+Now we can use Fast Exponentiation and matrix multiplication to find it is logn.
+For Matrix multiplication of n*m and m*k, complexity is n*m*k
+In our case we a matrix of 2x2, so complexity = 2*2*2 = 8
+M^n will have O(8logn) = O(logn)
+*/
+
+int fibo(int n)
+{
+    vector<vector<int>> mat{{1, 1}, {1, 0}};
+
+    while (n > 0)
+    {
+    }
+}
+
+// Catalan Numbers========================================================================================
+/*
+Catalan Numbers: https://cp-algorithms.web.app/combinatorics/catalan-numbers.html
+
+The first few numbers Catalan numbers, Cn (starting from zero):
+1,1,2,5,14,42,132,429,1430,…
+
+Formula: 
+
+
+Applications:
+The Catalan number Cn is the solution for:
+1. Number of correct bracket sequence consisting of n opening and n closing brackets.
+2. The number of rooted full binary trees with n+1 leaves (vertices are not numbered). 
+A rooted binary tree is full if every vertex has either two children or no children.
+3. The number of ways to completely parenthesize n+1 factors.
+4. The number of triangulations of a convex polygon with n+2 sides 
+(i.e. the number of partitions of polygon into disjoint triangles by using the diagonals).
+5. The number of ways to connect the 2n points on a circle to form n disjoint chords.
+6. The number of non-isomorphic full binary trees with n internal nodes (i.e. nodes having at least one son).
+7. The number of monotonic lattice paths from point (0,0) to point (n,n) in a square lattice of size n×n, 
+which do not pass above the main diagonal (i.e. connecting (0,0) to (n,n)).
+8. Number of permutations of length n that can be stack sorted 
+(i.e. it can be shown that the rearrangement is stack sorted if and only if there is no such index i<j<k, such that ak<ai<aj ).
+9. The number of non-crossing partitions of a set of n elements.
+10. The number of ways to cover the ladder 1…n using n rectangles 
+(The ladder consists of n columns, where ith column has a height i).
+*/
+
+// 64. Minimum Path Sum
+int minPathSum(vector<vector<int>> &grid)
+{
+    int n = grid.size();
+    int m = grid[0].size();
+
+    vector<vector<int>> dp(n + 1, vector<int>(m + 1));
+
+    for (int i = n - 1; i >= 0; i--)
+    {
+        for (int j = m - 1; j >= 0; j--)
+        {
+            if (i == n - 1 && j == m - 1)
+            {
+                dp[i][j] = grid[i][j];
+                continue;
+            }
+
+            int cost = INT_MAX;
+            if (i + 1 < n)
+                cost = min(cost, dp[i + 1][j]);
+            if (j + 1 < m)
+                cost = min(cost, dp[i][j + 1]);
+
+            dp[i][j] = cost + grid[i][j];
+        }
+    }
+
+    return dp[0][0];
 }
 
 int main()
