@@ -72,6 +72,25 @@ void modPower()
     //use fast exponentiation using MOD
     cout << pow(a, b) << endl;
 }
+// Iterative
+int modPow(int x, int y)
+{
+    long MOD = 1e9 + 7;
+    long res = 1;
+    while (y > 0)
+    {
+        if (y % 2 != 0)
+        {
+            res = (res * x) % MOD;
+            y--;
+        }
+
+        x = (x * x) % MOD;
+        y /= 2;
+    }
+
+    return res;
+}
 
 //Reduce a fraction to simplest form
 /*
@@ -209,6 +228,83 @@ vector<int> segmentedSieve(int m, int n)
     }
 
     return res;
+}
+
+// 509. Fibonacci Number (logn)
+/*
+Approach: O(logn)
+Fibonacci Series: 0 1 1 2 3 5
+If we have to find just the nth number in the fibonacci sequence, then it is possible to do it 
+in O(logn).
+
+The fibonacci sequence can be represented using the matrix:
+M = 1 1
+    1 0
+
+nth number in the series is given by M^n
+M^n = f(n+1) f(n)
+      f(n)   f(n-1)
+Eg: 
+Find 4th Fibonacci Number
+M^4:
+M^2: 1 1 * 1 1 = 2 1
+     1 0   1 0   1 1
+
+M^4: 2 1 * 2 1 = 5 3
+     1 1   1 1   3 2
+
+So, (n+1)th = 5th = 5,
+ nth = 4th = 3,
+ (n-1)th = 3rd = 2
+
+
+Now we can use Fast Exponentiation and matrix multiplication to find it is logn.
+For Matrix multiplication of n*m and m*k, complexity is n*m*k
+In our case we a matrix of 2x2, so complexity = 2*2*2 = 8
+M^n will have O(8logn) = O(logn)
+*/
+vector<vector<int>> matrixMultiply(vector<vector<int>> &mat1, vector<vector<int>> &mat2)
+{
+    int n1 = mat1.size(), m1 = mat1[0].size();
+    int n2 = mat2.size(), m2 = mat2[0].size();
+
+    vector<vector<int>> res(n1, vector<int>(m2)); // 2 x 2
+
+    for (int i = 0; i < n1; i++)
+    {
+        for (int j = 0; j < m2; j++)
+        {
+            for (int r = 0, c = 0; r < n2 && c < m1; r++, c++)
+            {
+                res[i][j] += mat1[i][c] * mat2[r][j];
+            }
+        }
+    }
+
+    return res;
+}
+int fib(int n)
+{
+    vector<vector<int>> x{{1, 1}, {1, 0}};
+    int y = n;
+
+    vector<vector<int>> res{{1, 0}, {0, 1}}; // Identity Matrix
+
+    while (y > 0)
+    {
+        if (y % 2 != 0)
+        {
+            res = matrixMultiply(res, x);
+            y--;
+        }
+
+        x = matrixMultiply(x, x);
+        y /= 2;
+    }
+
+    int ans = res[0][1];
+
+    return ans;
 }
 
 int main()

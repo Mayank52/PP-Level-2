@@ -404,7 +404,8 @@ int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &pro
     return res;
 }
 
-// Inlcude/Exclude(P & C)================================================================================
+// Include/Exclude(P & C)================================================================================
+
 // 514 · Paint Fence
 /*
 Approach: O(n)
@@ -464,7 +465,13 @@ Now for current index,
 Number of ways to add 1 here = Number of ways to put a zero at previous index = zeroCount
 Number of ways to add 0 here = We can add 0 after any sequence, so = oneCount + zeroCount
 
-This forms a fibonacci sequence: 0 1 1 2 3 5 8....
+Eg:
+1 2 3 4 5 6     : Idx
+1 2 3 4 8 13    : lastZero
+1 1 2 3 5 8     : lastOne
+Ans: 13 + 8 = 21
+
+This forms a fibonacci sequence: 0 1 1 2 3 5 8 13 21....
 Here the number of ways to make a sequecne of length 1 = 2 (Either 0 or 1)
 So in this case the sequence starts from n = 3 of fibonacci sequence
 
@@ -489,9 +496,10 @@ long long countStrings(int n)
     return (oneCount % MOD + zeroCount % MOD) % MOD;
 }
 
-// Nth Fibonacci Number(logn)
+// 509. Fibonacci Number (logn)
 /*
 Approach: O(logn)
+Fibonacci Series: 0 1 1 2 3 5
 If we have to find just the nth number in the fibonacci sequence, then it is possible to do it 
 in O(logn).
 
@@ -499,20 +507,102 @@ The fibonacci sequence can be represented using the matrix:
 M = 1 1
     1 0
 
-nth number in the series = M^n
+nth number in the series is given by M^n
+M^n = f(n+1) f(n)
+      f(n)   f(n-1)
+Eg: 
+Find 4th Fibonacci Number
+M^4:
+M^2: 1 1 * 1 1 = 2 1
+     1 0   1 0   1 1
+
+M^4: 2 1 * 2 1 = 5 3
+     1 1   1 1   3 2
+
+So, (n+1)th = 5th = 5,
+ nth = 4th = 3,
+ (n-1)th = 3rd = 2
+
+
 Now we can use Fast Exponentiation and matrix multiplication to find it is logn.
 For Matrix multiplication of n*m and m*k, complexity is n*m*k
 In our case we a matrix of 2x2, so complexity = 2*2*2 = 8
 M^n will have O(8logn) = O(logn)
 */
-
-int fibo(int n)
+vector<vector<int>> matrixMultiply(vector<vector<int>> &mat1, vector<vector<int>> &mat2)
 {
-    vector<vector<int>> mat{{1, 1}, {1, 0}};
+    int n1 = mat1.size(), m1 = mat1[0].size();
+    int n2 = mat2.size(), m2 = mat2[0].size();
 
-    while (n > 0)
+    vector<vector<int>> res(n1, vector<int>(m2)); // 2 x 2
+
+    for (int i = 0; i < n1; i++)
     {
+        for (int j = 0; j < m2; j++)
+        {
+            for (int r = 0, c = 0; r < n2 && c < m1; r++, c++)
+            {
+                res[i][j] += mat1[i][c] * mat2[r][j];
+            }
+        }
     }
+
+    return res;
+}
+int fib(int n)
+{
+    vector<vector<int>> x{{1, 1}, {1, 0}};
+    int y = n;
+
+    vector<vector<int>> res{{1, 0}, {0, 1}}; // Identity Matrix
+
+    while (y > 0)
+    {
+        if (y % 2 != 0)
+        {
+            res = matrixMultiply(res, x);
+            y--;
+        }
+
+        x = matrixMultiply(x, x);
+        y /= 2;
+    }
+
+    int ans = res[0][1];
+
+    return ans;
+}
+
+// Count possible ways to construct buildings
+/*
+Approach: O(n)
+This is same as consecutive 1's not allowed
+If we construct building on plot, then it is a 1
+And if we dont, then it is 0.
+
+We just find ways to construct building on one side = n 
+On the other side the count will be the same = n
+Now total ways to construct on both sides = n * n
+*/
+int TotalWays(int n)
+{
+    // Code here
+    long MOD = 1e9 + 7;
+    long long oneCount = 1;
+    long long zeroCount = 1;
+
+    for (int i = 1; i < n; i++)
+    {
+        long long a = oneCount, b = zeroCount;
+
+        oneCount = b;
+        zeroCount = (a % MOD + b % MOD) % MOD;
+    }
+
+    int res = (oneCount % MOD + zeroCount % MOD) % MOD;
+    res = (res % MOD * res % MOD) % MOD;
+
+    return res;
 }
 
 // Catalan Numbers========================================================================================
@@ -522,8 +612,20 @@ Catalan Numbers: https://cp-algorithms.web.app/combinatorics/catalan-numbers.htm
 The first few numbers Catalan numbers, Cn (starting from zero):
 1,1,2,5,14,42,132,429,1430,…
 
-Formula: 
+C[0] = 1
+C[1] = 1
+C[2] = C[0]*C[1] + C[1]*C[0] = 1 + 1 = 2
+C[3] = C[0]*C[2] + C[1]*C[1] + C[2]*C[0] = 2 + 1 + 2 = 5
+And So on....
 
+Formula:
+C(n) = 2nCn/(n+1)
+
+Complexity to get nth Catalan Number: 
+Approach 1: DP, O(n^2)
+Approach 2:
+    Using the Formula: C(n) = 2nCn/(n+1)
+    Time: O(n)
 
 Applications:
 The Catalan number Cn is the solution for:
@@ -543,7 +645,45 @@ which do not pass above the main diagonal (i.e. connecting (0,0) to (n,n)).
 10. The number of ways to cover the ladder 1…n using n rectangles 
 (The ladder consists of n columns, where ith column has a height i).
 */
+// https://practice.geeksforgeeks.org/problems/nth-catalan-number0817/1#
+// Approach 1: O(n^2)
+int findCatalan(int n)
+{
+    vector<int> cat(n + 1, 0);
+    cat[0] = cat[1] = 1;
 
+    for (int i = 2; i <= n; i++)
+    {
+        for (int j = 0; j < i; j++)
+            cat[i] += cat[j] * cat[i - 1 - j];
+    }
+
+    return cat[n];
+}
+
+// 96. Unique Binary Search Trees
+/*
+Approach: Catalan Number
+Number of Unique BSTs with n keys = nth Catalan Number
+Also, Number of Binary Trees with n keys = no. of unique BSTs * n!
+Because the structure of all Binary Trees will be the same as the BSTs
+But in each of those BSTs we can have n! permutations of keys to get a different binary tree
+*/
+int numTrees(int n)
+{
+    vector<int> cat(n + 1, 0);
+    cat[0] = cat[1] = 1;
+
+    for (int i = 2; i <= n; i++)
+    {
+        for (int j = 0; j < i; j++)
+            cat[i] += cat[j] * cat[i - 1 - j];
+    }
+
+    return cat[n];
+}
+
+// =======================================================================================================
 // 64. Minimum Path Sum
 int minPathSum(vector<vector<int>> &grid)
 {
@@ -573,6 +713,51 @@ int minPathSum(vector<vector<int>> &grid)
     }
 
     return dp[0][0];
+}
+
+// 741. Cherry Pickup
+/*
+Approach: O(n^3)
+
+*/
+int pickup(vector<vector<int>> &grid, int row1, int col1, int row2, vector<vector<vector<int>>> &dp)
+{
+    int col2 = row1 + col1 - row2;
+
+    // out of range indexes
+    if (row1 >= grid.size() || col1 >= grid[0].size() || row2 >= grid.size() || col2 >= grid[0].size() || grid[row1][col1] == -1 || grid[row2][col2] == -1)
+        return -1;
+
+    // obstacle
+    if (row1 == grid.size() - 1 && col1 == grid[0].size() - 1 && row2 == grid.size() - 1 && col2 == grid[0].size() - 1)
+        return dp[row1][col1][row2] = grid[row1][col1];
+
+    if (dp[row1][col1][row2] != -1)
+        return dp[row1][col1][row2];
+
+    int myAns;
+    if (row1 == row2 && col1 == col2)
+        myAns = grid[row1][col1];
+    else
+        myAns = grid[row1][col1] + grid[row2][col2];
+
+    int temp1 = pickup(grid, row1 + 1, col1, row2 + 1, dp);
+    int temp2 = pickup(grid, row1 + 1, col1, row2, dp);
+    int temp3 = pickup(grid, row1, col1 + 1, row2 + 1, dp);
+    int temp4 = pickup(grid, row1, col1 + 1, row2, dp);
+
+    int res = max(max(temp1, temp2), max(temp3, temp4));
+
+    return dp[row1][col1][row2] = (res == -1) ? res : res + myAns;
+}
+int cherryPickup(vector<vector<int>> &grid)
+{
+    int n = grid.size(), m = grid[0].size();
+
+    vector<vector<vector<int>>> dp(n, vector<vector<int>>(m, vector<int>(n, -1)));
+    int res = pickup(grid, 0, 0, 0, dp);
+
+    return res == -1 ? 0 : res;
 }
 
 int main()
