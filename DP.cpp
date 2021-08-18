@@ -750,6 +750,46 @@ int pickup(vector<vector<int>> &grid, int row1, int col1, int row2, vector<vecto
 
     return dp[row1][col1][row2] = (res == -1) ? res : res + myAns;
 }
+int pickup(vector<vector<int>> &grid)
+{
+    int n = grid.size(), m = grid[0].size();
+
+    vector<vector<vector<int>>> dp(n, vector<vector<int>>(m, vector<int>(n, -1)));
+
+    for (int row1 = n - 1; row1 >= 0; row1--)
+    {
+        for (int col1 = n - 1; col1 >= 0; col1--)
+        {
+            for (int row2 = n - 1; row2 >= 0; row2--)
+            {
+                int col2 = row1 + col1 - row2;
+
+                if (row1 == grid.size() - 1 && col1 == grid[0].size() - 1 && row2 == grid.size() - 1 && col2 == grid[0].size() - 1)
+                {
+                    dp[row1][col1][row2] = grid[row1][col1];
+                    continue;
+                }
+
+                int myAns;
+                if (row1 == row2 && col1 == col2)
+                    myAns = grid[row1][col1];
+                else
+                    myAns = grid[row1][col1] + grid[row2][col2];
+
+                int temp1 = (row1 + 1 < n && row2 + 1 < n) ? dp[row1 + 1][col1][row2 + 1] : -1;
+                int temp2 = (row1 + 1 < n) ? dp[row1 + 1][col1][row2] : -1;
+                int temp3 = (col1 + 1 < m && row2 + 1 < n) ? dp[row1][col1 + 1][row2 + 1] : -1;
+                int temp4 = (col1 + 1 < m) ? dp[row1][col1 + 1][row2] : -1;
+
+                int res = max(max(temp1, temp2), max(temp3, temp4));
+
+                dp[row1][col1][row2] = (res == -1) ? res : res + myAns;
+            }
+        }
+    }
+
+    return dp[0][0][0];
+}
 int cherryPickup(vector<vector<int>> &grid)
 {
     int n = grid.size(), m = grid[0].size();
@@ -758,6 +798,28 @@ int cherryPickup(vector<vector<int>> &grid)
     int res = pickup(grid, 0, 0, 0, dp);
 
     return res == -1 ? 0 : res;
+}
+
+// LCS================================================================================================
+// 1143. Longest Common Subsequence
+int longestCommonSubsequence(string text1, string text2)
+{
+    int n = text1.size(), m = text2.size();
+
+    vector<vector<int>> dp(n + 1, vector<int>(m + 1));
+
+    for (int i = n - 1; i >= 0; i--)
+    {
+        for (int j = m - 1; j >= 0; j--)
+        {
+            if (text1[i] == text2[j])
+                dp[i][j] = dp[i + 1][j + 1] + 1;
+            else
+                dp[i][j] = max(dp[i][j + 1], dp[i + 1][j]);
+        }
+    }
+
+    return dp[0][0];
 }
 
 int main()
