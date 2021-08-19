@@ -717,8 +717,24 @@ int minPathSum(vector<vector<int>> &grid)
 
 // 741. Cherry Pickup
 /*
-Approach: O(n^3)
+Approach: O(n^3) , O(n^3)
+Wrong Approach: 
+To Find the max path sum -> remove all cherries in that path -> find a second max path sum
 
+Correct Approach:
+We move 2 people through the matrix at once.
+And find the max path sum for both of them together for reaching the n-1,m-1 cell
+To move through 2 paths at the same time with right and down moves allowed, we get 4 combinations
+Right Right
+Right Down
+Down Down
+Down Right
+
+So at each step we find the max from these 4 options
+Also row1 + col1 = row2 + col2 for each step
+So, we only need 3 variables instead of 4
+r1 + c1 = r2 + c2
+so c2 = r1 + c1 - r2
 */
 int pickup(vector<vector<int>> &grid, int row1, int col1, int row2, vector<vector<vector<int>>> &dp)
 {
@@ -728,7 +744,7 @@ int pickup(vector<vector<int>> &grid, int row1, int col1, int row2, vector<vecto
     if (row1 >= grid.size() || col1 >= grid[0].size() || row2 >= grid.size() || col2 >= grid[0].size() || grid[row1][col1] == -1 || grid[row2][col2] == -1)
         return -1;
 
-    // obstacle
+    // last cell
     if (row1 == grid.size() - 1 && col1 == grid[0].size() - 1 && row2 == grid.size() - 1 && col2 == grid[0].size() - 1)
         return dp[row1][col1][row2] = grid[row1][col1];
 
@@ -736,11 +752,14 @@ int pickup(vector<vector<int>> &grid, int row1, int col1, int row2, vector<vecto
         return dp[row1][col1][row2];
 
     int myAns;
+    // if both people are at same cell, then pick the cherry once
     if (row1 == row2 && col1 == col2)
         myAns = grid[row1][col1];
+    // else pick the cherry in both cells
     else
         myAns = grid[row1][col1] + grid[row2][col2];
 
+    // get the max of next 4 options
     int temp1 = pickup(grid, row1 + 1, col1, row2 + 1, dp);
     int temp2 = pickup(grid, row1 + 1, col1, row2, dp);
     int temp3 = pickup(grid, row1, col1 + 1, row2 + 1, dp);
@@ -749,46 +768,6 @@ int pickup(vector<vector<int>> &grid, int row1, int col1, int row2, vector<vecto
     int res = max(max(temp1, temp2), max(temp3, temp4));
 
     return dp[row1][col1][row2] = (res == -1) ? res : res + myAns;
-}
-int pickup(vector<vector<int>> &grid)
-{
-    int n = grid.size(), m = grid[0].size();
-
-    vector<vector<vector<int>>> dp(n, vector<vector<int>>(m, vector<int>(n, -1)));
-
-    for (int row1 = n - 1; row1 >= 0; row1--)
-    {
-        for (int col1 = n - 1; col1 >= 0; col1--)
-        {
-            for (int row2 = n - 1; row2 >= 0; row2--)
-            {
-                int col2 = row1 + col1 - row2;
-
-                if (row1 == grid.size() - 1 && col1 == grid[0].size() - 1 && row2 == grid.size() - 1 && col2 == grid[0].size() - 1)
-                {
-                    dp[row1][col1][row2] = grid[row1][col1];
-                    continue;
-                }
-
-                int myAns;
-                if (row1 == row2 && col1 == col2)
-                    myAns = grid[row1][col1];
-                else
-                    myAns = grid[row1][col1] + grid[row2][col2];
-
-                int temp1 = (row1 + 1 < n && row2 + 1 < n) ? dp[row1 + 1][col1][row2 + 1] : -1;
-                int temp2 = (row1 + 1 < n) ? dp[row1 + 1][col1][row2] : -1;
-                int temp3 = (col1 + 1 < m && row2 + 1 < n) ? dp[row1][col1 + 1][row2 + 1] : -1;
-                int temp4 = (col1 + 1 < m) ? dp[row1][col1 + 1][row2] : -1;
-
-                int res = max(max(temp1, temp2), max(temp3, temp4));
-
-                dp[row1][col1][row2] = (res == -1) ? res : res + myAns;
-            }
-        }
-    }
-
-    return dp[0][0][0];
 }
 int cherryPickup(vector<vector<int>> &grid)
 {
@@ -799,6 +778,64 @@ int cherryPickup(vector<vector<int>> &grid)
 
     return res == -1 ? 0 : res;
 }
+
+// 1463. Cherry Pickup II
+/*
+Approach: O(n^3), O(n^3)
+Same approach as Cherry Pickup
+Just start one robot from 0,0 and second from 0, m-1
+And since there are 3 moves allowed per robot, so total combonations = 9
+
+Also we need to keep track of 3 variables: row, col1, col2
+As in each move they have to move to next row. Only option is between -1, 0, 1 columns.
+*/
+int pickup(vector<vector<int>> &grid, int row, int col1, int col2, vector<vector<vector<int>>> &dp)
+{
+    // out of range indexes
+    if (row >= grid.size() || col1 >= grid[0].size() || col1 < 0 || col2 >= grid[0].size() || col2 < 0)
+        return -1;
+
+    // last row
+    if (row == grid.size() - 1)
+    {
+        if (col1 == col2)
+            return dp[row][col1][col2] = grid[row][col1];
+        else
+            return dp[row][col1][col2] = grid[row][col1] + grid[row][col2];
+    }
+
+    if (dp[row][col1][col2] != -1)
+        return dp[row][col1][col2];
+
+    // include cherry for current cell of both robots
+    int myAns;
+    if (col1 == col2)
+        myAns = grid[row][col1];
+    else
+        myAns = grid[row][col1] + grid[row][col2];
+
+    // get max of next 9 options
+    int maxRes = -1;
+    for (int i = -1; i <= 1; i++)
+    {
+        for (int j = -1; j <= 1; j++)
+        {
+            maxRes = max(maxRes, pickup(grid, row + 1, col1 + i, col2 + j, dp));
+        }
+    }
+
+    return dp[row][col1][col2] = (maxRes == -1) ? maxRes : maxRes + myAns;
+}
+int cherryPickup(vector<vector<int>> &grid)
+{
+    int n = grid.size(), m = grid[0].size();
+
+    vector<vector<vector<int>>> dp(n, vector<vector<int>>(m, vector<int>(m, -1)));
+    int res = pickup(grid, 0, 0, m - 1, dp);
+
+    return res == -1 ? 0 : res;
+}
+
 
 // LCS================================================================================================
 // 1143. Longest Common Subsequence
