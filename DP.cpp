@@ -721,6 +721,27 @@ int minPathSum(vector<vector<int>> &grid)
 Approach: O(n^3) , O(n^3)
 Wrong Approach: 
 To Find the max path sum -> remove all cherries in that path -> find a second max path sum
+This Fails on following case:
+1 0 0 0 0
+0 0 0 0 0
+1 0 1 0 1
+0 0 1 0 0
+0 0 0 0 1
+
+The first max path will find the middle path with 4 cherries, then remove them and it will become
+0 0 0 0 0
+0 0 0 0 0
+1 0 0 0 1
+0 0 0 0 0
+0 0 0 0 0
+
+Now second time it will find 1 cherry path
+So, total 5 cherries
+
+But we could have collected all cherries we took the following 2 paths
+Path 1: 0,0(cherry) -> 0,1 -> 0,2 -> 1,2 -> 2,2(cherry) -> 2,3 -> 2,4(cherry) -> 3,4 -> 4,4(cherry) = (4 cherries)
+Path 2: 0,0 -> 1,0 -> 2,0(cherry) -> 3,0 -> 3,1 -> 3,2(cherry) -> 3,3 -> 3,4 -> 4,4 = (2 cherries)
+So, total 6 cherries
 
 Correct Approach:
 We move 2 people through the matrix at once.
@@ -743,7 +764,7 @@ int pickup(vector<vector<int>> &grid, int row1, int col1, int row2, vector<vecto
 
     // out of range indexes
     if (row1 >= grid.size() || col1 >= grid[0].size() || row2 >= grid.size() || col2 >= grid[0].size() || grid[row1][col1] == -1 || grid[row2][col2] == -1)
-        return -1;
+        return INT_MIN;
 
     // last cell
     if (row1 == grid.size() - 1 && col1 == grid[0].size() - 1 && row2 == grid.size() - 1 && col2 == grid[0].size() - 1)
@@ -768,7 +789,7 @@ int pickup(vector<vector<int>> &grid, int row1, int col1, int row2, vector<vecto
 
     int res = max(max(temp1, temp2), max(temp3, temp4));
 
-    return dp[row1][col1][row2] = (res == -1) ? res : res + myAns;
+    return dp[row1][col1][row2] = (res == INT_MIN) ? res : res + myAns;
 }
 int cherryPickup(vector<vector<int>> &grid)
 {
@@ -777,7 +798,7 @@ int cherryPickup(vector<vector<int>> &grid)
     vector<vector<vector<int>>> dp(n, vector<vector<int>>(m, vector<int>(n, -1)));
     int res = pickup(grid, 0, 0, 0, dp);
 
-    return res == -1 ? 0 : res;
+    return res == INT_MIN ? 0 : res;
 }
 
 // 1463. Cherry Pickup II
@@ -1076,8 +1097,8 @@ dp[i][k][1]= max(dp[i-1][k][1], dp[i-1][k-1][0] - prices[i])
 */
 int maxProfit(int K, vector<int> &prices)
 {
-    vector<int> dpi0(K + 1, 0); // 0 stock in hand, base case = 0
-    vector<int> dpi1(K + 1, INT_MIN);   // 1 stock in hand, base case = -inf
+    vector<int> dpi0(K + 1, 0);       // 0 stock in hand, base case = 0
+    vector<int> dpi1(K + 1, INT_MIN); // 1 stock in hand, base case = -inf
 
     for (int price : prices)
     {
