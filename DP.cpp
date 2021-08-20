@@ -683,7 +683,8 @@ int numTrees(int n)
     return cat[n];
 }
 
-// =======================================================================================================
+// Path====================================================================================================
+
 // 64. Minimum Path Sum
 int minPathSum(vector<vector<int>> &grid)
 {
@@ -836,6 +837,259 @@ int cherryPickup(vector<vector<int>> &grid)
     return res == -1 ? 0 : res;
 }
 
+// Buy and Sell Stock=====================================================================================
+/*
+Approach: 
+You have 3 parameters:
+Day no.: i
+No. of transactions completed: k
+number of stocks in hand: 0 or 1 (Buying another stock if you have a stock in hand is not allowed)
+
+Depending on these 3 parameters, we have 2 recurrence relations:
+1. You have 0 stocks in hand at end of ith day: dp[i][k][0]
+    If you have 0 stocks at the end of the day, then either you rested that day, or you sold a stock that day
+    2 options: rest, sell
+    If you rested today then profit today = dp[i][k][0] = profit of previous day for same number of transactions = dp[i-1][k][0]
+    If you sold a stock today then profit today = dp[i][k][0]
+    = profit of previous day for same number of transactions and one stock in hand which you would have sold today 
+    = dp[i-1][k][1] + price of that stock today
+
+    So, dp[i][k][0]= max(dp[i-1][k][0], dp[i-1][k][1] + prices[i])
+
+2. You have 1 stock in hand at end of ith day: dp[i][k][1]
+    If you have 1 stock at the end of the day, then either you rested that day, or you bought a stock that day
+    2 options: rest, buy
+    If you rested today then profit today = dp[i][k][1] = profit of previous day for same number of transactions = dp[i-1][k][1]
+    If you buy a stock today then profit today = dp[i][k][1]
+    = profit of previous day for k-1 number of transactions and 0 stocks in hand
+    = dp[i-1][k][1] - price of that stock today
+
+    So, dp[i][k][1]= max(dp[i-1][k][1], dp[i-1][k-1][0] - prices[i])
+
+Base Cases: 
+dp[-1][k][0] = 0        // No day has passed, 0 stocks in hand
+dp[i][0][0] = 0         // No transaction has taken place, 0 stock in hand
+dp[-1][k][1] = -inf     // No day has passed, 1 stock in hand
+dp[i][0][1] = -inf      // No transaction has taken place, 1 stock in hand
+
+And 2 relations:
+dp[i][k][0]= max(dp[i-1][k][0], dp[i-1][k][1] + prices[i])
+dp[i][k][1]= max(dp[i-1][k][1], dp[i-1][k-1][0] - prices[i])
+
+And the answer is at dp[n][K][0] i.e. at the end of last day with all K transactions completed and 0 stocks in hand
+There is no point in having 1 stock in hand at the end, 
+because if you cant sell it, then buying it just reduces the profit.
+
+We count a transaction when we buy a stock.
+Also, as every value of the ith day only depends on previous day, so, we dont need to store
+the values of all days.
+So, we need a n*k size dp to solve it.
+
+*/
+
+// 121. Best Time to Buy and Sell Stock
+/*
+Approach: O(n), O(1)
+Here k = 1, as only transaction is allowed
+We dont need to keep a dp array as only previous day is needed and k = 1
+
+So, the 2 equations:
+dp[i][k][0]= max(dp[i-1][k][0], dp[i-1][k][1] + prices[i])
+dp[i][k][1]= max(dp[i-1][k][1], dp[i-1][k-1][0] - prices[i])
+
+Become:
+dp[i][k][0]= max(dp[i-1][k][0], dp[i-1][k][1] + prices[i])
+dp[i][k][1]= max(dp[i-1][k][1], 0 - prices[i])
+As, k = 1, so, k - 1 = 0 and 
+We have base case: dp[i][0][0] = 0
+*/
+int maxProfit(vector<int> &prices)
+{
+    int dp0 = 0;       //dp[i-1][k][0]
+    int dp1 = INT_MIN; //dp[i-1][k][1]
+
+    for (int price : prices)
+    {
+        // rest or sell today: dp[i][k][0] = max(dp[i-1][k][0], dp[i-1][k][1] + prices[i])
+        dp0 = max(dp0, dp1 + price);
+
+        // rest or buy today: dp[i][k][1] = max(dp[i-1][k][1], 0 - prices[i])
+        dp1 = max(dp1, 0 - price);
+    }
+
+    return dp0;
+}
+
+// 122. Best Time to Buy and Sell Stock II
+/*
+Approach: O(n), O(1)
+Infinite Transactions Allowed
+So, k = inf so, just ignore k in the 2 equations:
+dp[i][0]= max(dp[i-1][0], dp[i-1][1] + prices[i])
+dp[i][1]= max(dp[i-1][1], dp[i-1][0] - prices[i])
+
+*/
+int maxProfit(vector<int> &prices)
+{
+    int dp0 = 0;       //dp[i-1][k][0]
+    int dp1 = INT_MIN; //dp[i-1][k][1]
+
+    for (int price : prices)
+    {
+        int temp = dp0;
+
+        // rest or sell today: dp[i][0] = max(dp[i-1][0], dp[i-1][1] + prices[i])
+        dp0 = max(dp0, dp1 + price);
+
+        // rest or buy today: dp[i][1] = max(dp[i-1][1], dp[i-1][0] - prices[i])
+        dp1 = max(dp1, temp - price);
+    }
+
+    return dp0;
+}
+
+// 714. Best Time to Buy and Sell Stock with Transaction Fee
+/*
+Approach: O(n), O(1)
+Exactly same as Buy and Sell Stock 2
+We just subtract a transaction fee for each transaction 
+We are counting the transaction at time of buying, so just change the equation to:
+dp[i][k][0]= max(dp[i-1][0], dp[i-1][1] + prices[i])
+dp[i][k][1]= max(dp[i-1][1], dp[i-1][0] - prices[i] - fees)
+
+*/
+int maxProfit(vector<int> &prices, int fee)
+{
+    int dp0 = 0;       //dp[i-1][k][0]
+    int dp1 = INT_MIN; //dp[i-1][k][1]
+
+    for (int price : prices)
+    {
+        int temp = dp0;
+
+        // rest or sell today: dp[i][0] = max(dp[i-1][0], dp[i-1][1] + prices[i])
+        dp0 = max(dp0, dp1 + price);
+
+        // rest or buy today: dp[i][1] = max(dp[i-1][1], dp[i-1][0] - prices[i] - fee)
+        dp1 = max(dp1, temp - price - fee);
+    }
+
+    return dp0;
+}
+
+// 309. Best Time to Buy and Sell Stock with Cooldown
+/*
+Approach: O(n), O(1)
+Exactly same as Buy and Sell Stock 2
+But as there is a cooldown of 1 day, so while buying we have to check for (i - 2)th day instead of (i - 1) 
+So, relation becomes:
+dp[i][0]= max(dp[i-1][0], dp[i-1][1] + prices[i])
+dp[i][1]= max(dp[i-1][1], dp[i-2][0] - prices[i])
+*/
+int maxProfit(vector<int> &prices)
+{
+    int dp0 = 0;       //dp[i-1][k][0]
+    int dp1 = INT_MIN; //dp[i-1][k][1]
+    int prevdp0 = 0;   //dp[i-2][k][0]
+
+    for (int price : prices)
+    {
+        int temp = dp0;
+
+        // rest or sell today: dp[i][0] = max(dp[i-1][0], dp[i-1][1] + prices[i])
+        dp0 = max(dp0, dp1 + price);
+
+        // rest or buy today: dp[i][1] = max(dp[i-1][1], dp[i-2][0] - prices[i])
+        dp1 = max(dp1, prevdp0 - price);
+
+        prevdp0 = temp;
+    }
+
+    return dp0;
+}
+
+// 123. Best Time to Buy and Sell Stock III
+/*
+Approach: O(n), O(1)
+2 transactions allowed, so, instead of just 2 variables we keep 4
+dp[i][1][0], dp[i][1][1]
+dp[i][2][0], dp[i][2][1]
+
+So, equations are:
+dp[i][1][0]= max(dp[i-1][1][0], dp[i-1][1][1] + prices[i])
+dp[i][1][1]= max(dp[i-1][1][1], dp[i-1][0][0] - prices[i])
+
+dp[i][2][0]= max(dp[i-1][2][0], dp[i-1][2][1] + prices[i])
+dp[i][2][1]= max(dp[i-1][2][1], dp[i-1][1][0] - prices[i])
+
+Also, if we keep the dp array, then we can calculate these 4 in any order.
+But as we want O(1) space, we are using 4 variables
+And these 4 variables are dependent on each other's values.
+So, either we save their original values in before calculating, or we calculate in a particualar order:
+1. dp[i][2][0]
+2. dp[i][2][1]
+3. dp[i][1][0]
+4. dp[i][1][1]
+
+We are starting with dp[i][2][0] as no other variable is dependent on it.
+So, changing it does not affect them.
+After that dp[i][2][1] as only dp[i][2][0] was dependent on it, and now it is done, so we can 
+change this
+In this way we can find the order to calculate them in.
+
+*/
+int maxProfit(vector<int> &prices)
+{
+    int dpi10 = 0;       //dp[i-1][1][0]
+    int dpi11 = INT_MIN; //dp[i-1][1][1]
+    int dpi20 = 0;       //dp[i-1][2][0]
+    int dpi21 = INT_MIN; //dp[i-1][2][1]
+
+    for (int price : prices)
+    {
+        dpi20 = max(dpi20, dpi21 + price);
+        dpi21 = max(dpi21, dpi10 - price);
+        dpi10 = max(dpi10, dpi11 + price);
+        dpi11 = max(dpi11, -price);
+    }
+
+    return dpi20;
+}
+
+// 188. Best Time to Buy and Sell Stock IV
+/*
+Approach: O(n*k), O(k)
+Similar to Buy and Sell Stock 3
+Here the 2 equations are used directly as k transactions are allowed
+And the order to fill the dp in is also observed from K = 2 transactions
+We fill dp from
+For each day we transactions in order k = K -> 0
+And fill for dp0 first, then dp1
+
+And as each ith only depends on i - 1
+So, maintain only a k*2 dp 
+2 for 0 or 1 stock in hand, and k for number of trasactions
+
+And equations remain same as original:
+dp[i][k][0]= max(dp[i-1][k][0], dp[i-1][k][1] + prices[i])
+dp[i][k][1]= max(dp[i-1][k][1], dp[i-1][k-1][0] - prices[i])
+*/
+int maxProfit(int K, vector<int> &prices)
+{
+    vector<int> dpi0(K + 1, 0); // 0 stock in hand, base case = 0
+    vector<int> dpi1(K + 1, INT_MIN);   // 1 stock in hand, base case = -inf
+
+    for (int price : prices)
+    {
+        for (int k = K; k > 0; k--)
+        {
+            dpi0[k] = max(dpi0[k], dpi1[k] + price);
+            dpi1[k] = max(dpi1[k], dpi0[k - 1] - price);
+        }
+    }
+
+    return dpi0[K];
+}
 
 // LCS================================================================================================
 // 1143. Longest Common Subsequence
