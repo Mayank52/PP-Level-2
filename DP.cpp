@@ -1112,7 +1112,76 @@ int maxProfit(int K, vector<int> &prices)
     return dpi0[K];
 }
 
-// LCS================================================================================================
+// Cut Type(MCM)=============================================================================================
+
+// Matrix Chain Multiplication (https://practice.geeksforgeeks.org/problems/matrix-chain-multiplication0303/1)
+/*
+Approach: Time: O(N^3), Space: O(N^2)
+
+*/
+int matrixMultiplication(int N, int arr[])
+{
+    vector<vector<int>> dp(N, vector<int>(N, INT_MAX));
+
+    for (int gap = 1; gap < N; gap++)
+    {
+        for (int si = 0, ei = gap; ei < N; si++, ei++)
+        {
+            if (si + 1 == ei)
+            {
+                dp[si][ei] = 0;
+                continue;
+            }
+
+            for (int cut = si + 1; cut < ei; cut++)
+            {
+                int leftCost = dp[si][cut];
+                int rightCost = dp[cut][ei];
+
+                int myCost = leftCost + arr[si] * arr[cut] * arr[ei] + rightCost;
+
+                dp[si][ei] = min(dp[si][ei], myCost);
+            }
+        }
+    }
+
+    return dp[0][N - 1];
+}
+
+// 312. Burst Balloons
+/*
+Approach: O(N^3), O(N^2)
+*/
+int maxCoins(vector<int> &nums)
+{
+    int n = nums.size();
+
+    vector<vector<int>> dp(n, vector<int>(n));
+
+    for (int gap = 0; gap < n; gap++)
+    {
+        for (int i = 0, j = gap; j < n; i++, j++)
+        {
+            int leftVal = (i == 0) ? 1 : nums[i - 1];
+            int rightVal = (j == n - 1) ? 1 : nums[j + 1];
+
+            for (int cut = i; cut <= j; cut++)
+            {
+                int leftCost = (cut == i) ? 0 : dp[i][cut - 1];
+                int rightCost = (cut == j) ? 0 : dp[cut + 1][j];
+
+                int myCost = leftCost + leftVal * nums[cut] * rightVal + rightCost;
+
+                dp[i][j] = max(dp[i][j], myCost);
+            }
+        }
+    }
+
+    return dp[0][n - 1];
+}
+
+// LCS / LPS====================================================================================================
+
 // 1143. Longest Common Subsequence
 int longestCommonSubsequence(string text1, string text2)
 {
@@ -1132,6 +1201,63 @@ int longestCommonSubsequence(string text1, string text2)
     }
 
     return dp[0][0];
+}
+
+// LCS of three strings (https://practice.geeksforgeeks.org/problems/lcs-of-three-strings0028/1)
+/*
+Approach: O(n^3), O(n^3)
+Same as LCS
+As there are 3 strings so take 3D DP and compare 3 strings instead of 2.
+*/
+int LCSof3(string A, string B, string C, int n1, int n2, int n3)
+{
+    vector<vector<vector<int>>> dp(n1 + 1, vector<vector<int>>(n2 + 1, vector<int>(n3 + 1)));
+
+    for (int i = n1 - 1; i >= 0; i--)
+    {
+        for (int j = n2 - 1; j >= 0; j--)
+        {
+            for (int k = n3 - 1; k >= 0; k--)
+            {
+                if (A[i] == B[j] && B[j] == C[k])
+                    dp[i][j][k] = dp[i + 1][j + 1][k + 1] + 1;
+                else
+                    dp[i][j][k] = max(dp[i + 1][j][k], max(dp[i][j + 1][k], dp[i][j][k + 1]));
+            }
+        }
+    }
+
+    return dp[0][0][0];
+}
+
+// 516. Longest Palindromic Subsequence
+int longestPalindromeSubseq(string s)
+{
+    int n = s.size();
+
+    vector<vector<int>> dp(n, vector<int>(n));
+
+    for (int gap = 0; gap < n; gap++)
+    {
+        for (int i = 0, j = gap; j < n; i++, j++)
+        {
+            if (i > j)
+                continue;
+
+            if (i == j)
+            {
+                dp[i][j] = 1;
+                continue;
+            }
+
+            if (s[i] == s[j])
+                dp[i][j] = dp[i + 1][j - 1] + 2;
+            else
+                dp[i][j] = max(dp[i + 1][j], dp[i][j - 1]);
+        }
+    }
+
+    return dp[0][n - 1];
 }
 
 int main()
