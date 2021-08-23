@@ -1260,6 +1260,62 @@ int longestPalindromeSubseq(string s)
     return dp[0][n - 1];
 }
 
+
+
+
+
+
+
+// Extra========================================================================================
+// Not a subset sum (https://practice.geeksforgeeks.org/problems/smallest-number-subset1220/1)
+/*
+Approach: O(n)
+Just keep a sum variable
+sum = 1 initially as that is the smallest +ve number
+Then iterate over the array and if the arr[i] <= sum
+Then every number till sum can be represented using subset of array
+So, iterate until this condition is true
+When the sum < arr[i], then sum is the answer
+*/
+long long findSmallest(long long arr[], int n)
+{
+    long long sum = 1;
+    for (int i = 0; i < n; i++)
+    {
+        if (arr[i] <= sum)
+            sum += arr[i];
+        else
+            break;
+    }
+
+    return sum;
+}
+
+// Count ways to divide N into K groups (https://www.geeksforgeeks.org/count-the-number-of-ways-to-divide-n-in-k-groups-incrementally/#)
+int countWays(int n, int k, int idx, vector<vector<vector<int>>> &dp)
+{
+    if (n == 0 && k == 0)
+        return dp[n][k][idx] = 1;
+    if (k == 0 || n <= 0 || k > n)
+        return dp[n][k][idx] = 0;
+
+    if (dp[n][k][idx] != -1)
+        return dp[n][k][idx];
+
+    int count = 0;
+    for (int i = idx; i <= n; i++)
+        count += countWays(n - i, k - 1, i, dp);
+
+    return dp[n][k][idx] = count;
+}
+void partitionNintoKgroups()
+{
+    int n = 8, k = 4;
+
+    vector<vector<vector<int>>> dp(n + 1, vector<vector<int>>(k + 1, vector<int>(n + 1, -1)));
+    cout << countWays(n, k, 1, dp);
+}
+
 int main()
 {
     return 0;
