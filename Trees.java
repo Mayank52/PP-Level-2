@@ -114,7 +114,7 @@ class Trees {
      * of Root Left Right , we do Root Right Left //So use this and then reverse the
      * traversal
      * 
-     * But this will require extra space to store and reverse the reverse preorder.
+     * But this will require extra space to store and reverse the reverse preorder.k
      * So, it is not exactly morris traversal. But if you have to do it then this is
      * the way to do it.
      */

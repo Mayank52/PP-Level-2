@@ -178,6 +178,34 @@ void recoverTree(TreeNode *root)
 }
 
 // 448 · Inorder Successor in BST
+/*
+Approach 1: O(n)
+Traverse in inorder, keep a prev node
+When prev node in inorder is the target node, then current node is its successor
+
+Approach 2: O(h) h = height of BST
+Inorder Successor will be the node with just greater value
+Cases:
+1. The leftmost child of target's right subtree. Eg: 8's Successor is 10
+2. If the right child does not have a left child, then right child itself is successor. Eg: 12's is 14
+3. If the node does not have a right child, then its inorder successor will be the first node in its node to root path
+   that has the target node in its left subtree. Eg: 14's is 20 and 10's is 12
+
+            20
+           /  \
+          8    22
+        /  \
+       4    12
+           /  \
+          10  14
+
+So, first find the target in the BST
+Then if the node has a right child, then its successor, is right child's leftmost child, and return false, as successor has been found
+If it does not have a right child, then return true
+So, now if a node get true from its left child, then this node is the successor
+Make it the successor  and return false as now the successor was found
+*/
+// Approach 1: O(n)
 TreeNode *succ = nullptr, *prev = nullptr;
 void inorderSuccessor_(TreeNode *root, TreeNode *p)
 {
@@ -198,6 +226,47 @@ void inorderSuccessor_(TreeNode *root, TreeNode *p)
 TreeNode *inorderSuccessor(TreeNode *root, TreeNode *p)
 {
     // write your code here
+    inorderSuccessor_(root, p);
+
+    return succ;
+}
+// Approach 2: O(h)
+TreeNode *succ = nullptr;
+bool inorderSuccessor_(TreeNode *root, TreeNode *p)
+{
+    if (root == nullptr)
+        return false;
+
+    if (root->val < p->val)
+        return inorderSuccessor_(root->right, p);
+    else if (root->val > p->val)
+    {
+        // if target node is in its left subtree, then make this the successor
+        bool leftAns = inorderSuccessor_(root->left, p);
+        if (leftAns)
+            succ = root;
+    }
+    else
+    {
+        // inorder successor
+        // right child != null, so succ is leftmost of right child
+        if (root->right != nullptr)
+        {
+            TreeNode *rightNode = root->right;
+            while (rightNode->left != nullptr)
+                rightNode = rightNode->left;
+
+            succ = rightNode;
+        }
+        // right child == null, return true to indicate that target node is present in this path
+        else
+            return true;
+    }
+
+    return false;
+}
+TreeNode *inorderSuccessor(TreeNode *root, TreeNode *p)
+{
     inorderSuccessor_(root, p);
 
     return succ;
@@ -244,7 +313,7 @@ int countNodes(TreeNode *root) //O(h)
     int rh = getRightHeight(root); //O(h)
 
     if (lh == rh)
-        return (1 << lh) - 1;   // 2 ^ lh - 1
+        return (1 << lh) - 1; // 2 ^ lh - 1
 
     return countNodes(root->left) + countNodes(root->right) + 1;
 }
