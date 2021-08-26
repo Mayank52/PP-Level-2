@@ -2,6 +2,8 @@
 #include <vector>
 #include <algorithm>
 #include <limits.h>
+#include <unordered_map>
+#include <unordered_set>
 
 using namespace std;
 
@@ -1260,11 +1262,261 @@ int longestPalindromeSubseq(string s)
     return dp[0][n - 1];
 }
 
+// Misc================================================================================================
 
+// 264. Ugly Number II
+/*
+Approach: O(n)
+Ugly number only have 2, 3, 5 as factors
+So, we can only get an ugly number by multiplying 2 ugly numbers
+To get the nth ugly number:
+We keep track of the greatest ugly number for 2, 3, 5 as factors
+And then to get the next ugly number we multiply the smallest of these with its next ugly number
+(1) 1×2, 2×2, 3×2, 4×2, 
+(2) 1×3, 2×3, 3×3,
+(3) 1×5, 2×5
 
+At this point 4x2 is smallest so we move 2 to its next factor that is also a ugly number which is 5
+*/
+int nthUglyNumber(int n)
+{
+    vector<int> nums(n);
+    int twoIdx = 0, threeIdx = 0, fiveIdx = 0;
 
+    nums[0] = 1; // first ugly number is 1
 
+    for (int i = 1; i < n; i++)
+    {
+        // get the min of all three 2, 3, 5's current ugly numbers
+        nums[i] = min(2 * nums[twoIdx], min(3 * nums[threeIdx], 5 * nums[fiveIdx]));
 
+        // whichever is the minimum move that to its next factor
+        // in case of duplicates like 2x3 and 3x2, move both 2 and 3 to next factor
+        if (nums[i] == 2 * nums[twoIdx])
+            twoIdx++;
+        if (nums[i] == 3 * nums[threeIdx])
+            threeIdx++;
+        if (nums[i] == 5 * nums[fiveIdx])
+            fiveIdx++;
+    }
+
+    return nums[n - 1];
+}
+
+// 313. Super Ugly Number
+/*
+Approach: O(nk)
+Same as nth Ugly number
+To maintain the indexes of primes we will need an array
+*/
+int nthSuperUglyNumber(int n, vector<int> &primes)
+{
+    vector<int> nums(n, INT_MAX);
+    vector<int> primesIdx(primes.size());
+
+    nums[0] = 1; // first ugly number is 1
+
+    for (int i = 1; i < n; i++)
+    {
+        // get the min of all primes's current factors
+        for (int j = 0; j < primes.size(); j++)
+        {
+            nums[i] = min(nums[i], primes[j] * nums[primesIdx[j]]);
+        }
+
+        // whichever is the minimum move that to its next factor
+        for (int j = 0; j < primes.size(); j++)
+        {
+            if (nums[i] == primes[j] * nums[primesIdx[j]])
+                primesIdx[j]++;
+        }
+    }
+
+    return nums[n - 1];
+}
+
+// 10. Regular Expression Matching(Not Done Yet)
+bool isMatch(string s, string p)
+{
+}
+
+// 44. Wildcard Matching
+/*
+Approach: 
+if s[i] == p[j] => n-1, m-1
+if s[i] != p[j]{
+    if '?' => n-1, m-1
+    if '* => n-1,m and n-1,m-1 and n,m-1(for "" string)
+    also in '* wildcard, can be subtituted for empty "" string in begin and end
+}
+*/
+int isMatch_Mem(string &s, string &p, int n, int m, vector<vector<int>> &dp)
+{
+    //both strings are over
+    if (n < 0 && m < 0)
+        return 1;
+    if (m < 0)
+        return 0;
+    if (n < 0)
+    {
+        //for case: s="", p="***", i.e pattern just has wildcards left
+        //then all wildcards are substituted for empty string
+        while (m >= 0 && p[m] == '*')
+            m--;
+
+        if (n < 0 && m < 0)
+            return 1;
+        else
+            return 0;
+    }
+
+    if (dp[n][m] != -1)
+        return dp[n][m];
+
+    bool res = false;
+    if (s[n] == p[m])
+    {
+        res = res || isMatch_Mem(s, p, n - 1, m - 1, dp);
+    }
+    else
+    {
+        if (p[m] == '?')
+        {
+            res = res || isMatch_Mem(s, p, n - 1, m - 1, dp);
+        }
+        else if (p[m] == '*')
+        {
+            res = res || isMatch_Mem(s, p, n - 1, m, dp) || isMatch_Mem(s, p, n - 1, m - 1, dp) || isMatch_Mem(s, p, n, m - 1, dp);
+        }
+    }
+
+    return dp[n][m] = (res ? 1 : 0);
+}
+bool isMatch(string s, string p)
+{
+    int n = s.size() - 1;
+    int m = p.size() - 1;
+
+    vector<vector<int>> dp(n + 1, vector<int>(m + 1, -1));
+    return isMatch_Mem(s, p, n, m, dp);
+}
+
+// 87. Scramble String
+/*
+Approach: O(n^3)
+We make cuts at indexes 1 to n
+And we check if 
+1. 0 to i of string1 can be scrambled into 0 to i of string2 
+   and i to n of string1 can be scrambled into i to n of string 2
+2. we can also swap the left and right part of ith index. So, check if
+   0 to i of string1 can be scrambled into last i characters
+   and i to n can of string 1 can be scrambled into 0 to n - i of string2
+
+Also before making the cuts check if both strings have the same characters
+Otherwise they can never be equal
+
+Eg:
+great, rgeat
+Suppose we make a cut at 2
+So we check for (gr, rg) and (eat, eat)
+And (gr, at) and (eat, rge)
+
+            great, rgeat (Only the true calls are shown)
+             /      \
+        gr, rg     eat, eat (returns true)
+        /    \
+   (g,r)    (r,g)     
+(1st,1st) (2nd,2nd) 
+  (g, g)     (r,r)
+(1st,2nd), (2nd,1st)
+
+So, we make cut at i = 2, and the right parts are already equal
+And for left parts we again make cuts, and their left and right parts are equal
+So, it returns true           
+
+*/
+unordered_map<string, bool> dp;
+bool isScramble(string s1, string s2)
+{
+    string key = s1 + s2;
+
+    if (dp.find(key) != dp.end())
+        return dp[key];
+
+    // if both strigns are equal
+    if (s1 == s2)
+        return dp[key] = true;
+
+    // compare the frequency map of strings
+    vector<int> freq1(26), freq2(26);
+    for (int i = 0; i < s1.size(); i++)
+    {
+        freq1[s1[i] - 'a']++;
+        freq2[s2[i] - 'a']++;
+    }
+    // if frequency map is different then they cannot be equal
+    for (int i = 0; i < 26; i++)
+    {
+        if (freq1[i] != freq2[i])
+            return dp[key] = false;
+    }
+
+    for (int i = 1; i < s1.size(); i++)
+    {
+        // make a cut at ith index in both strings
+        // compare 1st and 2nd parts of both strings
+        bool isEqual1 = isScramble(s1.substr(0, i), s2.substr(0, i));
+        bool isEqual2 = isScramble(s1.substr(i), s2.substr(i));
+
+        if (isEqual1 && isEqual2)
+            return dp[key] = true;
+
+        // compare first i characters of string1 with last i characters of strign 2
+        // and same for 2nd part with first part of string2
+        bool isEqual3 = isScramble(s1.substr(0, i), s2.substr(s2.size() - i));
+        bool isEqual4 = isScramble(s1.substr(i), s2.substr(0, s2.size() - i));
+
+        if (isEqual3 && isEqual4)
+            return dp[key] = true;
+    }
+
+    return dp[key] = false;
+}
+
+// 139. Word Break
+/*
+Approach:
+
+*/
+unordered_set<string> dict;
+unordered_map<string, bool> dp;
+bool wordBreak_(string &s)
+{
+    if (dp.find(s) != dp.end())
+        return dp[s];
+
+    if (dict.find(s) != dict.end())
+        return dp[s] = true;
+
+    for (int i = 1; i < s.size(); i++)
+    {
+        if (dict.find(s.substr(0, i)) != dict.end())
+        {
+            string remStr = s.substr(i);
+            if (wordBreak_(remStr))
+                return dp[s] = true;
+        }
+    }
+
+    return dp[s] = false;
+}
+bool wordBreak(string &s, vector<string> &wordDict)
+{
+    for (string &str : wordDict)
+        dict.insert(str);
+
+    return wordBreak_(s);
+}
 
 // Extra========================================================================================
 // Not a subset sum (https://practice.geeksforgeeks.org/problems/smallest-number-subset1220/1)
@@ -1314,6 +1566,65 @@ void partitionNintoKgroups()
 
     vector<vector<vector<int>>> dp(n + 1, vector<vector<int>>(k + 1, vector<int>(n + 1, -1)));
     cout << countWays(n, k, 1, dp);
+}
+
+// 1641. Count Sorted Vowel Strings
+/*
+For every string add all vowels greater than the last character to it.
+So, for each recursive call we pass it the n-1, last character used
+Then, at each call we start adding vowels from that last character
+
+For Eg: n=3
+Dp:
+1 1 1 1 1 
+5 4 3 2 1 
+15 10 6 3 1 
+35 -1 -1 -1 -1 
+
+So, at each row we are storing the sum of previous row from that column to end
+Like dp[2][1] = dp[1][1] + dp[1][2] + dp[1][3] + dp[1][4] = 4 + 3 + 2 + 1
+
+So, since we only need one row at a time, we can use a 1d dp.
+*/
+char vowels[5] = {'a', 'e', 'i', 'o', 'u'};
+int countVowelStrings_(int n, int lastChar, vector<vector<int>> &dp)
+{
+    if (n == 0)
+        return dp[n][lastChar] = 1;
+
+    if (dp[n][lastChar] != -1)
+        return dp[n][lastChar];
+
+    int res = 0;
+    for (int i = lastChar; i < 5; i++)
+    {
+        res += countVowelStrings_(n - 1, i, dp);
+    }
+
+    return dp[n][lastChar] = res;
+}
+int countVowelStrings_dp(int N)
+{
+    vector<vector<int>> dp(N + 1, vector<int>(5, -1));
+    for (int n = 0; n <= N; n++)
+    {
+        //start adding from end at each row, so at each n,i we will get the required sum
+        for (int i = 4; i >= 0; i--)
+        {
+            if (n == 0)
+                dp[n][i] = 1;
+            else
+                dp[n][i] = dp[n][i + 1] + dp[n - 1][i];
+        }
+    }
+
+    return dp[N][0];
+}
+int countVowelStrings(int n)
+{
+    vector<vector<int>> dp(n + 1, vector<int>(5, -1));
+    // return countVowelStrings_(n, 0, dp);
+    return countVowelStrings_dp(n);
 }
 
 int main()
