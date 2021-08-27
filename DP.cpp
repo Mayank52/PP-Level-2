@@ -1121,6 +1121,29 @@ int maxProfit(int K, vector<int> &prices)
 Approach: Time: O(N^3), Space: O(N^2)
 
 */
+// Recursive
+int MCM_rec(vector<int> &arr, int si, int ei, vector<vector<int>> &dp)
+{
+    if (si + 1 == ei)
+        return dp[si][ei] = 0;
+
+    if (dp[si][ei] != -1)
+        return dp[si][ei];
+
+    int ans = 1e8;
+    for (int cut = si + 1; cut < ei; cut++)
+    {
+        int leftCost = MCM_rec(arr, si, cut, dp);
+        int rightCost = MCM_rec(arr, cut, ei, dp);
+
+        int myCost = leftCost + arr[si] * arr[cut] * arr[ei] + rightCost;
+        if (myCost < ans)
+            ans = myCost;
+    }
+
+    return dp[si][ei] = ans;
+}
+// Iterative
 int matrixMultiplication(int N, int arr[])
 {
     vector<vector<int>> dp(N, vector<int>(N, INT_MAX));
@@ -1154,6 +1177,29 @@ int matrixMultiplication(int N, int arr[])
 /*
 Approach: O(N^3), O(N^2)
 */
+// Recursive
+int burstBallon(vector<int> &arr, int si, int ei, vector<vector<int>> &dp)
+{
+    if (dp[si][ei] != 0)
+        return dp[si][ei];
+
+    int lVal = si == 0 ? 1 : arr[si - 1];
+    int rVal = (ei == arr.size() - 1) ? 1 : arr[ei + 1];
+
+    int ans = 0;
+    for (int cut = si; cut <= ei; cut++)
+    {
+        int leftTreeCost = (cut == si) ? 0 : burstBallon(arr, si, cut - 1, dp);
+        int rightTreeCost = (cut == ei) ? 0 : burstBallon(arr, cut + 1, ei, dp);
+
+        int myCost = leftTreeCost + lVal * arr[cut] * rVal + rightTreeCost;
+        if (myCost > ans)
+            ans = myCost;
+    }
+
+    return dp[si][ei] = ans;
+}
+// Iterative
 int maxCoins(vector<int> &nums)
 {
     int n = nums.size();
@@ -1180,6 +1226,55 @@ int maxCoins(vector<int> &nums)
     }
 
     return dp[0][n - 1];
+}
+
+// 1039. Minimum Score Triangulation of Polygon
+/*
+Approach: O(n^3), O(n^2)
+We start from gap 2
+Because for gap 0 and 1, we will have only 2 vertices in the polygon
+So, it wont be a triangle
+Rest, just use the MCM method
+And for the cuts we make cut at start + 1 to end - 1
+Because if we make cut on start, then right side is the whole polygon and left side is nothing
+Similarly for the cut at end
+
+If we have to find the number of triangulations, it is given by Catalan number
+Number of triangultions for n vertices is (n - 2)th Catalan Number
+
+*/
+int minScoreTriangulation(vector<int> &nums)
+{
+    int n = nums.size();
+
+    vector<vector<int>> dp(n, vector<int>(n));
+
+    for (int gap = 2; gap < n; gap++)
+    {
+        for (int i = 0, j = gap; j < n; i++, j++)
+        {
+            int myAns = INT_MAX;
+            for (int cut = i + 1; cut < j; cut++)
+            {
+                int leftCost = dp[i][cut];
+                int rightCost = dp[cut][j];
+
+                int myCost = leftCost + nums[i] * nums[cut] * nums[j] + rightCost;
+
+                myAns = min(myAns, myCost);
+            }
+
+            dp[i][j] = myAns;
+        }
+    }
+
+    return dp[0][n - 1];
+}
+
+// 725 · Boolean Parenthesization
+int countParenth(string &symb, string &oper)
+{
+   
 }
 
 // LCS / LPS====================================================================================================
@@ -1485,9 +1580,12 @@ bool isScramble(string s1, string s2)
 
 // 139. Word Break
 /*
-Approach:
+Approach 1:
+For the string s, make a cut at each index and check if the substring 0 to cut is present in the dictionary
+If it is then make the call to check for the remaining string
 
 */
+// Approach 1: O(n^3)
 unordered_set<string> dict;
 unordered_map<string, bool> dp;
 bool wordBreak_(string &s)
@@ -1495,14 +1593,17 @@ bool wordBreak_(string &s)
     if (dp.find(s) != dp.end())
         return dp[s];
 
+    // check if current string itself is in the dictionary
     if (dict.find(s) != dict.end())
         return dp[s] = true;
 
     for (int i = 1; i < s.size(); i++)
     {
+        // check substring from 1 to i of current string is in the dictionary
         if (dict.find(s.substr(0, i)) != dict.end())
         {
             string remStr = s.substr(i);
+            // if the substring is present in dictionary, check for the remaining string
             if (wordBreak_(remStr))
                 return dp[s] = true;
         }
@@ -1512,10 +1613,326 @@ bool wordBreak_(string &s)
 }
 bool wordBreak(string &s, vector<string> &wordDict)
 {
+    // put all words into a hashset, to make find operation O(1)
     for (string &str : wordDict)
         dict.insert(str);
 
     return wordBreak_(s);
+}
+// Approach 2: O(n^2), Same as Approach 1, But Using indexes instead of substring
+unordered_set<string> dict;
+vector<int> dp;
+bool wordBreak_(string &s, int si)
+{
+    if (si >= s.size())
+        return false;
+
+    if (dp[si] != -1)
+        return dp[si];
+
+    // check for all possible substrings from startIndex(si) to s.size()
+    string currSubStr = "";
+    for (int i = si; i < s.size(); i++)
+    {
+        currSubStr += s[i];
+
+        if (dict.find(currSubStr) != dict.end())
+        {
+            if (wordBreak_(s, i + 1))
+            {
+                return dp[si] = true;
+            }
+        }
+    }
+
+    // check for whole string formed from si to s.size()
+    if (dict.find(currSubStr) != dict.end())
+    {
+        return dp[si] = true;
+    }
+
+    return dp[si] = false;
+}
+bool wordBreak(string &s, vector<string> &wordDict)
+{
+    dp.resize(s.size(), -1);
+    for (string &str : wordDict)
+        dict.insert(str);
+
+    return wordBreak_(s, 0);
+}
+// Approach 3: Iterative
+bool wordBreak(string &s, vector<string> &wordDict)
+{
+    unordered_set<string> dict;
+    for (string &str : wordDict)
+        dict.insert(str);
+
+    vector<bool> dp(s.size() + 1, false);
+
+    for (int si = s.size() - 1; si >= 0; si--)
+    {
+        string currSubStr = "";
+        for (int i = si; i < s.size(); i++)
+        {
+            currSubStr += s[i];
+
+            if (dict.find(currSubStr) != dict.end())
+            {
+                if (dp[i + 1])
+                {
+                    dp[si] = true;
+                    break;
+                }
+            }
+        }
+
+        if (dict.find(currSubStr) != dict.end())
+        {
+            dp[si] = true;
+            continue;
+        }
+    }
+
+    return dp[0];
+}
+
+// 140. Word Break II
+/*
+Approach:
+Same as Word Break I
+Instead of true, false return all possible sentences for the substring
+*/
+unordered_set<string> dict;
+unordered_map<int, vector<string>> dp;
+vector<string> wordBreak_(string &s, int si)
+{
+    if (si >= s.size())
+        return {};
+
+    if (dp.find(si) != dp.end())
+        return dp[si];
+
+    // check for all possible substrings from startIndex(si) to s.size()
+    string currSubStr = "";
+    vector<string> myAns;
+    for (int i = si; i < s.size(); i++)
+    {
+        currSubStr += s[i];
+
+        // if current substring is present in dictionary
+        if (dict.find(currSubStr) != dict.end())
+        {
+            // get all sentences possible for the remaining string, and add yourself to all of their start
+            vector<string> sentences = wordBreak_(s, i + 1);
+            for (string &sent : sentences)
+            {
+                myAns.push_back(currSubStr + " " + sent);
+            }
+        }
+    }
+
+    // check for whole string formed from si to s.size()
+    if (dict.find(currSubStr) != dict.end())
+    {
+        // there is no remaining substring, so this string itself forms 1 sentence
+        myAns.push_back(currSubStr);
+    }
+
+    return dp[si] = myAns;
+}
+vector<string> wordBreak(string &s, vector<string> &wordDict)
+{
+    for (string &str : wordDict)
+        dict.insert(str);
+
+    return wordBreak_(s, 0);
+}
+
+// 1092. Shortest Common Supersequence
+/*
+Approach: O(n*m)
+Find the LCS
+Every Character in LCS will be present in the answer once
+Rest of them should be present in same manner as the 2 strings given
+So, build the LCS string from the dp
+Then keep 3 pointers, one each on str1, str2, lcs
+Until the current character in str1, str2 != current of lcs, keep adding them to the ans
+Then add the lcs current and move all ahead.
+
+Eg: AGGTAB, GXTXAYB
+LCS: GTAB
+
+So, the ans will of size = str1.size() + str2.size() - lcs.size() = 6 + 7 - 4 = 9
+Ans = AGGXTXAYB
+
+*/
+string lcs(string &s1, string &s2)
+{
+    int n = s1.size(), m = s2.size();
+
+    vector<vector<int>> dp(n + 1, vector<int>(m + 1));
+
+    // find the length of LCS
+    for (int i = 0; i <= n; i++)
+    {
+        for (int j = 0; j <= m; j++)
+        {
+            if (i == 0 || j == 0)
+                continue;
+
+            if (s1[i - 1] == s2[j - 1])
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            else
+                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);
+        }
+    }
+
+    int lcsLen = dp[n][m];
+
+    string lcsStr = "";
+
+    // build the LCS string from the DP
+    int i = n, j = m, count = 0;
+    while (count < lcsLen)
+    {
+        if (s1[i - 1] == s2[j - 1])
+        {
+            lcsStr += s1[i - 1];
+            i--;
+            j--;
+            count++;
+        }
+        else
+        {
+            if (dp[i - 1][j] > dp[i][j - 1])
+                i--;
+            else
+                j--;
+        }
+    }
+
+    reverse(lcsStr.begin(), lcsStr.end());
+
+    return lcsStr;
+}
+string shortestCommonSupersequence(string str1, string str2)
+{
+    string lcsStr = lcs(str1, str2);
+
+    int i = 0, j = 0, k = 0;
+    string res = "";
+
+    // get the result string using the lcs
+    while (k < lcsStr.size())
+    {
+        // until str1[i] != lcs[k], keep adding it to result
+        while (i < str1.size() && str1[i] != lcsStr[k])
+            res += str1[i++];
+
+        // until str2[j] != lcs[k], keep adding it to result
+        while (j < str2.size() && str2[j] != lcsStr[k])
+            res += str2[j++];
+
+        // now all 3 pointers are at same character, so add it to result and increase all 3
+        res += lcsStr[k];
+        i++;
+        j++;
+        k++;
+    }
+
+    // add the remaining str1 into result
+    while (i < str1.size())
+        res += str1[i++];
+
+    // add the remaining str2 into result
+    while (j < str2.size())
+        res += str2[j++];
+
+    return res;
+}
+
+// 403. Frog Jump
+/*
+Approach: O(n^2)
+Keep a hashmap of {stone position : set of k values that it can be reached with}
+Keep mp[0] = 1
+As k for postion 0 is 1 always
+
+Now we iterate over the stones
+And for each stone, for each of each k value we find the next Position
+that can be reached from their as nextPos = curr + k
+And at that next positions's set, we insert k-1, k, k+1
+
+This way the at the end the last stone has all the k that it can be reached with.
+*/
+bool canCross(vector<int> &stones)
+{
+    unordered_map<int, unordered_set<int>> mp;
+    // initialise the set for each stones so that we have
+    // the available stone values in the map when we search later
+    for (int val : stones)
+        mp[val] = unordered_set<int>();
+
+    mp[0].insert(1);
+
+    for (int val : stones)
+    {
+        // iterate over all k values of current stone
+        for (auto itr = mp[val].begin(); itr != mp[val].end(); itr++)
+        {
+            int nextPos = val + *itr; // get the next position for that k
+            // if there is a stone at that next positon, then insert k-1, k, k+1 in that stone's set
+            if (mp.find(nextPos) != mp.end())
+            {
+                mp[nextPos].insert(*itr - 1);
+                mp[nextPos].insert(*itr);
+                mp[nextPos].insert(*itr + 1);
+            }
+        }
+    }
+
+    // if size of the set of last stone is > 0, then it can be reached else not
+    return mp[stones[stones.size() - 1]].size() > 0;
+}
+
+// 72. Edit Distance
+/*
+Approach: O(n*m)
+The relations for each operation is given by
+insert: dp[i][j] = dp[i][j-1] + 1
+remove: dp[i][j] = dp[i-1][j] + 1
+replace: dp[i][j] = dp[i-1][j-1] + 1
+
+*/
+int minDistance(string word1, string word2)
+{
+    int n = word1.size(), m = word2.size();
+
+    vector<vector<int>> dp(n + 1, vector<int>(m + 1));
+
+    for (int j = 0; j <= m; j++)
+        dp[0][j] = j;
+    for (int i = 0; i <= n; i++)
+        dp[i][0] = i;
+
+    for (int i = 0; i <= n; i++)
+    {
+        for (int j = 0; j <= m; j++)
+        {
+            if (i == 0 || j == 0)
+                continue;
+
+            if (word1[i - 1] == word2[j - 1])
+                dp[i][j] = dp[i - 1][j - 1];
+            else
+            {
+                dp[i][j] = min(dp[i - 1][j - 1], min(dp[i - 1][j], dp[i][j - 1])) + 1;
+            }
+        }
+    }
+
+    return dp[n][m];
 }
 
 // Extra========================================================================================
