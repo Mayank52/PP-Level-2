@@ -1274,7 +1274,81 @@ int minScoreTriangulation(vector<int> &nums)
 // 725 · Boolean Parenthesization
 int countParenth(string &symb, string &oper)
 {
-   
+}
+
+// Minimum and Maximum values of an expression with * and +
+int minAndMax(string &exp, string &oper)
+{
+}
+
+// 241. Different Ways to Add Parentheses
+vector<int> diffWaysToCompute(string expression)
+{
+}
+
+// Optimal BST (https://www.pepcoding.com/resources/data-structures-and-algorithms-in-java-levelup/dynamic-programming/optimal-bst-official/ojquestion)
+/*
+Approach: O(n^3)
+Cut Type Approach
+We make cut on each  key one by one
+This means that key is the root, and we need to find the cost for its left side 
+that will make the left subtree, and its right side that will make the right subtree
+Then as this becomes the root so everything on left and right goes down 1 level
+So, their cost of searching will also increase by 1 for all frequencies
+Eg:
+Input:  keys[] = {10, 12, 20}, freq[] = {34, 8, 50}
+There can be following possible BSTs
+    10                12                 20         10              20
+      \             /    \              /             \            /
+      12          10     20           12               20         10  
+        \                            /                 /           \
+         20                        10                12             12  
+     I               II             III             IV             V
+Among all possible BSTs, cost of the fifth BST is minimum.  
+
+Cost of searching of a key is = depth * frequency
+So, if we make a cut at 12, and we have the cost of left i.e. 10, and right i.e. 20
+Then when 12 becomes the root, all keys in left and right go down one level
+And now, 
+previous cost of 10 = 1 * 34
+Now cost of 10 = 2 * 34 
+Similarly for all other keys 
+So, total increase in cost = sum of frequencies of left keys + current node's frequency + sum of frequency of right keys
+= total frequency sum in range (L, R) both inclusive
+L, R are the border that we are making the cuts in
+*/
+int optimalbst(vector<int> &keys, vector<int> &frequency)
+{
+    int n = keys.size();
+
+    vector<vector<int>> dp(n, vector<int>(n));
+    vector<int> prefixSum(n);
+
+    prefixSum[0] = frequency[0];
+    for (int i = 1; i < n; i++)
+    {
+        prefixSum[i] = prefixSum[i - 1] + frequency[i];
+    }
+
+    for (int gap = 0; gap < n; gap++)
+    {
+        for (int i = 0, j = gap; j < n; i++, j++)
+        {
+            int minCost = INT_MAX;
+            for (int cut = i; cut <= j; cut++)
+            {
+                int leftCost = (cut == 0) ? 0 : dp[i][cut - 1];
+                int rightCost = (cut == n - 1) ? 0 : dp[cut + 1][j];
+                int myCost = prefixSum[j] - prefixSum[i] + frequency[i]; // sum of frequencies in range (i, j) both inclusive
+
+                minCost = min(minCost, leftCost + myCost + rightCost);
+            }
+
+            dp[i][j] = minCost;
+        }
+    }
+
+    return dp[0][n - 1];
 }
 
 // LCS / LPS====================================================================================================
