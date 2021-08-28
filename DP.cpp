@@ -7,6 +7,18 @@
 
 using namespace std;
 
+void display(vector<vector<int>> &dp)
+{
+    for (int i = 0; i < dp.size(); i++)
+    {
+        for (int j = 0; j < dp[0].size(); j++)
+        {
+            cout << dp[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
 // LIS======================================================================================
 // 300. Longest Increasing Subsequence
 /*
@@ -1272,18 +1284,229 @@ int minScoreTriangulation(vector<int> &nums)
 }
 
 // 725 · Boolean Parenthesization
+/*
+Approach: O(n^3)
+We keep 2 2D DPs
+One for true count, and one for false count
+
+For each cut, we check
+leftCount = dp[i][cut]
+rightCount = dp[cut + 1][j]
+
+
+For each operator, using their Truth Table, we can find their current count of True and False values 
+Case:
+OR : 
+    trueCount = (leftTrue * rightTrue) + (leftTrue * rightFalse) + (leftFalse * rightTrue)
+    falseCount = (leftFalse * rightFalse)
+AND:
+    trueCount = (leftTrue * rightTrue)
+    falseCount = (leftFalse * rightFalse) + (leftTrue * rightFalse) + (leftFalse * rightTrue)
+XOR:
+    trueCount = (leftTrue * rightFalse) + (leftFalse * rightTrue)
+    falseCount = (leftFalse * rightFalse) + (leftTrue * rightTrue)
+
+*/
 int countParenth(string &symb, string &oper)
 {
+    int n = symb.size();
+
+    vector<vector<int>> trueCount(n, vector<int>(n)), falseCount(n, vector<int>(n));
+
+    for (int gap = 0; gap < n; gap++)
+    {
+        for (int i = 0, j = gap; j < n; i++, j++)
+        {
+            if (i == j)
+            {
+                trueCount[i][j] = symb[i] == 'T' ? 1 : 0;
+                falseCount[i][j] = symb[i] == 'F' ? 1 : 0;
+                continue;
+            }
+
+            for (int cut = i; cut <= j; cut++)
+            {
+                int leftTrue = trueCount[i][cut];
+                int rightTrue = (cut == n - 1) ? 0 : trueCount[cut + 1][j];
+                int leftFalse = falseCount[i][cut];
+                int rightFalse = (cut == n - 1) ? 0 : falseCount[cut + 1][j];
+
+                if (oper[cut] == '|')
+                {
+                    trueCount[i][j] += (leftTrue * rightTrue) + (leftTrue * rightFalse) + (leftFalse * rightTrue);
+                    falseCount[i][j] += (leftFalse * rightFalse);
+                }
+                else if (oper[cut] == '&')
+                {
+                    trueCount[i][j] += (leftTrue * rightTrue);
+                    falseCount[i][j] += (leftFalse * rightFalse) + (leftTrue * rightFalse) + (leftFalse * rightTrue);
+                }
+                else
+                {
+                    trueCount[i][j] += (leftTrue * rightFalse) + (leftFalse * rightTrue);
+                    falseCount[i][j] += (leftFalse * rightFalse) + (leftTrue * rightTrue);
+                }
+            }
+        }
+    }
+
+    return trueCount[0][n - 1];
 }
 
 // Minimum and Maximum values of an expression with * and +
-int minAndMax(string &exp, string &oper)
+/*
+Approach: O(n^3)
+Similar to Boolean Parenthesization
+
+In the DP, at each cell we store {minValue, maxValue}
+For each cut, we get left and right min and max
+leftMin = dp[i][cut][0];
+rightMin = dp[cut + 1][j][0];
+leftMax = dp[i][cut][1];
+rightMax = dp[cut + 1][j][1];
+
+Then, current min = leftMin * rightMin
+And, current max = leftMax * rightMax
+
+*/
+vector<int> minAndMax(string expression)
 {
+    vector<int> nums;
+    vector<char> oper;
+
+    int i = 0;
+    while (i < expression.size())
+    {
+        int num = 0;
+        while (expression[i] - '0' >= 0 && expression[i] - '0' <= 9)
+        {
+            num = num * 10 + (expression[i] - '0');
+            i++;
+        }
+
+        nums.push_back(num);
+        oper.push_back(expression[i]);
+        i++;
+    }
+
+    int n = nums.size();
+
+    vector<vector<vector<int>>> dp(n, vector<vector<int>>(n, vector<int>(2)));
+
+    for (int gap = 0; gap < n; gap++)
+    {
+        for (int i = 0, j = gap; j < n; i++, j++)
+        {
+            // Base Case
+            if (i == j)
+            {
+                dp[i][j] = {nums[i], nums[i]};
+                continue;
+            }
+
+            int minAns = INT_MAX, maxAns = INT_MIN;
+            for (int cut = i; cut < j; cut++)
+            {
+                // nothing on right, so left value is the only option
+                if (cut == n - 1)
+                {
+                    minAns = dp[i][cut][0]; // leftMin
+                    maxAns = dp[i][cut][1]; // leftMax
+                    continue;
+                }
+
+                int leftMin = dp[i][cut][0];
+                int rightMin = dp[cut + 1][j][0];
+                int leftMax = dp[i][cut][1];
+                int rightMax = dp[cut + 1][j][1];
+
+                if (oper[cut] == '*')
+                {
+                    minAns = min(minAns, leftMin * rightMin);
+                    maxAns = max(maxAns, leftMax * rightMax);
+                }
+                else
+                {
+                    minAns = min(minAns, leftMin + rightMin);
+                    maxAns = max(maxAns, leftMax + rightMax);
+                }
+            }
+
+            dp[i][j] = {minAns, maxAns};
+        }
+    }
+
+    return dp[0][n - 1];
 }
 
 // 241. Different Ways to Add Parentheses
+/*
+Approach: O(n^3)
+Same as previous question
+At each cell in DP we keep an array of all possible values of the expression for that cell
+Then for current cell, we get
+All left Values * All right Values
+*/
 vector<int> diffWaysToCompute(string expression)
 {
+    vector<int> nums;
+    vector<char> oper;
+
+    int i = 0;
+    while (i < expression.size())
+    {
+        int num = 0;
+        while (expression[i] - '0' >= 0 && expression[i] - '0' <= 9)
+        {
+            num = num * 10 + (expression[i] - '0');
+            i++;
+        }
+
+        nums.push_back(num);
+        oper.push_back(expression[i]);
+        i++;
+    }
+
+    int n = nums.size();
+
+    vector<vector<vector<int>>> dp(n, vector<vector<int>>(n));
+
+    for (int gap = 0; gap < n; gap++)
+    {
+        for (int i = 0, j = gap; j < n; i++, j++)
+        {
+            // Base Case
+            if (i == j)
+            {
+                dp[i][j].push_back(nums[i]);
+                continue;
+            }
+            for (int cut = i; cut < j; cut++)
+            {
+                for (int leftVal : dp[i][cut])
+                {
+                    // Nothing on right
+                    if (cut == n - 1)
+                    {
+                        dp[i][j].push_back(leftVal);
+                        continue;
+                    }
+
+                    for (int rightVal : dp[cut + 1][j])
+                    {
+                        if (oper[cut] == '+')
+                            dp[i][j].push_back(leftVal + rightVal);
+                        else if (oper[cut] == '*')
+                            dp[i][j].push_back(leftVal * rightVal);
+                        else
+                            dp[i][j].push_back(leftVal - rightVal);
+                    }
+                }
+            }
+        }
+    }
+
+    return dp[0][n - 1];
 }
 
 // Optimal BST (https://www.pepcoding.com/resources/data-structures-and-algorithms-in-java-levelup/dynamic-programming/optimal-bst-official/ojquestion)
