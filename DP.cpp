@@ -418,6 +418,156 @@ int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &pro
     return res;
 }
 
+// Longest Bitonic Subsequence
+/*
+Approach: O(nlogn)
+1. Find LIS (Left to Right)
+2. Find LDS (Right to Left)
+
+In LIS DP for each index i we have, longest increasing subsequence ending at i
+In LDS DP for each index i we have, longest decreasing subsequence starting at i
+
+Now iterate over these 2, and for each index find the longest bitonice subsequence
+longestBitonicSubsequence = lis[i] + lds[i] - 1
+lis[i] will give the increasing till i, lds[i] will give the longest decreasing from i,
+in this ith index is counted twice, so we take lis[i] + lds[i] - 1
+*/
+int LongestBitonicSequence(vector<int> nums)
+{
+    int n = nums.size();
+
+    // LIS
+    vector<int> lis(n, 1);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i - 1; j >= 0; j--)
+        {
+            if (nums[i] > nums[j])
+                lis[i] = max(lis[i], lis[j] + 1);
+        }
+    }
+
+    // LDS
+    vector<int> lds(n, 1);
+    for (int i = n - 1; i >= 0; i--)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            if (nums[i] > nums[j])
+                lds[i] = max(lds[i], lds[j] + 1);
+        }
+    }
+
+    // Longest Bitonic Subsequence
+    int res = 0;
+    for (int i = 0; i < n; i++)
+    {
+        res = max(res, lis[i] + lds[i] - 1);
+    }
+
+    return res;
+}
+
+// 1671. Minimum Number of Removals to Make Mountain Array
+/*
+Approach 1: O(n^2)
+We have to find the Longest Bitonic Subsequence
+But the peak element must have atleast one element on both its left and right
+We cannot take a subsequence that is just increasing or decreasing.
+
+Approach 2: O(nlogn)
+Use nlogn approach for LIS and LDS
+And maintain a prefix, suffix array to keep
+prefix: max LIS till i
+suffix: max LDS from i
+
+Logic I am not sure
+*/
+// Approach 2: O(nlogn)
+int minimumMountainRemovals(vector<int> &nums)
+{
+    int n = nums.size();
+
+    // LIS
+    vector<int> prefix(n), suffix(n);
+    vector<int> dp;
+    for (int i = 0; i < n; i++)
+    {
+        int idx = lower_bound(dp.begin(), dp.end(), nums[i]) - dp.begin();
+
+        if (idx == dp.size())
+            dp.push_back(nums[i]);
+        else
+            dp[idx] = nums[i];
+
+        // update prefix[i] with max LIS till i, which is dp.size()
+        prefix[i] = dp.size();
+    }
+
+    dp.clear();
+
+    // LDS
+    for (int i = n - 1; i >= 0; i--)
+    {
+        int idx = lower_bound(dp.begin(), dp.end(), nums[i]) - dp.begin();
+
+        if (idx == dp.size())
+            dp.push_back(nums[i]);
+        else
+            dp[idx] = nums[i];
+
+        // update suffix[i] with max LDS starting from i, which is dp.size()
+        suffix[i] = dp.size();
+    }
+
+    // Longest Bitonic Subsequence
+    int maxBitonicLen = 0;
+    for (int i = 1; i < n - 1; i++)
+    {
+        if (prefix[i] > 1 && suffix[i] > 1)
+            maxBitonicLen = max(maxBitonicLen, prefix[i] + suffix[i] - 1);
+    }
+
+    return nums.size() - maxBitonicLen;
+}
+// Approach: O(n^2)
+int minimumMountainRemovals(vector<int> &nums)
+{
+    int n = nums.size();
+
+    // LIS
+    vector<int> lis(n, 1);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i - 1; j >= 0; j--)
+        {
+            if (nums[i] > nums[j])
+                lis[i] = max(lis[i], lis[j] + 1);
+        }
+    }
+
+    // LDS
+    vector<int> lds(n, 1);
+    for (int i = n - 1; i >= 0; i--)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            if (nums[i] > nums[j])
+                lds[i] = max(lds[i], lds[j] + 1);
+        }
+    }
+
+    // Longest Bitonic Subsequence
+    int maxBitonicLen = 0;
+    for (int i = 1; i < n - 1; i++)
+    {
+        if (lis[i] > 1 && lds[i] > 1)
+            maxBitonicLen = max(maxBitonicLen, lis[i] + lds[i] - 1);
+    }
+
+    return nums.size() - maxBitonicLen;
+}
+
 // Include/Exclude(P & C)================================================================================
 
 // 514 · Paint Fence
@@ -1126,7 +1276,7 @@ int maxProfit(int K, vector<int> &prices)
     return dpi0[K];
 }
 
-// Cut Type(MCM)=============================================================================================
+// Cut Type=====================================================================================================
 
 // Matrix Chain Multiplication (https://practice.geeksforgeeks.org/problems/matrix-chain-multiplication0303/1)
 /*
@@ -1727,9 +1877,68 @@ int nthSuperUglyNumber(int n, vector<int> &primes)
     return nums[n - 1];
 }
 
-// 10. Regular Expression Matching(Not Done Yet)
+// 10. Regular Expression Matching
+/*
+Approach: O(n^2)
+If current p[i] is a letter, then   
+    if p[i] = s[j], then dp[i][j] = true
+    else dp[i][j] = false
+If current p[i] is '.', then
+    if p,s are equal till i-1, j-1, then they are equal till i,j as well
+        then dp[i][j] = true
+    else dp[i][j] = false
+If current p[i] is '*', then
+
+*/
 bool isMatch(string s, string p)
 {
+    int n = s.size(), m = p.size();
+
+    vector<vector<bool>> dp(m + 1, vector<bool>(n + 1));
+    dp[0][0] = true;
+
+    for (int i = 0; i < m; i++)
+    {
+        if (p[i] == '*')
+            dp[i + 1][0] = dp[i - 1][0];
+    }
+
+    for (int i = 1; i <= m; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            // if letter
+            if (p[i - 1] >= 'a' && p[i - 1] <= 'z')
+            {
+                if (s[j - 1] == p[i - 1])
+                    dp[i][j] = dp[i - 1][j - 1];
+                else
+                    dp[i][j] = false;
+            }
+
+            // if .
+            else if (p[i - 1] == '.')
+            {
+                dp[i][j] = dp[i - 1][j - 1];
+            }
+
+            // if *
+            else
+            {
+                if (dp[i - 2][j] == true)
+                    dp[i][j] = true;
+                else
+                {
+                    if (p[i - 2] != s[j - 1] && p[i - 2] != '.')
+                        dp[i][j] = false;
+                    else
+                        dp[i][j] = dp[i - 1][j] || dp[i][j - 1];
+                }
+            }
+        }
+    }
+
+    return dp[m][n];
 }
 
 // 44. Wildcard Matching
@@ -1791,6 +2000,75 @@ bool isMatch(string s, string p)
 
     vector<vector<int>> dp(n + 1, vector<int>(m + 1, -1));
     return isMatch_Mem(s, p, n, m, dp);
+}
+
+// 688. Knight Probability in Chessboard
+/*
+Approach: O(k*n*n)
+For a particular row r, and column c
+We have 8 options
+So, the probability of going to those 8 positions is 1/8 each of the probabilty of current cell
+
+For each k, the probabilities only depend on probabilities k - 1 moves
+So, we keep two 2D DPs: previous probabilities, current probabilities
+
+Now We iterate over the previous probabilties, and for each cell with p > 0
+We find the 8 cells that can be reached from that cell
+And the probability of that cell is:
+current probability = current probability + (previous probability / 8)
+
+We do this k times to get the probability for each cell on the board after k moves
+And for total probability just find the sum of all values in the previous probability DP at the end
+*/
+double knightProbability(int n, int k, int row, int column)
+{
+    int dir[8][2] = {{2, 1}, {2, -1}, {1, 2}, {1, -2}, {-2, 1}, {-2, -1}, {-1, 2}, {-1, -2}};
+
+    vector<vector<double>> prevProb(n, vector<double>(n)), currProb(n, vector<double>(n));
+
+    // initially, knight starts at the given row, column, so that cell's probability = 1
+    prevProb[row][column] = 1;
+
+    for (int count = 0; count < k; count++)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                // if probability of reaching current cell = 0, then skip it
+                if (prevProb[i][j] == 0)
+                    continue;
+
+                // else update probability for the 8 cells on the board that can be reached from current cell
+                for (int d = 0; d < 8; d++)
+                {
+                    int x = i + dir[d][0];
+                    int y = j + dir[d][1];
+
+                    if (x >= 0 && y >= 0 && x < n && y < n)
+                    {
+                        currProb[x][y] += prevProb[i][j] / 8;
+                    }
+                }
+            }
+        }
+
+        // current becomes previous
+        prevProb = currProb;
+
+        // and reset the current board
+        currProb.assign(n, vector<double>(n, 0));
+    }
+
+    // get the total probability after k moves
+    double totalProb = 0;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+            totalProb += prevProb[i][j];
+    }
+
+    return totalProb;
 }
 
 // 87. Scramble String
@@ -2233,6 +2511,7 @@ int minDistance(string word1, string word2)
 }
 
 // Extra========================================================================================
+
 // Not a subset sum (https://practice.geeksforgeeks.org/problems/smallest-number-subset1220/1)
 /*
 Approach: O(n)
