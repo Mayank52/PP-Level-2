@@ -1964,6 +1964,254 @@ int extractPalindrome(string s, int left, int right)
     return count;
 }
 
+// 132. Palindrome Partitioning II
+/*
+Approach 1: Cut Type O(n^3)
+First make a 2D isPalindrome DP
+Then using Cut type approach, for each substring, make cuts and for each cut
+leftCost = dp[i][cut] 
+rightCost = dp[cut + 1][j]
+totalCost = leftCost + 1 + rightCost
+We added 1 as we are making a cut ourselves as well at the cut index
+
+
+Approach 2: O(n^2)
+We can preprocess
+Then we can just keep a 1D DP
+For each cut if the right side is not a palindrome then we dont need to calculate the cost for that cut
+As that would already have been calculated in some other part
+Eg:
+a | baccdbd     No
+ab | accdbd     No
+aba | ccdbd     No
+abac | cdbd     No
+abacc | dbd     Yes
+abaccd | bd     No
+abaccdb | d     Yes
+
+Like in abac | cdbd, on right side we have cdbd, which is not a palindrome
+So, we would make cuts in it such that its left and right sides are palindromes
+Now, after making those cuts, the right side would have become a palindrome and we
+would get the case we have already calculated
+Like in this case
+cdbd -> cdb | b is the only cut with right a palindrome
+So, the total string would become
+abac | cdbd  -> abaccdb | d
+which is already done
+
+So, for any cut where right side is not a palindrome we dont need to check
+So, just keep a 1D DP, here for each i, make a cut everywhere b/w 0 and i, and cost is
+leftCost = dp[cut] 
+rightCost = 0 as it is palindrome
+totalCost = leftCost + 1 + rightCost
+
+Approach 3: O(n^2), O(n)
+Similar to 647. Palindrome Substrings
+For each index i, we extend left and right indexes until string left...right is a palindrome
+And while extending, for each left...right,
+Cuts for (right + 1) = cuts for (left - 1) + 1, because left...right is already a palindrome so 0 cuts for that.
+
+We do this for both odd and even length palindromes.
+Initial values of cuts for all indexes is i - 1
+dp[i] is storing the cuts required till i - 1.
+
+*/
+// Approach 2: Time: O(n^2), Space: O(n^2)
+int minCut(string s)
+{
+    int n = s.size();
+
+    // make the isPalindrome DP, for the string
+    vector<vector<bool>> isPalindrome(n, vector<bool>(n, true));
+
+    for (int gap = 0; gap < n; gap++)
+    {
+        for (int i = 0, j = gap; j < n; i++, j++)
+        {
+            // Single Characters
+            if (i == j)
+            {
+                isPalindrome[i][j] = true;
+                continue;
+            }
+            // Only 2 characters
+            if (i + 1 == j)
+            {
+                if (s[i] == s[j])
+                    isPalindrome[i][j] = true;
+                else
+                    isPalindrome[i][j] = false;
+
+                continue;
+            }
+
+            if (s[i] == s[j])
+                isPalindrome[i][j] = isPalindrome[i + 1][j - 1];
+            else
+                isPalindrome[i][j] = false;
+        }
+    }
+
+    vector<int> dp(n);
+    for (int i = 0; i < n; i++)
+    {
+        dp[i] = i;
+
+        // if 0 to i is a palindrome, then cuts = 0
+        if (isPalindrome[0][i])
+        {
+            dp[i] = 0;
+            continue;
+        }
+
+        // else make cuts between 0 to i
+        for (int cut = 0; cut < i; cut++)
+        {
+            // if right side is not a palindrome, then skip
+            if (!isPalindrome[cut + 1][i])
+                continue;
+
+            dp[i] = min(dp[i], dp[cut] + 1);
+        }
+    }
+
+    return dp[n - 1];
+}
+// Approach 3: Time: O(n^2), Space: O(n)
+int minCut(string s)
+{
+    int n = s.size();
+
+    vector<int> dp(n + 1);
+
+    // Max cuts for index i, can be i - 1
+    for (int i = 0; i <= n; i++)
+        dp[i] = i - 1;
+
+    for (int i = 0; i < n; i++)
+    {
+        // Odd Length Palindrome
+        int left = i, right = i;
+        while (left >= 0 && right < n && s[left] == s[right])
+        {
+            dp[right + 1] = min(dp[right + 1], dp[left] + 1);
+            left--;
+            right++;
+        }
+
+        // Even Length Palindrome
+        left = i, right = i + 1;
+        while (left >= 0 && right < n && s[left] == s[right])
+        {
+            dp[right + 1] = min(dp[right + 1], dp[left] + 1);
+            left--;
+            right++;
+        }
+    }
+
+    return dp[n];
+}
+
+// Count All Palindromic Subsequence in a given String (https://practice.geeksforgeeks.org/problems/count-palindromic-subsequences/1)
+/*
+Approach: O(n^2)
+
+If we consider:
+A = count of (i + 1, j)
+B = count of (i, j -1)
+C = count of (i + 1, j - 1)
+Cases:
+a[i] == a[j]
+    We take A + B, and remove their intersection C.
+    Now as a[i] == a[j], so adding these two to all palindromic subsequences in (i + 1, j - 1) gives a new palindrome
+    So, we get count(i + 1, j - 1) = C new ones. Also a[i] and a[j] together also make a new palindrome as they are equal.
+    So, dp[i][j] = (A + B - C) + (C + 1) = A + B + 1
+
+a[i] != a[j]:
+    Just take A + B and remove the intersection C. We dont get any new palindromes
+    dp[i][j] = A + B - C
+
+We dont count a[i], a[j] as new as they would have been counted already in start of A, and end of B.
+
+*/
+long long int countPS(string s)
+{
+    int n = s.size();
+    long MOD = 1e9 + 7;
+
+    vector<vector<long long>> dp(n, vector<long long>(n));
+
+    for (int gap = 0; gap < n; gap++)
+    {
+        for (int i = 0, j = gap; j < n; i++, j++)
+        {
+            if (i == j)
+            {
+                dp[i][j] = 1;
+                continue;
+            }
+            if (i + 1 == j)
+            {
+                if (s[i] == s[j])
+                    dp[i][j] = 3;
+                else
+                    dp[i][j] = 2;
+
+                continue;
+            }
+
+            if (s[i] == s[j])
+                dp[i][j] = ((dp[i + 1][j] % MOD + dp[i][j - 1] % MOD) % MOD + 1) % MOD;
+            else
+                dp[i][j] = ((dp[i + 1][j] % MOD + dp[i][j - 1] % MOD) % MOD - dp[i + 1][j - 1] % MOD + MOD) % MOD;
+        }
+    }
+
+    return dp[0][n - 1];
+}
+
+// 730. Count Different Palindromic Subsequences (Not Complete)
+/*
+Approach: O(n^3)
+
+*/
+int countPalindromicSubsequences(string s)
+{
+    int n = s.size();
+    long MOD = 1e9 + 7;
+
+    vector<vector<long long>> dp(n, vector<long long>(n));
+
+    for (int gap = 0; gap < n; gap++)
+    {
+        for (int i = 0, j = gap; j < n; i++, j++)
+        {
+            if (i == j)
+            {
+                dp[i][j] = 1;
+                continue;
+            }
+            if (i + 1 == j)
+            {
+                if (s[i] == s[j])
+                    dp[i][j] = 2;
+                else
+                    dp[i][j] = 1;
+
+                continue;
+            }
+
+            if (s[i] == s[j]){
+                dp[i][j] = ((dp[i + 1][j] % MOD + dp[i][j - 1] % MOD) % MOD) % MOD;
+            }
+            else
+                dp[i][j] = ((dp[i + 1][j] % MOD + dp[i][j - 1] % MOD) % MOD - dp[i + 1][j - 1] % MOD + MOD) % MOD;
+        }
+    }
+
+    return dp[0][n - 1];
+}
+
 // Misc================================================================================================
 
 // 264. Ugly Number II
@@ -2160,109 +2408,6 @@ bool isMatch(string s, string p)
 
     vector<vector<int>> dp(n + 1, vector<int>(m + 1, -1));
     return isMatch_Mem(s, p, n, m, dp);
-}
-
-// 132. Palindrome Partitioning II
-/*
-Approach 1: Cut Type O(n^3)
-First make a 2D isPalindrome DP
-Then using Cut type approach, for each substring, make cuts and for each cut
-leftCost = dp[i][cut] 
-rightCost = dp[cut + 1][j]
-totalCost = leftCost + 1 + rightCost
-We added 1 as we are making a cut ourselves as well at the cut index
-
-
-Approach 2: O(n^2)
-We can preprocess
-Then we can just keep a 1D DP
-For each cut if the right side is not a palindrome then we dont need to calculate the cost for that cut
-As that would already have been calculated in some other part
-Eg:
-a | baccdbd     No
-ab | accdbd     No
-aba | ccdbd     No
-abac | cdbd     No
-abacc | dbd     Yes
-abaccd | bd     No
-abaccdb | d     Yes
-
-Like in abac | cdbd, on right side we have cdbd, which is not a palindrome
-So, we would make cuts in it such that its left and right sides are palindromes
-Now, after making those cuts, the right side would have become a palindrome and we
-would get the case we have already calculated
-Like in this case
-cdbd -> cdb | b is the only cut with right a palindrome
-So, the total string would become
-abac | cdbd  -> abaccdb | d
-which is already done
-
-So, for any cut where right side is not a palindrome we dont need to check
-So, just keep a 1D DP, here for each i, make a cut everywhere b/w 0 and i, and cost is
-leftCost = dp[cut] 
-rightCost = 0 as it is palindrome
-totalCost = leftCost + 1 + rightCost
-
-*/
-int minCut(string s)
-{
-    int n = s.size();
-
-    // make the isPalindrome DP, for the string
-    vector<vector<bool>> isPalindrome(n, vector<bool>(n, true));
-
-    for (int gap = 0; gap < n; gap++)
-    {
-        for (int i = 0, j = gap; j < n; i++, j++)
-        {
-            // Single Characters
-            if (i == j)
-            {
-                isPalindrome[i][j] = true;
-                continue;
-            }
-            // Only 2 characters
-            if (i + 1 == j)
-            {
-                if (s[i] == s[j])
-                    isPalindrome[i][j] = true;
-                else
-                    isPalindrome[i][j] = false;
-
-                continue;
-            }
-
-            if (s[i] == s[j])
-                isPalindrome[i][j] = isPalindrome[i + 1][j - 1];
-            else
-                isPalindrome[i][j] = false;
-        }
-    }
-
-    vector<int> dp(n);
-    for (int i = 0; i < n; i++)
-    {
-        dp[i] = i;
-
-        // if 0 to i is a palindrome, then cuts = 0
-        if (isPalindrome[0][i])
-        {
-            dp[i] = 0;
-            continue;
-        }
-
-        // else make cuts between 0 to i
-        for (int cut = 0; cut < i; cut++)
-        {   
-            // if right side is not a palindrome, then skip
-            if (!isPalindrome[cut + 1][i])
-                continue;
-
-            dp[i] = min(dp[i], dp[cut] + 1);
-        }
-    }
-
-    return dp[n - 1];
 }
 
 // 688. Knight Probability in Chessboard
