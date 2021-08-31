@@ -401,19 +401,19 @@ int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &pro
     vector<int> dp;
     int res = 0;
 
-    for (int i = 0; i < n; i++)
-    {
-        int lo = 0, hi = dp.size();
+    // for (int i = 0; i < n; i++)
+    // {
+    //     int lo = 0, hi = dp.size();
 
-        while (lo < hi)
-        {
-            int mid = lo + (hi - lo) / 2;
+    //     while (lo < hi)
+    //     {
+    //         int mid = lo + (hi - lo) / 2;
 
-            if (dp[lo] < dp[mid])
-        }
+    //         if (dp[lo] < dp[mid])
+    //     }
 
-        res = max(res, dp[i]);
-    }
+    //     res = max(res, dp[i]);
+    // }
 
     return res;
 }
@@ -2201,7 +2201,8 @@ int countPalindromicSubsequences(string s)
                 continue;
             }
 
-            if (s[i] == s[j]){
+            if (s[i] == s[j])
+            {
                 dp[i][j] = ((dp[i + 1][j] % MOD + dp[i][j - 1] % MOD) % MOD) % MOD;
             }
             else
@@ -2210,6 +2211,236 @@ int countPalindromicSubsequences(string s)
     }
 
     return dp[0][n - 1];
+}
+
+// 115. Distinct Subsequences
+// Memoization
+vector<vector<int>> dp;
+int numDistinct(string &s, string &t, int i, int j)
+{
+    if (j == t.size())
+        return dp[i][j] = 1;
+
+    if (i == s.size())
+        return dp[i][j] = 0;
+
+    if (dp[i][j] != -1)
+        return dp[i][j];
+
+    int count = 0;
+    if (s[i] == t[j])
+        count += numDistinct(s, t, i + 1, j + 1);
+
+    count += numDistinct(s, t, i + 1, j);
+
+    return dp[i][j] = count;
+}
+int numDistinct(string s, string t)
+{
+    int n = s.size(), m = t.size();
+
+    dp.resize(n + 1, vector<int>(m + 1, -1));
+
+    return numDistinct(s, t, 0, 0);
+}
+// Iterative
+int numDistinct(string s, string t)
+{
+    int n = s.size(), m = t.size();
+
+    vector<vector<int>> dp(n + 1, vector<int>(m + 1));
+
+    for (int i = 0; i <= n; i++)
+    {
+        for (int j = 0; j <= m; j++)
+        {
+            if (j == 0)
+            {
+                dp[i][j] = 1;
+                continue;
+            }
+
+            if (j > i)
+            {
+                dp[i][j] = 0;
+                continue;
+            }
+
+            if (s[i - 1] == t[j - 1])
+                dp[i][j] += dp[i - 1][j - 1];
+
+            dp[i][j] += dp[i - 1][j];
+        }
+    }
+
+    return dp[n][m];
+}
+
+// Knapsack============================================================================================
+
+// 0 - 1 Knapsack Problem (https://practice.geeksforgeeks.org/problems/0-1-knapsack-problem0945/1)
+/*
+Approach: O(n^2)
+Include / Exclude Approach
+If the current item weight <= remaining weight
+    Then make 2 calls: inlcude(idx + 1, remainingWeight - currItemWeight), exclude(idx + 1, remainingWeight)
+    And take max of these
+Else
+    Just exclude: exclude(idx + 1, remainingWeight)
+
+*/
+// Memoization
+int knapSack01(int wt[], int val[], int W, int n, int idx, vector<vector<int>> &dp)
+{
+    if (W == 0 || idx == n)
+        return 0;
+
+    if (dp[idx][W] != -1)
+        return dp[idx][W];
+
+    int ans = -1;
+
+    // include
+    if (W - wt[idx] >= 0)
+        ans = max(ans, knapSack01(wt, val, W - wt[idx], n, idx + 1, dp) + val[idx]);
+
+    // exclude
+    ans = max(ans, knapSack01(wt, val, W, n, idx + 1, dp));
+
+    return dp[idx][W] = ans;
+}
+int knapSack(int W, int wt[], int val[], int n)
+{
+    vector<vector<int>> dp(n + 1, vector<int>(W + 1, -1));
+
+    return knapSack01(wt, val, W, n, 0, dp);
+}
+// Iterative
+int knapSack(int W, int wt[], int val[], int n)
+{
+    vector<vector<int>> dp(n + 1, vector<int>(W + 1));
+
+    for (int i = 1; i <= n; i++)
+    {
+        for (int w = 0; w <= W; w++)
+        {
+            // if this can be included
+            if (w - wt[i - 1] >= 0)
+                dp[i][w] = max(dp[i - 1][w], dp[i - 1][w - wt[i - 1]] + val[i - 1]);
+            // if it cannot be included
+            else
+                dp[i][w] = dp[i - 1][w];
+        }
+    }
+
+    return dp[n][W];
+}
+
+// Unbounded Knapsack (https://practice.geeksforgeeks.org/problems/knapsack-with-duplicate-items4201/1)
+/*
+Approach: O(n^2)
+Same as 0/1 Knapsack,
+Just while including dont increase the index by 1, as current item can be included again
+*/
+int knapSack01(int wt[], int val[], int W, int n, int idx, vector<vector<int>> &dp)
+{
+    if (W == 0 || idx == n)
+        return 0;
+
+    if (dp[idx][W] != -1)
+        return dp[idx][W];
+
+    int ans = -1;
+
+    // include
+    if (W - wt[idx] >= 0)
+        ans = max(ans, knapSack01(wt, val, W - wt[idx], n, idx, dp) + val[idx]);
+
+    // exclude
+    ans = max(ans, knapSack01(wt, val, W, n, idx + 1, dp));
+
+    return dp[idx][W] = ans;
+}
+int knapSack(int n, int W, int val[], int wt[])
+{
+    vector<vector<int>> dp(n + 1, vector<int>(W + 1, -1));
+
+    return knapSack01(wt, val, W, n, 0, dp);
+}
+// Iterative
+int knapSack(int n, int W, int val[], int wt[])
+{
+    vector<vector<int>> dp(n + 1, vector<int>(W + 1));
+
+    for (int i = 1; i <= n; i++)
+    {
+        for (int w = 0; w <= W; w++)
+        {
+            // if this can be included
+            if (w - wt[i - 1] >= 0)
+                dp[i][w] = max(dp[i - 1][w], dp[i][w - wt[i - 1]] + val[i - 1]);
+            // if it cannot be included
+            else
+                dp[i][w] = dp[i - 1][w];
+        }
+    }
+
+    return dp[n][W];
+}
+
+// Fractional Knapsack Problem
+/*
+Approach: Greedy O(nlogn)
+Sort the items in decreasing order of ratio: value / weight
+
+The start with the highest ratio, and keep including the item completely until
+its weight <= remaining weight
+And then include the ratio of the next item to complete the capacity
+
+Eg:
+Items as (value, weight) pairs 
+arr[] = {{60, 10}, {100, 20}, {120, 30}} 
+Knapsack Capacity, W = 50; 
+
+Ans:
+Maximum possible value = 240 
+by taking items of weight 10 and 20 kg and 2/3 fraction 
+of 30 kg. Hence total price will be 60+100+(2/3)(120) = 240
+
+*/
+struct Item
+{
+    int value;
+    int weight;
+};
+double fractionalKnapsack(int W, Item arr[], int n)
+{
+    // Your code here
+    sort(arr, arr + n, [](Item &i1, Item &i2)
+         { return (double)i1.value / i1.weight > (double)i2.value / i2.weight; });
+
+    double ans = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        if (W - arr[i].weight >= 0)
+        {
+            ans += arr[i].value;
+            W -= arr[i].weight;
+        }
+        else
+        {
+            ans += ((double)W / arr[i].weight) * arr[i].value;
+            break;
+        }
+    }
+
+    return ans;
+}
+
+// 416. Partition Equal Subset Sum
+bool canPartition(vector<int> &nums)
+{
 }
 
 // Misc================================================================================================
@@ -2916,6 +3147,50 @@ int minDistance(string word1, string word2)
     }
 
     return dp[n][m];
+}
+
+// 546. Remove Boxes
+int removeBoxes(vector<int> &boxes, int left, int right, int count, vector<vector<vector<int>>> &dp)
+{
+    if (left > right)
+        return 0;
+
+    if (dp[left][right][count] != -1)
+    {
+        return dp[left][right][count];
+    }
+
+    int currLeft = left;
+    int currCount = count;
+
+    while (currLeft < right && boxes[currLeft] == boxes[currLeft + 1])
+    {
+        currLeft++;
+        currCount++;
+    }
+
+    int ans = 0;
+
+    ans = removeBoxes(boxes, currLeft + 1, right, 0, dp) + (currCount + 1) * (currCount + 1);
+
+    for (int i = currLeft + 1; i <= right; i++)
+    {
+        if (boxes[i] == boxes[currLeft])
+        {
+            int temp = removeBoxes(boxes, currLeft + 1, i - 1, 0, dp) + removeBoxes(boxes, i, right, currCount + 1, dp);
+            ans = max(ans, temp);
+        }
+    }
+
+    return dp[left][right][count] = ans;
+}
+int removeBoxes(vector<int> &boxes)
+{
+    int n = boxes.size();
+
+    vector<vector<vector<int>>> dp(n + 1, vector<vector<int>>(n + 1, vector<int>(n + 1, -1)));
+
+    return removeBoxes(boxes, 0, boxes.size() - 1, 0, dp);
 }
 
 // Extra========================================================================================
