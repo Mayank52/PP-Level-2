@@ -2243,7 +2243,7 @@ int numDistinct(string s, string t)
 
     return numDistinct(s, t, 0, 0);
 }
-// Iterative
+// Iterative (Not Complete)
 int numDistinct(string s, string t)
 {
     int n = s.size(), m = t.size();
@@ -2280,13 +2280,16 @@ int numDistinct(string s, string t)
 
 // 0 - 1 Knapsack Problem (https://practice.geeksforgeeks.org/problems/0-1-knapsack-problem0945/1)
 /*
-Approach: O(n^2)
+Approach: O(n^2), O(n)
 Include / Exclude Approach
 If the current item weight <= remaining weight
     Then make 2 calls: inlcude(idx + 1, remainingWeight - currItemWeight), exclude(idx + 1, remainingWeight)
     And take max of these
 Else
     Just exclude: exclude(idx + 1, remainingWeight)
+
+Each state of DP only depends on previous state.
+So, we need only 1D DP.
 
 */
 // Memoization
@@ -2316,6 +2319,7 @@ int knapSack(int W, int wt[], int val[], int n)
     return knapSack01(wt, val, W, n, 0, dp);
 }
 // Iterative
+// 2D DP
 int knapSack(int W, int wt[], int val[], int n)
 {
     vector<vector<int>> dp(n + 1, vector<int>(W + 1));
@@ -2334,6 +2338,29 @@ int knapSack(int W, int wt[], int val[], int n)
     }
 
     return dp[n][W];
+}
+// 1D DP
+int knapSack(int W, int wt[], int val[], int n)
+{
+    vector<int> prev(W + 1), curr(W + 1);
+
+    for (int i = 1; i <= n; i++)
+    {
+        for (int w = 0; w <= W; w++)
+        {
+            // if this can be included
+            if (w - wt[i - 1] >= 0)
+                curr[w] = max(prev[w], prev[w - wt[i - 1]] + val[i - 1]);
+            // if it cannot be included
+            else
+                curr[w] = prev[w];
+        }
+
+        prev = curr;
+        curr.assign(W + 1, 0);
+    }
+
+    return prev[W];
 }
 
 // Unbounded Knapsack (https://practice.geeksforgeeks.org/problems/knapsack-with-duplicate-items4201/1)
@@ -2390,7 +2417,7 @@ int knapSack(int n, int W, int val[], int wt[])
 
 // Fractional Knapsack Problem
 /*
-Approach: Greedy O(nlogn)
+Approach: Greedy O(nlogn + n)
 Sort the items in decreasing order of ratio: value / weight
 
 The start with the highest ratio, and keep including the item completely until
@@ -2402,7 +2429,11 @@ Items as (value, weight) pairs
 arr[] = {{60, 10}, {100, 20}, {120, 30}} 
 Knapsack Capacity, W = 50; 
 
-Ans:
+Ratio: 60/10 = 6
+100/20 = 5
+120/30 = 4
+
+Decreasing order: (60,10), (100,20), (120,30)
 Maximum possible value = 240 
 by taking items of weight 10 and 20 kg and 2/3 fraction 
 of 30 kg. Hence total price will be 60+100+(2/3)(120) = 240
@@ -2438,9 +2469,35 @@ double fractionalKnapsack(int W, Item arr[], int n)
     return ans;
 }
 
-// 416. Partition Equal Subset Sum
-bool canPartition(vector<int> &nums)
+// 518. Coin Change 2 (Coin Change Combination)
+int combinations(vector<int> &coins, int tar, int idx, vector<vector<int>> &dp)
 {
+    if (tar == 0)
+        return dp[idx][tar] = 1;
+    if (idx == coins.size())
+        return dp[idx][tar] = 0;
+
+    if (dp[idx][tar] != -1)
+        return dp[idx][tar];
+
+    int count = 0;
+    if (tar - coins[idx] >= 0)
+        count += combinations(coins, tar - coins[idx], idx, dp);
+
+    count += combinations(coins, tar, idx + 1, dp);
+
+    return dp[idx][tar] = count;
+}
+int change(int amount, vector<int> &coins)
+{
+    vector<vector<int>> dp(coins.size() + 1, vector<int>(amount + 1, -1));
+
+    return combinations(coins, amount, 0, dp);
+}
+
+// Coin Change Permutation
+int coinChange(vector<int> coins, int amount){
+    
 }
 
 // Misc================================================================================================
