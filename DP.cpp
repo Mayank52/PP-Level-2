@@ -387,35 +387,45 @@ int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &pro
 
     return res;
 }
-// Approach 2: O(nlogn)(Not Complete)
+// Approach 2: O(nlogn)
+int lower_bound(vector<vector<int>> &arr, int lo, int x)
+{
+    int hi = arr.size() - 1;
+    while (lo <= hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+        if (arr[mid][0] >= x)
+            hi = mid - 1;
+        else
+            lo = mid + 1;
+    }
+    return lo;
+}
+
 int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &profit)
 {
     int n = startTime.size();
+    vector<int> dp(n, 0);
 
-    vector<vector<int>> arr(n);
+    vector<vector<int>> arr(n); //{start, end, profit}
     for (int i = 0; i < n; i++)
         arr[i] = {startTime[i], endTime[i], profit[i]};
 
     sort(arr.begin(), arr.end());
 
-    vector<int> dp;
-    int res = 0;
+    int maxprofit = 0;
+    for (int i = n - 1; i >= 0; i--)
+    {
+        int j = lower_bound(arr, i + 1, arr[i][1]);
 
-    // for (int i = 0; i < n; i++)
-    // {
-    //     int lo = 0, hi = dp.size();
+        int lb = j == n ? 0 : dp[j];
 
-    //     while (lo < hi)
-    //     {
-    //         int mid = lo + (hi - lo) / 2;
+        dp[i] = max(arr[i][2] + lb, maxprofit);
 
-    //         if (dp[lo] < dp[mid])
-    //     }
+        maxprofit = max(maxprofit, dp[i]);
+    }
 
-    //     res = max(res, dp[i]);
-    // }
-
-    return res;
+    return maxprofit;
 }
 
 // Longest Bitonic Subsequence
@@ -1020,6 +1030,112 @@ int cherryPickup(vector<vector<int>> &grid)
     int res = pickup(grid, 0, 0, m - 1, dp);
 
     return res == -1 ? 0 : res;
+}
+
+// 174. Dungeon Game
+/*
+Approach: O(n^2), O(n^2)
+For each cell, we find the min HP we need to stay above 0 from this cell to the end
+So, we basically find the max path sum from that cell to the end to get the path in which we would need the least HP of our own.
+Then we see if this cell itself requires some HP from our side or not.
+Eg: the max path till end may be 10, but this cell itself is -3, so we still need to cover that -3 to reach this cell.
+
+Eg:
+-2   -3   3 
+-5  -10   1
+10   30  -5
+
+For eg: in cell 1,1 with value 10, we have 2 options
+1. 2,1(30): From this cell the min HP that will be reached till 2,2 will be 25(30 - 5).
+2. 1,2(1): From this cell the min HP that will be reached will be -4 (1 - 5)
+
+So, in 1,1 cell we can either take the path with 25 min HP, or -4 min Hp
+Out of these 2 we choose the max, as we want to start with min extra HP, and the path that
+requires the least HP to stay above 0 till the end is the one we choose 
+Now we will take min of current cell and the currentCell + maxPathToEnd
+Because we need to return the min HP it gets to in that path
+So, -10 returns -10
+
+And for cell 0,2(-3), the max HP from neighbors will be -1 from right cell.
+And this itself is -3.
+So, to stay above 0 throughout this path we need atleast -3 + -1 = -4           
+
+*/
+// Recursive
+vector<vector<int>> dp;
+int calculateMinimumHP(vector<vector<int>> &dungeon, int r, int c, vector<vector<bool>> &vis)
+{
+    int n = dungeon.size(), m = dungeon[0].size();
+
+    if (r == n - 1 && c == m - 1)
+        return dp[r][c] = dungeon[r][c];
+
+    if (dp[r][c] != INT_MIN)
+        return dp[r][c];
+
+    vis[r][c] = true;
+
+    int myAns = INT_MIN;
+
+    int dir[2][2] = {{1, 0}, {0, 1}};
+
+    // get the max path sum for neighbors
+    for (int d = 0; d < 2; d++)
+    {
+        int x = r + dir[d][0];
+        int y = c + dir[d][1];
+
+        if (x >= 0 && y >= 0 && x < n && y < m && !vis[x][y])
+        {
+            int minHP = calculateMinimumHP(dungeon, x, y, vis);
+            myAns = max(myAns, minHP);
+        }
+    }
+
+    vis[r][c] = false;
+
+    // return the min HP this cell reaches
+    return dp[r][c] = min(dungeon[r][c], myAns + dungeon[r][c]);
+}
+int calculateMinimumHP(vector<vector<int>> &dungeon)
+{
+    int n = dungeon.size(), m = dungeon[0].size();
+
+    dp.resize(n, vector<int>(m, INT_MIN));
+    vector<vector<bool>> vis(n, vector<bool>(m, false));
+
+    int res = calculateMinimumHP(dungeon, 0, 0, vis);
+
+    return res < 0 ? abs(res) + 1 : 1;
+}
+// Iterative
+int calculateMinimumHP(vector<vector<int>> &dungeon)
+{
+    int n = dungeon.size(), m = dungeon[0].size();
+
+    vector<vector<int>> dp(n + 1, vector<int>(m + 1, INT_MIN));
+
+    int dir[2][2] = {{1, 0}, {0, 1}};
+
+    for (int r = n - 1; r >= 0; r--)
+    {
+        for (int c = m - 1; c >= 0; c--)
+        {
+            if (r == n - 1 && c == m - 1)
+            {
+                dp[r][c] = dungeon[r][c];
+                continue;
+            }
+
+            // get the max hp of next two cells you can go to
+            int myAns = max(dp[r + 1][c], dp[r][c + 1]);
+
+            // find the min hp required to come to this cell
+            dp[r][c] = min(dungeon[r][c], myAns + dungeon[r][c]);
+        }
+    }
+
+    return dp[0][0] < 0 ? abs(dp[0][0]) + 1 : 1;
 }
 
 // Buy and Sell Stock=====================================================================================
@@ -2496,8 +2612,8 @@ int change(int amount, vector<int> &coins)
 }
 
 // Coin Change Permutation
-int coinChange(vector<int> coins, int amount){
-    
+int coinChange(vector<int> coins, int amount)
+{
 }
 
 // Misc================================================================================================
