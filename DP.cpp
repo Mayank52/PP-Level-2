@@ -2286,9 +2286,51 @@ long long int countPS(string s)
     return dp[0][n - 1];
 }
 
-// 730. Count Different Palindromic Subsequences (Not Complete)
+// 730. Count Different Palindromic Subsequences
 /*
 Approach: O(n^3)
+It is similar to count different palindromic subsequences
+But here we dont want duplicates
+
+A = count of (i + 1, j)
+B = count of (i, j -1)
+C = count of (i + 1, j - 1)
+
+So, condition of
+
+s[i] == s[j] changes:
+1. There are no occurences of s[i] in the middle string C
+    In this case, as ith index is the first time this character has occured, so adding s[i] to 
+    (i+1, j-1) string wont give any new palindromes, same with adding s[j] to the middle.
+    So, the number of palindromes in A, B are equal to C because of this reason.
+    So, the relation = (A + B - C) + C + 1 = A + B + 1
+    changes to = C + C + 2
+    because A = C, B = C
+    And the character at s[i], s[j] can now give 2 palindromes: s[i], s[i]+s[j]
+    Eg: acddca
+    i, j are at leftmost and rightmost. Since there are no a's in the middle string.
+    So, a,a themselves will give 2 palindromes: a, aa
+    and rest are the palindromes in A, B of the string which are equal to C
+    So, dp[i][j] = 2*dp[i+1][j-1] + 2
+2. Count of s[i] in middle string = 1
+    In this case everything is same as 1st case. Except instead of +2 we have +1
+    as s[i] is present in middle string so it was already counted there. Now we only count s[i]+s[j]
+    Eg: acdadca
+    So here we only count aa as new because a would have been counted in middle already
+    So, dp[i][j] = 2*dp[i+1][j-1] + 1
+3. Count of s[i] in middle string >= 2
+    In this case, we will get duplicates for every subsequence that already has s[i]s[j] at each leftmost and rightmost position
+    Eg: abadaccadaba
+    So, now if i = 4, j = 7 which is acca. Here we counted acca
+    And now when we come to i = 0, j = 11, i.e. whole string abadaccadaba
+    Then since we are taking subsequences we will count the acca again with the new a's
+    This will lead to duplicates: one in the middle 'acca' and other is the middle 'cc' with the a0 and a11
+    So, we find the position of the leftmost and rightmost s[i] in the middle string and subtract its palindrome count from the answer
+    Eg, in abadaccadaba we will subtract d[2][9] to remove the duplicates
+    And the a, aa would have been counted in the middle string already
+    So, dp[i][j] = 2*dp[i+1][j-1] - dp[left+1][right-1]
+
+s[i] != s[j] remains the same
 
 */
 int countPalindromicSubsequences(string s)
@@ -2296,7 +2338,7 @@ int countPalindromicSubsequences(string s)
     int n = s.size();
     long MOD = 1e9 + 7;
 
-    vector<vector<long long>> dp(n, vector<long long>(n));
+    vector<vector<long>> dp(n, vector<long>(n));
 
     for (int gap = 0; gap < n; gap++)
     {
@@ -2307,22 +2349,28 @@ int countPalindromicSubsequences(string s)
                 dp[i][j] = 1;
                 continue;
             }
-            if (i + 1 == j)
-            {
-                if (s[i] == s[j])
-                    dp[i][j] = 2;
-                else
-                    dp[i][j] = 1;
-
-                continue;
-            }
 
             if (s[i] == s[j])
             {
-                dp[i][j] = ((dp[i + 1][j] % MOD + dp[i][j - 1] % MOD) % MOD) % MOD;
+                int left = i + 1, right = j - 1;
+
+                while (left <= right && s[left] != s[j])
+                    left++;
+                while (left <= right && s[right] != s[j])
+                    right--;
+
+                if (left > right) // count of s[i] in i+1, j-1 = 0
+                    dp[i][j] = dp[i + 1][j - 1] * 2 + 2;
+                else if (left == right) // count of s[i] in i+1, j-1 = 1
+                    dp[i][j] = dp[i + 1][j - 1] * 2 + 1;
+                else // count of s[i] in i+1, j-1 >= 2
+                    dp[i][j] = dp[i + 1][j - 1] * 2 - dp[left + 1][right - 1];
             }
             else
-                dp[i][j] = ((dp[i + 1][j] % MOD + dp[i][j - 1] % MOD) % MOD - dp[i + 1][j - 1] % MOD + MOD) % MOD;
+                dp[i][j] = dp[i + 1][j] + dp[i][j - 1] - dp[i + 1][j - 1];
+
+            // instead of taking mod in every line, just do this
+            dp[i][j] = dp[i][j] < 0 ? dp[i][j] + MOD : dp[i][j] % MOD;
         }
     }
 
@@ -2390,6 +2438,58 @@ int numDistinct(string s, string t)
     }
 
     return dp[n][m];
+}
+
+// 734 · Number of Subsequences of Form a^i b^j c^k (Lintcode)
+/*
+Approach: O(n)
+We make 3 1D DPs 
+aCount: ith index shows number of subsequences till now that end with 'a'
+bCount: ith index shows number of subsequences till now that end with 'b'
+cCount: ith index shows number of subsequences till now that end with 'c'
+
+Since the question says we need k>=1 for a,b,c
+So the answer will be cCount[i] for the last index
+
+The relations will be:
+Ending with 'a':
+    It can only be attached in front of a subsequence ending with 'a'
+    So, we count all subsequences that end with 'a' and adding this to their end gives a new subsequence.
+    Also, this alone could start a new subsequence
+    So, the count = count(a) + count(a) + 1
+    count(a) = 2*count(a) + 1
+Ending with 'b':
+    'b' can only be attached in front of a subsequence ending with 'a' or 'b'
+    So, total subsequeces ending with 'b' till now = previous count of subsequences ending with 'b' and
+    same count and we add this b to their end giving new subsequences.
+    Also, this can be added to end of 'a' to give new subseq ending with 'b'
+    So, the count = prevCount(b) + prevCount(b) + count(a)
+    count(b) = 2*count(b) + count(a)
+Ending with 'c':
+    Same thing as 'b'
+    Here we count all ending with 'c' + add this 'c' to their end giving new sequeces + add this 'c' to end of all
+    sequences ending with 'b'
+    count(c) = 2*count(c) + count(b)
+
+Also, as each state i only depends on i-1, so we dont need to keep an array.
+*/
+int countSubsequences(string &source)
+{
+    int n = source.size();
+
+    int aCount = 0, bCount = 0, cCount = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        if (source[i] == 'a')
+            aCount = 2 * aCount + 1;
+        else if (source[i] == 'b')
+            bCount = 2 * bCount + aCount;
+        else
+            cCount = 2 * cCount + bCount;
+    }
+
+    return cCount;
 }
 
 // Knapsack============================================================================================
@@ -3364,6 +3464,44 @@ int removeBoxes(vector<int> &boxes)
     vector<vector<vector<int>>> dp(n + 1, vector<vector<int>>(n + 1, vector<int>(n + 1, -1)));
 
     return removeBoxes(boxes, 0, boxes.size() - 1, 0, dp);
+}
+
+// 887. Super Egg Drop
+/*
+Approach: O(n*k)
+
+We start with m moves, e eggs
+For each floor, we drop an egg:
+1. Survive: 
+    moves left = m - 1
+    eggs left = e
+    Number of floors checked = x
+
+2. Break: 
+    moves left = m - 1
+    eggs left = e - 1
+    Number of floors checked = y
+
+So, number of floors for m, e = x + y + 1
+Here, x, y = number of floors that we can check we the remaining moves, eggs
+
+*/
+int superEggDrop(int k, int n)
+{
+    vector<vector<int>> dp(n, vector<int>(k));
+
+    for (int m = 0; m < n; m++)
+    {
+        for (int e = 0; e < k; e++)
+        {
+            dp[m][e] = dp[m - 1][e] + dp[m - 1][e - 1] + 1;
+
+            if(dp[m][e] >= n)
+                return m;
+        }
+    }
+
+    return n;
 }
 
 // Extra========================================================================================
