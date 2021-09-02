@@ -1840,6 +1840,96 @@ int optimalbst(vector<int> &keys, vector<int> &frequency)
     return dp[0][n - 1];
 }
 
+// 1547. Minimum Cost to Cut a Stick
+/*
+Approach 1: O(n^3), O(n^2)
+Using cut approach
+We make a cut at each index from left + 1 to right - 1
+leftCost = dp[i][cut]
+rightCost = dp[cut][j]
+myCost = right - left
+
+When making the cut just check if we can make a cut at that index
+
+Approach 2: O(k^3), O(k^2)
+k = cuts.size()
+
+Instead of checking for the whole length of rod, 
+We check for the cuts array
+Add 0, n into the cuts array so that it has the correct left and right
+Then sort the cuts array
+Now use the same method using the cuts array
+So, here 
+leftCost = 
+*/
+// Approach 1: O(n^3), O(n^2) (TLE)
+int minCost(int n, vector<int> &cuts)
+{
+    // Given n is 0 based, n + 1 gives the actual length
+    n++;
+
+    vector<vector<int>> dp(n, vector<int>(n));
+    unordered_set<int> cutSet;
+
+    // add all cuts in a set, to make search O(1)
+    for (int val : cuts)
+        cutSet.insert(val);
+
+    for (int gap = 2; gap < n; gap++)
+    {
+        for (int i = 0, j = gap; j < n; i++, j++)
+        {
+            int cost = INT_MAX;
+            for (int cut = i + 1; cut < j; cut++)
+            {
+                // if we cannot make a cut at this index then skip it
+                if (cutSet.find(cut) == cutSet.end())
+                    continue;
+
+                int leftCost = dp[i][cut];
+                int rightCost = dp[cut][j];
+
+                cost = min(cost, leftCost + j - i + rightCost);
+            }
+
+            dp[i][j] = cost == INT_MAX ? 0 : cost;
+        }
+    }
+
+    return dp[0][n - 1];
+}
+// Approach 2: O(k^3), O(k^2) , k = cuts.size()
+int minCost(int n, vector<int> &cuts)
+{
+    cuts.push_back(0);
+    cuts.push_back(n);
+
+    sort(cuts.begin(), cuts.end());
+
+    int k = cuts.size();
+
+    vector<vector<int>> dp(k, vector<int>(k));
+
+    for (int gap = 2; gap < k; gap++)
+    {
+        for (int i = 0, j = gap; j < k; i++, j++)
+        {
+            int cost = INT_MAX;
+            for (int cut = i + 1; cut < j; cut++)
+            {
+                int leftCost = dp[i][cut];
+                int rightCost = dp[cut][j];
+
+                cost = min(cost, leftCost + cuts[j] - cuts[i] + rightCost);
+            }
+
+            dp[i][j] = cost == INT_MAX ? 0 : cost;
+        }
+    }
+
+    return dp[0][k - 1];
+}
+
 // Strings====================================================================================================
 
 // 1143. Longest Common Subsequence
@@ -3468,8 +3558,10 @@ int removeBoxes(vector<int> &boxes)
 
 // 887. Super Egg Drop
 /*
-Approach: O(n*k)
+Brute Force: 
 
+
+Approach: O(n*k)
 We start with m moves, e eggs
 For each floor, we drop an egg:
 1. Survive: 
@@ -3488,17 +3580,15 @@ Here, x, y = number of floors that we can check we the remaining moves, eggs
 */
 int superEggDrop(int k, int n)
 {
-    vector<vector<int>> dp(n, vector<int>(k));
+    vector<vector<int>> dp(n + 1, vector<int>(k + 1));
 
-    for (int m = 0; m < n; m++)
+    for (int m = 1; m <= n; m++)
     {
-        for (int e = 0; e < k; e++)
-        {
+        for (int e = 1; e <= k; e++)
             dp[m][e] = dp[m - 1][e] + dp[m - 1][e - 1] + 1;
 
-            if(dp[m][e] >= n)
-                return m;
-        }
+        if (dp[m][k] >= n)
+            return m;
     }
 
     return n;
