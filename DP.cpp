@@ -2823,7 +2823,7 @@ int change(int amount, vector<int> &coins)
     return dp[amount];
 }
 
-// Coin Change Permutation
+// Coin Change Permutation (Pepcoding)
 int change(int amount, vector<int> coins)
 {
     int n = coins.size();
@@ -2843,10 +2843,75 @@ int change(int amount, vector<int> coins)
     return dp[amount];
 }
 
+// 322. Coin Change
+/*
+Approach: 
+Same as Coin Change 2 (Combinations)
+Instead of the count we just store the minimum subset size
+Rest is same
+*/
+// Approach 1: Recursive, O(n^2), O(n^2)
+int combinations(vector<int> &coins, int tar, int idx, vector<vector<int>> &dp)
+{
+    if (tar == 0)
+        return dp[idx][tar] = 1;
+    if (idx == coins.size())
+        return dp[idx][tar] = 0;
+
+    if (dp[idx][tar] != -1)
+        return dp[idx][tar];
+
+    int res = INT_MAX;
+
+    if (tar - coins[idx] >= 0)
+    {
+        int includeAns = combinations(coins, tar - coins[idx], idx, dp);
+        // if including gives an answer, then update the min subset size
+        if (includeAns)
+            res = min(res, includeAns + 1);
+    }
+
+    int excludeAns = combinations(coins, tar, idx + 1, dp);
+    // if excluding gives an answer, then update the min subset size
+    if (excludeAns)
+        res = min(res, excludeAns);
+
+    return dp[idx][tar] = res == INT_MAX ? 0 : res;
+}
+int coinChange(vector<int> &coins, int amount)
+{
+    vector<vector<int>> dp(coins.size() + 1, vector<int>(amount + 1, -1));
+
+    int res = combinations(coins, amount, 0, dp);
+
+    return res == INT_MAX ? -1 : res - 1;
+}
+// Approach 2: Iterative, O(n^2), O(n)
+int coinChange(vector<int> &coins, int amount)
+{
+    // Initialize with amount + 1 value, instead of INT_MAX to avoid overflow with INT_MAX + 1
+    vector<int> dp(amount + 1, amount + 1);
+    dp[0] = 0;
+
+    for (int coin : coins)
+    {
+        for (int tar = coin; tar <= amount; tar++)
+        {
+            if (tar - coin >= 0)
+                dp[tar] = min(dp[tar], dp[tar - coin] + 1);
+        }
+    }
+
+    return dp[amount] == amount + 1 ? -1 : dp[amount];
+}
+
 // 416. Partition Equal Subset Sum
 /*
 Approach: O(n^2)
 Exactly same as knapsack
+To divide the array into two subsets of equal sum, we just need to find a subset whose sum = total sum / 2
+If there is a subarray with totalSum/2 sum, then the remaining elements will form the second subset
+Also, the totalSum has to be even to divide the array into 2 subsets of equal sum
 */
 bool knapsack01(vector<int> &nums, int tar, int idx, vector<vector<int>> &dp)
 {
@@ -2875,17 +2940,25 @@ bool canPartition(vector<int> &nums)
     for (int val : nums)
         totalSum += val;
 
+    // if total sum is odd, return false
     if (totalSum % 2 != 0)
         return false;
 
+    // use knapsack for target = total sum / 2
     vector<vector<int>> dp(n + 1, vector<int>(totalSum / 2 + 1, -1));
 
     return knapsack01(nums, totalSum / 2, 0, dp);
 }
 
 // 494. Target Sum
+/*
+Approach: O(n^2)
+The current sum can be in the range: -target to +target
+So, make DP for 2*target + 1
+And to keep the currSum in range for indexing use currSum + totalSum
+*/
 int totalSum = 0;
-int knapsack01(vector<int> &nums, int currSum, int tar, int idx, vector<vector<int>> &dp)
+int targetSum(vector<int> &nums, int currSum, int tar, int idx, vector<vector<int>> &dp)
 {
     if (idx == nums.size())
     {
@@ -2900,8 +2973,8 @@ int knapsack01(vector<int> &nums, int currSum, int tar, int idx, vector<vector<i
 
     int count = 0;
 
-    count += knapsack01(nums, currSum - nums[idx], tar, idx + 1, dp);
-    count += knapsack01(nums, currSum + nums[idx], tar, idx + 1, dp);
+    count += targetSum(nums, currSum - nums[idx], tar, idx + 1, dp);
+    count += targetSum(nums, currSum + nums[idx], tar, idx + 1, dp);
 
     return dp[idx][currSum + totalSum] = count;
 }
@@ -2914,7 +2987,7 @@ int findTargetSumWays(vector<int> &nums, int target)
 
     vector<vector<int>> dp(n + 1, vector<int>(2 * totalSum + 1, -1));
 
-    return knapsack01(nums, 0, target, 0, dp);
+    return targetSum(nums, 0, target, 0, dp);
 }
 
 // Misc================================================================================================
@@ -3795,6 +3868,42 @@ long long int maxSumWithK(long long int a[], long long int n, long long int k)
     }
 
     return res;
+}
+
+// 45. Jump Game II
+// Approach 1: O(n^2), O(n)
+int jumps(vector<int> &nums, int idx, vector<int> &dp)
+{
+    if (idx >= nums.size())
+        return -1;
+
+    if (idx == nums.size() - 1)
+        return 0;
+
+    if (dp[idx] != -1)
+        return dp[idx];
+
+    int minCount = nums.size();
+    
+    // for current index, go to every index this index can jump to
+    for (int i = 1; i <= nums[idx]; i++)
+    {
+        int currCount = jumps(nums, idx + i, dp);
+
+        // if you were able to reach the end
+        if (currCount != -1)
+            minCount = min(minCount, currCount + 1);
+    }
+
+    return dp[idx] = minCount;
+}
+int jump(vector<int> &nums)
+{
+    int n = nums.size();
+
+    vector<int> dp(n, -1);
+
+    return jumps(nums, 0, dp);
 }
 
 // Extra========================================================================================
