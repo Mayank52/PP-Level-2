@@ -2776,6 +2776,10 @@ double fractionalKnapsack(int W, Item arr[], int n)
 }
 
 // 518. Coin Change 2 (Coin Change Combination)
+/*
+Approach: O(n^2), O(n^2)
+*/
+// Approach 1: Time: O(n^2), Space: O(n^2)
 int combinations(vector<int> &coins, int tar, int idx, vector<vector<int>> &dp)
 {
     if (tar == 0)
@@ -2800,10 +2804,117 @@ int change(int amount, vector<int> &coins)
 
     return combinations(coins, amount, 0, dp);
 }
+// Approach 2: Time: O(n^2), Space: O(n)
+int change(int amount, vector<int> &coins)
+{
+    vector<int> dp(amount + 1);
+    dp[0] = 1;
+
+    // checking all targets for the available coins gives combinations
+    for (int coin : coins)
+    {
+        for (int tar = coin; tar <= amount; tar++)
+        {
+            if (tar - coin >= 0)
+                dp[tar] += dp[tar - coin];
+        }
+    }
+
+    return dp[amount];
+}
 
 // Coin Change Permutation
-int coinChange(vector<int> coins, int amount)
+int change(int amount, vector<int> coins)
 {
+    int n = coins.size();
+    vector<int> dp(amount + 1);
+    dp[0] = 1;
+
+    // checking all coins for every target gives the permutations
+    for (int tar = 0; tar <= amount; tar++)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            if (tar - coins[i] >= 0)
+                dp[tar] += dp[tar - coins[i]];
+        }
+    }
+
+    return dp[amount];
+}
+
+// 416. Partition Equal Subset Sum
+/*
+Approach: O(n^2)
+Exactly same as knapsack
+*/
+bool knapsack01(vector<int> &nums, int tar, int idx, vector<vector<int>> &dp)
+{
+    if (tar == 0)
+        return dp[idx][tar] = true;
+    if (idx == nums.size())
+        return dp[idx][tar] = false;
+
+    if (dp[idx][tar] != -1)
+        return dp[idx][tar];
+
+    bool res = false;
+
+    if (tar - nums[idx] >= 0)
+        res = res || knapsack01(nums, tar - nums[idx], idx + 1, dp);
+
+    res = res || knapsack01(nums, tar, idx + 1, dp);
+
+    return dp[idx][tar] = res;
+}
+bool canPartition(vector<int> &nums)
+{
+    int n = nums.size();
+
+    int totalSum = 0;
+    for (int val : nums)
+        totalSum += val;
+
+    if (totalSum % 2 != 0)
+        return false;
+
+    vector<vector<int>> dp(n + 1, vector<int>(totalSum / 2 + 1, -1));
+
+    return knapsack01(nums, totalSum / 2, 0, dp);
+}
+
+// 494. Target Sum
+int totalSum = 0;
+int knapsack01(vector<int> &nums, int currSum, int tar, int idx, vector<vector<int>> &dp)
+{
+    if (idx == nums.size())
+    {
+        if (currSum == tar)
+            return dp[idx][currSum + totalSum] = 1;
+
+        return dp[idx][currSum + totalSum] = 0;
+    }
+
+    if (dp[idx][currSum + totalSum] != -1)
+        return dp[idx][currSum + totalSum];
+
+    int count = 0;
+
+    count += knapsack01(nums, currSum - nums[idx], tar, idx + 1, dp);
+    count += knapsack01(nums, currSum + nums[idx], tar, idx + 1, dp);
+
+    return dp[idx][currSum + totalSum] = count;
+}
+int findTargetSumWays(vector<int> &nums, int target)
+{
+    int n = nums.size();
+
+    for (int val : nums)
+        totalSum += val;
+
+    vector<vector<int>> dp(n + 1, vector<int>(2 * totalSum + 1, -1));
+
+    return knapsack01(nums, 0, target, 0, dp);
 }
 
 // Misc================================================================================================
@@ -3592,6 +3703,98 @@ int superEggDrop(int k, int n)
     }
 
     return n;
+}
+
+// Friends Pairing Problem
+/*
+Approach: O(n)
+For n people, we have 2 choices for each person:
+1. Remain Single: If this person remains single, then we just need to find the number of ways to pair up the remaining (n - 1) people.
+                  So, in this case number of ways = count(n - 1)
+2. Pair Up: If this person wants to pair up, then he can be paired up with one of the remaining (n - 1) people in (n - 1) ways
+            And the then we find the number of ways for remaining (n - 2) people.
+            So, in this case number of ways = count(n - 2) * (n - 1)
+    
+So, total count = count(n - 1) + count(n - 2) * (n - 1)
+
+Base Case: If n == 1, then number of ways = 1
+*/
+// O(n) space
+int countFriendsPairings(int n)
+{
+    long MOD = 1e9 + 7;
+
+    vector<long> dp(n + 1);
+    dp[0] = dp[1] = 1;
+
+    for (int i = 2; i <= n; i++)
+    {
+        dp[i] = dp[i - 1] + dp[i - 2] * (i - 1);
+        dp[i] %= MOD;
+    }
+
+    return dp[n];
+}
+// O(1) space
+int countFriendsPairings(int n)
+{
+    long MOD = 1e9 + 7;
+
+    long a = 1, b = 1; // a = dp[n-2], b = dp[n-1]
+
+    for (int i = 2; i <= n; i++)
+    {
+        long c = b + a * (i - 1);
+        c %= MOD;
+
+        a = b;
+        b = c;
+    }
+
+    return b;
+}
+
+// Largest Sum Subarray of Size at least K
+/*
+Approach: O(n)
+We preprocess and make a prefixSum array
+Each index i of prefixMax contains the max subarray sum till i
+
+Then using a sliding window we find the sum of every k size window
+And for each window, we update the max sum as
+maxSum = max(windowSum, windowSum + prefixMax[i-k])
+So, for each window, the max can be that window, or that window + the max sum on its left
+*/
+long long int maxSumWithK(long long int a[], long long int n, long long int k)
+{
+    vector<long long> prefixMax(n);
+
+    // find prefixMax for each index
+    prefixMax[0] = a[0];
+    for (int i = 1; i < n; i++)
+    {
+        // max for this index is either this element or this element + max till now
+        prefixMax[i] = max(a[i], a[i] + prefixMax[i - 1]);
+    }
+
+    long long res = 0, currSum = 0;
+
+    // first window
+    for (int i = 0; i < k; i++)
+        currSum += a[i];
+
+    res = currSum;
+
+    for (int i = k; i < n; i++)
+    {
+        // find current window sum
+        currSum += a[i] - a[i - k];
+
+        // update the max sum
+        res = max(res, max(currSum, currSum + prefixMax[i - k]));
+    }
+
+    return res;
 }
 
 // Extra========================================================================================
