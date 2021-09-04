@@ -85,8 +85,26 @@ int ternarySearch(int key, vector<int> &arr)
 
 // 4. Median of Two Sorted Arrays
 /*
-Approach: O(log(n+m))
-We find the mid of first array
+Approach: Binary Search, Time: O(log(min(n,m))), Space: O(1)
+Find the size of the split half of the merged array: (nums1.size() + nums2.size() + 1) / 2
+We take +1 beacuse we want ceil in case of odd number length
+
+Then, We perform binary search on the smaller length array
+mid1 = mid of arr1
+Now, we want half elements of both combined on left, and half on right
+So, mid1 gives the number of elements of arr1 on left. 
+Remaining elements will be from the second array
+So, mid2 = split - mid1
+
+Now to make sure that the mid1 , mid2 divides the array into left and right half
+such that all elements in left half <= right half
+We check that the leftMax of arr1 <= rightMin of arr2
+and leftMax of arr2 <= rightMin of arr1
+
+If this condition is satisfied then we are in middle of the merged array, and we can find the median
+
+Else if leftMax of arr1 > rightMin2, then we reject the right half , because we need to satisfy leftMax <= rightMin
+Else we reject the left half
 */
 int leftMax(vector<int> &nums, int idx)
 {
@@ -104,11 +122,10 @@ int rightMin(vector<int> &nums, int idx)
 }
 double findMedianSortedArrays(vector<int> &nums1, vector<int> &nums2)
 {
-    int totalSize = nums1.size() + nums2.size();
-
     if (nums1.size() > nums2.size())
-        swap(nums1, nums2);
+        return findMedianSortedArrays(nums2, nums1);
 
+    int totalSize = nums1.size() + nums2.size();
     int lo = 0, hi = nums1.size();
     int splitSize = (totalSize + 1) / 2;
 
@@ -137,8 +154,238 @@ double findMedianSortedArrays(vector<int> &nums1, vector<int> &nums2)
 }
 
 // 1283. Find the Smallest Divisor Given a Threshold
+/*
+Approach: Binary Search O(n*log(max divisor))
+We use binary search on the answer i.e. We find the divisor using binary search
+The max divisor we can get = max element of the array
+Because every number greater than that will give the same quotients
+
+And the minimum will be 1.
+
+So, we use binary search for the range 1 to maxNum
+
+And each time the mid will be the divisor
+Using mid as divisor we find the sum of all quotients
+Now,
+If sum < threshold: Then as we want the minimum value, and since sum <= threshold
+    so, it is a possible ans, and everything on its right is rejected.
+    And we try to find a smaller answer on its left side
+Else
+    If the current mid gave a sum > threshold, then everything on its left, i.e. 
+    everything smaller than mid will just give even greater values. So, we reject 
+    everything on left
+*/
 int smallestDivisor(vector<int> &nums, int threshold)
 {
+    int maxDivisor = 0;
+    for (int val : nums)
+        maxDivisor = max(maxDivisor, val);
+
+    int lo = 1, hi = maxDivisor;
+
+    while (lo < hi)
+    {
+        double mid = lo + (hi - lo) / 2;
+
+        int res = 0;
+        for (int val : nums)
+            res += ceil(val / mid);
+
+        if (threshold < res)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+
+    return lo;
+}
+
+// 1011. Capacity To Ship Packages Within D Days
+/*
+Approach: O(n * log(totalSum of Weights))
+We do binary search to find the minimum weight 
+low = max weight value, as we need atleast that much to carry all weights
+high = total sum of all weights
+
+Eg: [1,2,3,1,1]
+Here, the ship has to be able to carry atleast 3 weight otherwise it wont be able to carry package at index 2.
+And the max is the sum of weights which will take the ship 1 day to carry as it can carry it all at once.
+
+Then use binary search to find the minimum weight
+If the current mid weight requires d days, then
+If d < days: Then d is a possible answer, and we want minimum, so reject the right side
+Else reject the left side
+*/
+int shipWithinDays(vector<int> &weights, int days)
+{
+    int totalWeight = 0, maxWeight = weights[0];
+    for (int val : weights)
+    {
+        totalWeight += val;
+        maxWeight = max(maxWeight, val);
+    }
+
+    int lo = maxWeight, hi = totalWeight;
+
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+
+        int requiredDays = 1, currWeight = 0;
+        for (int val : weights)
+        {
+            currWeight += val;
+            if (currWeight > mid)
+            {
+                requiredDays++;
+                currWeight = val;
+            }
+        }
+
+        if (requiredDays > days)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+
+    return lo;
+}
+
+// 875. Koko Eating Bananas
+/*
+Approach: O(n * log(max pile size))
+We perform Binary Search to find the minimum pile size
+lo = 1, hi = max pile size
+*/
+int minEatingSpeed(vector<int> &piles, int h)
+{
+    int lo = 1, hi = piles[0];
+
+    for (int val : piles)
+    {
+        lo = min(lo, val);
+        hi = max(hi, val);
+    }
+
+    while (lo < hi)
+    {
+        double mid = lo + (hi - lo) / 2;
+
+        int hours = 0;
+        for (int val : piles)
+        {
+            hours += ceil(val / mid);
+        }
+
+        if (hours > h)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+
+    return lo;
+}
+
+// Painter's Partition Problem
+/*
+Approach: O(n * log(totalTime))
+Similar to 1011. Capacity To Ship Packages Within D Days
+All A painters will work parallely, so, we need to find the minimum time that one painter is allowed such that
+with that time, the number of painters <= A
+
+So, we do binary search to find the time for one painter
+lo = maxTime required for one job
+hi = totalTime required for all jobs
+
+Now for each mid, the maxTime a painter can use = mid
+Now, for this time, we find the number of painters we need 
+If they are <= A, then this is a possible answer, and we need minimum, so reject right side
+Else we reject left side
+
+*/
+int paint(int A, int B, vector<int> &C)
+{
+    long long totalTime = 0, maxTime = C[0];
+    for (long long val : C)
+    {
+        totalTime += val * B;
+        maxTime = max(maxTime, val * B);
+    }
+
+    long long lo = maxTime, hi = totalTime;
+
+    while (lo < hi)
+    {
+        long long mid = lo + (hi - lo) / 2;
+
+        long long requiredPainters = 1, currTime = 0;
+
+        for (long long val : C)
+        {
+            currTime += val * B;
+
+            if (currTime > mid)
+            {
+                requiredPainters++;
+                currTime = val * B;
+            }
+        }
+
+        if (requiredPainters > A)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+
+    return lo % 10000003;
+}
+
+// 410. Split Array Largest Sum
+/*
+Approach: O(n * log(totalSum))
+Same as 1011. Capacity To Ship Packages Within D Days
+
+lo = max value in array, as you need to be able to fit each element into a subarray
+hi = totalSum, we can put all elements in a single subarray
+
+Eg: [7,2,5,10,8]
+So, lo = 10 (minimum subarray sum)
+If it is < 10 then 10 cannot be put in any subarray
+*/
+int splitArray(vector<int> &nums, int m)
+{
+    int maxVal = nums[0], totalSum = 0;
+    for (int val : nums)
+    {
+        maxVal = max(maxVal, val);
+        totalSum += val;
+    }
+
+    int lo = maxVal, hi = totalSum;
+
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+
+        int subArrCount = 1, currSum = 0;
+        for (int val : nums)
+        {
+            currSum += val;
+
+            if (currSum > mid)
+            {
+                subArrCount++;
+                currSum = val;
+            }
+        }
+
+        if (subArrCount > m)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+
+    return lo;
 }
 
 int main()
