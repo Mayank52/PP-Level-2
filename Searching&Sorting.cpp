@@ -2,7 +2,7 @@
 
 using namespace std;
 
-// 704. Binary Search
+// 704. Binary Search=========================================================================================================
 /* 
 Approach: O(logn) Base of log = 2
 We keep low = 0, high = size - 1
@@ -386,6 +386,139 @@ int splitArray(vector<int> &nums, int m)
     }
 
     return lo;
+}
+
+// 786. K-th Smallest Prime Fraction
+vector<int> kthSmallestPrimeFraction(vector<int> &arr, int k)
+{
+    int n = arr.size();
+
+    double lo = 0.0, hi = 1.0;
+
+    while (lo <= hi)
+    {
+        double mid = lo + (hi - lo) / 2;
+
+        int i = 0, j = n - 1;
+        int num = 0, den = 1;
+
+        while ()
+    }
+}
+
+// 153. Find Minimum in Rotated Sorted Array
+/*
+Approach : O(logn)
+Minimum element is the pivot of the rotated sorted array
+So, we have to find the first element of the sorted array before it was rotated
+Using binary search
+If arr[mid] > arr[hi]:
+    This means the mid element was brought to the front after rotation. So, the minimum element would lie to its right
+Else the minimium element is to its left
+*/
+int findMin(vector<int> &nums)
+{
+    int lo = 0, hi = nums.size() - 1;
+
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+
+        if (nums[mid] > nums[hi])
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+
+    return nums[lo];
+}
+
+// 154. Find Minimum in Rotated Sorted Array II
+/*
+Approach: O(n)
+We use the same approach as with non duplicates
+But in case of duplicates 
+if arr[mid] == arr[hi], then we do hi--
+We can have following cases:
+[2,2,2,0,1]
+[2,2,2,0,2]
+[2,2,2,2,2]
+
+So, in worst case we will need a linear search to find the min element
+Because there is no way to find which side to go if arr[mid] == arr[hi]
+So, we just reduce the upper limit by 1, and check again
+*/
+int findMin(vector<int> &nums)
+{
+    int lo = 0, hi = nums.size() - 1;
+
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+
+        if (nums[mid] > nums[hi])
+            lo = mid + 1;
+        else if (nums[mid] < nums[hi])
+            hi = mid;
+        else
+            hi--;
+    }
+
+    return nums[lo];
+}
+
+// 33. Search in Rotated Sorted Array
+/*
+Approach: O(logn)
+1. Find the pivot index of array
+2. If target > last element of array, then it lies in left of pivot
+   Else it lies in right of pivot
+*/
+int search(vector<int> &nums, int target)
+{
+    int n = nums.size();
+
+    // find pivot index
+    int lo = 0, hi = n - 1;
+
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+
+        if (nums[mid] > nums[hi])
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+
+    int pivot = lo;
+
+    lo = 0, hi = n - 1;
+
+    // if target > last element then it lies in left side of pivot
+    if (target > nums[n - 1])
+        hi = pivot - 1;
+    // if target <= last element, then it lies in right side of pivot
+    else
+        lo = pivot;
+
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+
+        if (nums[mid] < target)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+
+    return nums[lo] == target ? lo : -1;
+}
+
+// 81. Search in Rotated Sorted Array II
+bool search(vector<int> &nums, int target)
+{
+    
 }
 
 int main()
