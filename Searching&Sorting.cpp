@@ -389,21 +389,112 @@ int splitArray(vector<int> &nums, int m)
 }
 
 // 786. K-th Smallest Prime Fraction
+/*
+Approach: Binary Search, O(nlogn)
+We do a binary search on the value of fraction
+lo = 0, hi = 1
+Since they are all prime fractions, so they are in range 0 to 1
+
+Now if we consider a group of fractions, and each fraction in this group is <= mid
+then, if the number of fractions in the group = k
+Then there are only those k fractions that are <= mid
+This means the max of that group is the kth smallest prime fraction
+If our count > k, then we need to increase the allowed value, so check in right side
+Else left side
+
+Eg:
+[1,2,3,5,7,13]
+
+1/7 1/5 1/3 1/2
+2/7 2/5 2/3
+3/7 3/5
+5/7
+
+Now lo = 0, hi = 1
+mid = (0 + 1)/2 = 0.5
+
+We take all fractions <= 0.5
+1/7 1/5 1/3 1/2
+2/7 2/5
+3/7
+
+If we take this fractions in sorted form
+1
+*/
 vector<int> kthSmallestPrimeFraction(vector<int> &arr, int k)
 {
     int n = arr.size();
 
     double lo = 0.0, hi = 1.0;
 
-    while (lo <= hi)
+    while (true)
     {
         double mid = lo + (hi - lo) / 2;
 
         int i = 0, j = n - 1;
-        int num = 0, den = 1;
+        int num = 0, den = 1, count = 0;
 
-        while ()
+        // find the count of fractions < mid
+        while (j > 0 && i < n - 1)
+        {
+            while (j > 0 && arr[i] > mid * arr[n - j])
+                j--;
+
+            count += j;
+
+            // update the max fraction of current group
+            if (j > 0 && arr[i] * den > num * arr[n - j])
+            {
+                num = arr[i];
+                den = arr[n - j];
+            }
+
+            i++;
+        }
+
+        // when count of fractions < mid is equal to k, then the max fraction is the answer
+        if (count == k)
+            return {num, den};
+        else if (count > k)
+            hi = mid - 0.000001;
+        else
+            lo = mid + 0.000001;
     }
+
+    return {};
+}
+
+// 378. Kth Smallest Element in a Sorted Matrix
+int kthSmallest(vector<vector<int>> &matrix, int k)
+{
+    int n = matrix.size(), m = matrix[0].size();
+
+    int lo = matrix[0][0], hi = matrix[n - 1][m - 1];
+
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+
+        int i = 0, j = m - 1, count = 0;
+
+        // find the count of numbers <= mid in the matrix
+        while (i < n)
+        {
+            while (j >= 0 && matrix[i][j] > mid)
+                j--;
+
+            count += j + 1;
+
+            i++;
+        }
+
+        if (count < k)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+
+    return lo;
 }
 
 // 153. Find Minimum in Rotated Sorted Array
@@ -518,7 +609,6 @@ int search(vector<int> &nums, int target)
 // 81. Search in Rotated Sorted Array II
 bool search(vector<int> &nums, int target)
 {
-    
 }
 
 int main()
