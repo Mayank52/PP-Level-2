@@ -427,15 +427,15 @@ vector<int> kthSmallestPrimeFraction(vector<int> &arr, int k)
 
     double lo = 0.0, hi = 1.0;
 
-    while (true)
+    while (lo <= hi)
     {
         double mid = lo + (hi - lo) / 2;
 
-        int i = 0, j = n - 1;
+        int j = n - 1;
         int num = 0, den = 1, count = 0;
 
         // find the count of fractions < mid
-        while (j > 0 && i < n - 1)
+        for (int i = 0; i < n - 1; i++)
         {
             while (j > 0 && arr[i] > mid * arr[n - j])
                 j--;
@@ -448,23 +448,47 @@ vector<int> kthSmallestPrimeFraction(vector<int> &arr, int k)
                 num = arr[i];
                 den = arr[n - j];
             }
-
-            i++;
         }
 
         // when count of fractions < mid is equal to k, then the max fraction is the answer
         if (count == k)
             return {num, den};
         else if (count > k)
-            hi = mid - 0.000001;
+            hi = mid - 0.000000001;
         else
-            lo = mid + 0.000001;
+            lo = mid + 0.000000001;
     }
 
     return {};
 }
 
 // 378. Kth Smallest Element in a Sorted Matrix
+/*
+Approach: O(nlog(max - min))
+Use Binary Search to find the answer
+The range is min value in matrix to max value in matrix
+If the count of elements <= mid is less than k, then we need to increase mid,
+So, we reject left side
+Else reject right side
+At the end when lo==hi, lo is the answer
+
+In this way of binary search, we find the element which is equal to the answer
+And if answer is not present we find the just greater element
+At the end lo, hi, mid are all equal and we return lo as the answer
+So, we can only get the answer count == k, when this happens we 3 cases:
+1. ans = mid, in this case, we just keep searching in range lo to mid.
+2. ans < mid, in this case also, we just keep searching in range lo to mid.
+3. ans > mid, this is not possible, because if ans > mid, then count of elements <= mid would be less than k
+
+So, we eventually mid will be equal to the ans.
+Because the ans is always in lo to mid range, as we only move lo when the count < k (which is condition for 
+answer cannot be in lo to mid range). So, since we decrease hi, whenever we find a possible answer, so, at
+the end lo is equal to answer.
+
+So, when the search stops, mid will definetely be present in the matrix, as we are finding the lower bound using
+binary search. So, there cannot be any number present in the matrix that will be smaller than lo.
+
+*/
 int kthSmallest(vector<vector<int>> &matrix, int k)
 {
     int n = matrix.size(), m = matrix[0].size();
@@ -475,17 +499,15 @@ int kthSmallest(vector<vector<int>> &matrix, int k)
     {
         int mid = lo + (hi - lo) / 2;
 
-        int i = 0, j = m - 1, count = 0;
+        int j = m - 1, count = 0;
 
         // find the count of numbers <= mid in the matrix
-        while (i < n)
+        for (int i = 0; i < n; i++)
         {
             while (j >= 0 && matrix[i][j] > mid)
                 j--;
 
             count += j + 1;
-
-            i++;
         }
 
         if (count < k)
@@ -609,6 +631,163 @@ int search(vector<int> &nums, int target)
 // 81. Search in Rotated Sorted Array II
 bool search(vector<int> &nums, int target)
 {
+}
+
+// F1. Guess the K-th Zero (Easy version) (https://codeforces.com/problemset/problem/1520/F1#)
+/*
+Approach: O(logn)
+lo = 1, hi = n
+We print the range 0 to mid
+The sum it returns would be equal to count of 1s in that range.
+So, zeroCount  = total length of that range - oneCount in that range = hi - lo + 1 - oneCount
+
+If this zeroCount < k, then we need to find the (k - zeroCount)th zero in mid + 1 to hi
+As, zeroCount number of zeroes are already present in the left side, so the kth zero in the right side 
+would be (k - zeroCount)th zero
+Else we need to find the kth zero in the lo to mid
+
+*/
+void kthZero()
+{
+    int n, t;
+    cin >> n >> t;
+
+    while (t-- > 0)
+    {
+        int k;
+        cin >> k;
+
+        int lo = 1, hi = n;
+
+        while (lo < hi)
+        {
+            int mid = lo + (hi - lo) / 2;
+
+            cout << "? " << lo << " " << mid << endl;
+
+            int oneCount;
+            cin >> oneCount;
+
+            int zeroCount = mid - lo + 1 - oneCount;
+
+            if (zeroCount < k)
+            {
+                lo = mid + 1;
+                k -= zeroCount;
+            }
+            else
+                hi = mid;
+        }
+
+        cout << "! " << lo << endl;
+    }
+}
+
+// Sorting=================================================================================================
+
+// 912. Sort an Array (Merge Sort)
+void mergeSort(vector<int> &arr, int si, int ei)
+{
+    if (si == ei)
+        return;
+
+    int mid = si + (ei - si) / 2;
+
+    // sort left half
+    mergeSort(arr, si, mid);
+    // sort right half
+    mergeSort(arr, mid + 1, ei);
+
+    // merge both sorted arrays
+    merge(arr, si, mid, ei);
+}
+void merge(vector<int> &arr, int si, int mid, int ei)
+{
+    vector<int> res;
+
+    int i = si, j = mid + 1;
+    int n = mid + 1, m = ei + 1;
+
+    while (i < n && j < m)
+    {
+        if (arr[i] < arr[j])
+            res.push_back(arr[i++]);
+        else
+            res.push_back(arr[j++]);
+    }
+
+    while (i < n)
+        res.push_back(arr[i++]);
+    while (j < m)
+        res.push_back(arr[j++]);
+
+    for (int k = si; k <= ei; k++)
+        arr[k] = res[k - si];
+}
+vector<int> sortArray(vector<int> &nums)
+{
+    mergeSort(nums, 0, nums.size() - 1);
+    return nums;
+}
+
+// Count Inversions (https://practice.geeksforgeeks.org/problems/inversion-of-array-1587115620/1)
+/*
+Approach: O(nlogn)
+Merge Sort
+While merging the sorted arrays we count the inversions
+*/
+long long countInversions(long long *arr, long long si, long long ei)
+{
+    if (si == ei)
+        return 0;
+
+    long long mid = si + (ei - si) / 2;
+
+    // sort left half
+    long long leftCount = countInversions(arr, si, mid);
+    // sort right half
+    long long rightCount = countInversions(arr, mid + 1, ei);
+
+    // merge both sorted arrays
+    long long myCount = merge(arr, si, mid, ei);
+
+    return leftCount + rightCount + myCount;
+}
+long long merge(long long *arr, long long si, long long mid, long ei)
+{
+    long long i = si, j = mid + 1;
+    long long n = mid + 1, m = ei + 1;
+    long long inversionCount = 0;
+
+    vector<long long> res;
+
+    while (i < n && j < m)
+    {
+        if (arr[i] <= arr[j])
+        {
+            res.push_back(arr[i++]);
+        }
+        else
+        {
+            inversionCount += n - i;
+            res.push_back(arr[j++]);
+        }
+    }
+
+    while (i < n)
+        res.push_back(arr[i++]);
+    while (j < m)
+        res.push_back(arr[j++]);
+
+    for (int k = si; k <= ei; k++)
+        arr[k] = res[k - si];
+
+    return inversionCount;
+}
+long long int inversionCount(long long arr[], long long N)
+{
+    // Your Code Here
+    return countInversions(arr, 0, N - 1);
 }
 
 int main()
