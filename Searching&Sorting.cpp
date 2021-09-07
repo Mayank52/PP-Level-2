@@ -582,11 +582,38 @@ int findMin(vector<int> &nums)
 
 // 33. Search in Rotated Sorted Array
 /*
-Approach: O(logn)
+Approach 1: O(logn)
 1. Find the pivot index of array
 2. If target > last element of array, then it lies in left of pivot
    Else it lies in right of pivot
+3. Use binary on that side, as that side will be completely sorted
+
+Approach 2: O(logn)
+We can also do it without finding the pivot first
+We take lo = 0, hi = n-1
+Then we take the mid
+
+We have following cases:
+1. If both the target and mid, lie on same side of pivot, then we have 2 cases:
+    1. If nums[mid] < target: check on right side of mid
+    2. Else check on left of mid
+2. Else, we check which side of pivot target lies on:
+    If target > nums[n-1] then we check on left of mid.
+    Else we check on right of mid
+
+Because if they both lie on same side of pivot i.e. left or right side of pivot,
+then they will both lie in sorted order, as left and right side of pivot are sorted
+So, in this case we can find which side to reject by comparing target and mid value
+
+But if they lie in different sides, then to compare mid and target directly, we need
+to know which side they both lie on. As if mid is in left side, then it will be greater then 
+all elements on right of pivot. In this case if target < nums[mid], then we need to check 
+in right. So, in case of different sides, we just check which side the target lies on,
+And accordingly change the search space instead of comparing target and mid
+
+For better visualization: https://leetcode.com/problems/search-in-rotated-sorted-array-ii/solution/
 */
+// Approach 1:
 int search(vector<int> &nums, int target)
 {
     int n = nums.size();
@@ -623,6 +650,35 @@ int search(vector<int> &nums, int target)
             lo = mid + 1;
         else
             hi = mid;
+    }
+
+    return nums[lo] == target ? lo : -1;
+}
+// Approach 2:
+int search(vector<int> &nums, int target)
+{
+    int n = nums.size();
+
+    int lo = 0, hi = n - 1;
+
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+
+        //target and mid are on the same side
+        if ((target > nums[n - 1]) == (nums[mid] > nums[n - 1]))
+        {
+            if (nums[mid] < target)
+                lo = mid + 1;
+            else
+                hi = mid;
+        }
+        // target on the left side
+        else if (target > nums[n - 1])
+            hi = mid;
+        // target on the right side
+        else
+            lo = mid + 1;
     }
 
     return nums[lo] == target ? lo : -1;
