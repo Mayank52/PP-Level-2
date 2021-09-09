@@ -342,22 +342,176 @@ public:
 };
 
 // 460. LFU Cache
+/*
+Approach: 
+Here we use 2 maps:
+1. To keep all the nodes currently in cache
+2. To maintain the doubly linked lists corresponding to each frequency, in order of recently used
+
+The second map, each list itself is same as LRU.
+
+get(int key): O(1)
+If it is already present, then update its frequency, and in the frequency list,
+remove it from the previous frequency list and add it to the end of the new frequency list
+Each list itself is in order of least recently used to most recently used
+If it is not already present, then return -1.
+
+put(int key, int value): O(1)
+If the capacity is not full:
+    If it is already in map, then just update the frequency, and remove from old frequency
+    and add to new frequency.
+    Else, make a new node, and add it to both maps. In the first map we just add the {key, node address},
+    and in second map we will add to end of list corresponding to 1 frequency.
+Else:
+    We remove the first node of the 1 frequency list, and remove it from the first map as well.
+    Then make a new node, and add it to both maps with frequency 1.
+    Also, the minimum frequency becomes 1.
+    
+Updating the min frequency:
+If no node is removed, then min frequency remains same.
+When a new node is added, min frequency is 1
+If we remove a node, then if that frequency list becomes empty, then min frequency is increased by
+1 as the node who had the min frequency just had its frequecy increased by 1 and no other node has that frequency.
+Otherwise the min frequecy remains the same.
+*/
+class Node
+{
+public:
+    int key;
+    int val;
+    int freq;
+    Node *next;
+    Node *prev;
+
+    Node(int val, int key, int freq)
+    {
+        this->val = val;
+        this->key = key;
+        this->freq = freq;
+        this->next = nullptr;
+        this->prev = nullptr;
+    }
+};
 class LFUCache
 {
+private:
+    unordered_map<int, Node *> nodeMap;               // {key: node}
+    unordered_map<int, pair<Node *, Node *>> freqMap; // {frequency, (head, tail) of list}
+    int minFreq;
+    int capacity;
+
+    void addLast(Node *node, Node *tail)
+    {
+        node->next = tail;
+        node->prev = tail->prev;
+
+        tail->prev->next = node;
+        tail->prev = node;
+    }
+    void removeNode(Node *node)
+    {
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+
+        node->next = nullptr;
+        node->prev = nullptr;
+    }
+    
 public:
     LFUCache(int capacity)
     {
+        this->capacity = capacity;
+        this->minFreq = 0;
     }
 
+    void initializeFreqList(int freq)
+    {
+        Node *head = new Node(-1, -1, -1);
+        Node *tail = new Node(-1, -1, -1);
+
+        head->next = tail;
+        tail->prev = head;
+
+        freqMap[freq] = {head, tail};
+    }
     int get(int key)
     {
+        if (nodeMap.find(key) == nodeMap.end())
+            return -1;
+
+        Node *node = nodeMap[key];
+
+        removeNode(node);
+
+        if (freqMap[node->freq].first->next == freqMap[node->freq].second)
+        {
+            freqMap.erase(node->freq);
+
+            if (node->freq == minFreq)
+                minFreq++;
+        }
+
+        node->freq++;
+        if (freqMap.find(node->freq) == freqMap.end())
+            initializeFreqList(node->freq);
+
+        addLast(node, freqMap[node->freq].second);
+
+        return node->val;
     }
 
     void put(int key, int value)
     {
+        if (capacity == 0)
+            return;
+
+        if (nodeMap.find(key) != nodeMap.end())
+        {
+            Node *node = nodeMap[key];
+
+            removeNode(node);
+
+            if (freqMap[node->freq].first->next == freqMap[node->freq].second)
+            {
+                freqMap.erase(node->freq);
+                
+                if (node->freq == minFreq)
+                    minFreq++;
+            }
+
+            node->freq++;
+            node->val = value;
+
+            if (freqMap.find(node->freq) == freqMap.end())
+                initializeFreqList(node->freq);
+
+            addLast(node, freqMap[node->freq].second);
+        }
+        else
+        {
+            if (nodeMap.size() == capacity)
+            {
+                Node *minFreqNode = freqMap[minFreq].first->next;
+
+                nodeMap.erase(minFreqNode->key);
+                removeNode(minFreqNode);
+
+                if (freqMap[minFreq].first->next == freqMap[minFreq].second)
+                    freqMap.erase(minFreq);
+            }
+
+            minFreq = 1;
+            Node *node = new Node(value, key, 1);
+
+            nodeMap[key] = node;
+
+            if (freqMap.find(node->freq) == freqMap.end())
+                initializeFreqList(node->freq);
+
+            addLast(node, freqMap[node->freq].second);
+        }
     }
 };
-
 int main()
 {
     ios_base::sync_with_stdio(false);
