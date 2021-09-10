@@ -355,24 +355,17 @@ If it is already present, then update its frequency, and in the frequency list,
 remove it from the previous frequency list and add it to the end of the new frequency list
 Each list itself is in order of least recently used to most recently used
 If it is not already present, then return -1.
+Also, the frequency we removed it from, if that was the min frequency, then increase min frequency by 1
+and also if that frequency list is empty now, then erase it from map
+Also, the frequency list has to be made first in the map if this is the first node for it.
 
 put(int key, int value): O(1)
 If the capacity is not full:
-    If it is already in map, then just update the frequency, and remove from old frequency
-    and add to new frequency.
-    Else, make a new node, and add it to both maps. In the first map we just add the {key, node address},
-    and in second map we will add to end of list corresponding to 1 frequency.
+    Same as get()
 Else:
     We remove the first node of the 1 frequency list, and remove it from the first map as well.
     Then make a new node, and add it to both maps with frequency 1.
     Also, the minimum frequency becomes 1.
-    
-Updating the min frequency:
-If no node is removed, then min frequency remains same.
-When a new node is added, min frequency is 1
-If we remove a node, then if that frequency list becomes empty, then min frequency is increased by
-1 as the node who had the min frequency just had its frequecy increased by 1 and no other node has that frequency.
-Otherwise the min frequecy remains the same.
 */
 class Node
 {
@@ -441,20 +434,28 @@ public:
 
         Node *node = nodeMap[key];
 
+        // remove from old frequency list
         removeNode(node);
 
+        // if that list is now empty
         if (freqMap[node->freq].first->next == freqMap[node->freq].second)
-        {
+        {   
+            // remove it from map
             freqMap.erase(node->freq);
 
+            // if this frequency was also the min frequency, the update min freq
             if (node->freq == minFreq)
                 minFreq++;
         }
 
+        // increase this node's freq
         node->freq++;
+
+        // if new frequency list doesn't exist yet, then make it
         if (freqMap.find(node->freq) == freqMap.end())
             initializeFreqList(node->freq);
 
+        // add this node to the new freq list's end
         addLast(node, freqMap[node->freq].second);
 
         return node->val;
@@ -474,7 +475,7 @@ public:
             if (freqMap[node->freq].first->next == freqMap[node->freq].second)
             {
                 freqMap.erase(node->freq);
-                
+
                 if (node->freq == minFreq)
                     minFreq++;
             }
@@ -491,15 +492,18 @@ public:
         {
             if (nodeMap.size() == capacity)
             {
+                // remove the min frequency first node
                 Node *minFreqNode = freqMap[minFreq].first->next;
 
                 nodeMap.erase(minFreqNode->key);
                 removeNode(minFreqNode);
 
+                // if it now became empty, remove the list from map
                 if (freqMap[minFreq].first->next == freqMap[minFreq].second)
                     freqMap.erase(minFreq);
             }
 
+            // make a new node with 1 frequency, and add it to 1 freq list
             minFreq = 1;
             Node *node = new Node(value, key, 1);
 
@@ -512,6 +516,7 @@ public:
         }
     }
 };
+
 int main()
 {
     ios_base::sync_with_stdio(false);
