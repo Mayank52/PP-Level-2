@@ -666,7 +666,7 @@ int search(vector<int> &nums, int target)
         int mid = lo + (hi - lo) / 2;
 
         //target and mid are on the same side
-        if ((target > nums[n - 1]) == (nums[mid] > nums[n - 1]))
+        if ((target > nums[hi]) == (nums[mid] > nums[hi]))
         {
             if (nums[mid] < target)
                 lo = mid + 1;
@@ -685,8 +685,47 @@ int search(vector<int> &nums, int target)
 }
 
 // 81. Search in Rotated Sorted Array II
+/*
+Approach: O(n)
+Using the 2nd approach of previous question.
+Here as there are duplicates so, each time first check is mid element is equal to the last element
+If it is equal then just reduce upper limit by 1 and move next iteration.
+Rest is the same.
+*/
 bool search(vector<int> &nums, int target)
 {
+    int n = nums.size();
+
+    int lo = 0, hi = n - 1;
+
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+
+        // if mid of current search space == end of current search space
+        if (nums[mid] == nums[hi])
+        {
+            hi--;
+            continue;
+        }
+
+        //target and mid are on the same side
+        if ((target > nums[hi]) == (nums[mid] > nums[hi]))
+        {
+            if (nums[mid] < target)
+                lo = mid + 1;
+            else
+                hi = mid;
+        }
+        // target on the left side
+        else if (target > nums[n - 1])
+            hi = mid;
+        // target on the right side
+        else
+            lo = mid + 1;
+    }
+
+    return nums[lo] == target;
 }
 
 // F1. Guess the K-th Zero (Easy version) (https://codeforces.com/problemset/problem/1520/F1#)
