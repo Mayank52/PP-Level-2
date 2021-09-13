@@ -388,6 +388,58 @@ int splitArray(vector<int> &nums, int m)
     return lo;
 }
 
+// Allocate Books (https://www.interviewbit.com/problems/allocate-books/)
+/*
+Approach: O(nlog(totalSum))
+We have to minimize the page number sum for each student
+So, we run a binary search on page numbers
+lo = max page number a book has
+hi = total sum of all page numbers
+
+Everytime, the mid represents the max total number of pages we can assign to one student
+So, using this find the count of students you can give the books to
+If the count > B, then we need to increase page numbers per student so move to right side
+Else move to left side
+*/
+int books(vector<int> &A, int B)
+{
+    if (A.size() < B)
+        return -1;
+
+    int totalPages = 0, maxPages = INT_MIN;
+    for (int val : A)
+    {
+        totalPages += val;
+        maxPages = max(maxPages, val);
+    }
+
+    int lo = maxPages, hi = totalPages;
+
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+
+        int count = 1, currSum = 0;
+        for (int val : A)
+        {
+            currSum += val;
+
+            if (currSum > mid)
+            {
+                currSum = val;
+                count++;
+            }
+        }
+
+        if (count > B)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+
+    return lo;
+}
+
 // 786. K-th Smallest Prime Fraction
 /*
 Approach: Binary Search, O(nlogn)
@@ -883,6 +935,161 @@ long long int inversionCount(long long arr[], long long N)
 {
     // Your Code Here
     return countInversions(arr, 0, N - 1);
+}
+
+// Chocolate Distribution problem (https://practice.geeksforgeeks.org/problems/chocolate-distribution-problem3825/1)
+/*
+Approach: O(nlogn)
+
+*/
+long long findMinDiff(vector<long long> arr, long long n, long long m)
+{
+    sort(arr.begin(), arr.end());
+
+    long long minDiff = arr[arr.size() - 1] - arr[0];
+
+    for (long long i = m - 1; i < n; i++)
+    {
+        minDiff = min(minDiff, arr[i] - arr[i - m + 1]);
+    }
+
+    return minDiff;
+}
+
+// Counting Sort (https://practice.geeksforgeeks.org/problems/largest-even-number3821/1)
+void countSort(vector<int> &nums)
+{
+    // find the min and max element of array
+    int minNum = INT_MAX, maxNum = INT_MIN;
+    for (int val : nums)
+    {
+        minNum = min(minNum, val);
+        maxNum = max(maxNum, val);
+    }
+
+    // get the count of each element
+    vector<int> freq(maxNum - minNum + 1);
+    for (int val : nums)
+        freq[val - minNum]++;
+
+    // find prefix sum for each index in frequency array
+    for (int i = 1; i < freq.size(); i++)
+        freq[i] += freq[i - 1];
+
+    // put all elements in sorted order in the result (stable sort)
+    vector<int> res(nums.size());
+    for (int i = nums.size() - 1; i >= 0; i--)
+    {
+        int pos = freq[nums[i] - minNum] - 1;
+        res[pos] = nums[i];
+        freq[nums[i] - minNum]--;
+    }
+
+    // put the sorted array back into original array
+    for (int i = 0; i < res.size(); i++)
+        nums[i] = res[i];
+}
+
+// Radix Sort
+void countSort(vector<int> &nums, int exp)
+{
+    // get the count of each element
+    vector<int> freq(10);
+    for (int val : nums)
+        freq[(val / exp) % 10]++;
+
+    // find prefix sum for each index in frequency array
+    for (int i = 1; i < freq.size(); i++)
+        freq[i] += freq[i - 1];
+
+    // put all elements in sorted order in the result (stable sort)
+    vector<int> res(nums.size());
+    for (int i = nums.size() - 1; i >= 0; i--)
+    {
+        int pos = freq[(nums[i] / exp) % 10] - 1;
+        res[pos] = nums[i];
+        freq[(nums[i] / exp) % 10]--;
+    }
+
+    // put the sorted array back into original array
+    for (int i = 0; i < res.size(); i++)
+        nums[i] = res[i];
+}
+void radixSort(vector<int> &nums)
+{
+    int maxVal = INT_MIN;
+
+    for (int i = 0; i < nums.size(); i++)
+        maxVal = max(maxVal, nums[i]);
+
+    // call count sort for every digit right to left
+    for (int exp = 1; maxVal / exp > 0; exp *= 10)
+        countSort(nums, exp);
+}
+
+// QuickSort
+int partition(vector<int> &nums, int lo, int hi, int pivot)
+{
+    int i = lo, j = lo;
+
+    // partition everything < pivot to its left, and > pivot to its right
+    while (i <= hi)
+    {
+        if (nums[i] <= pivot)
+        {
+            swap(nums[i], nums[j]);
+            i++;
+            j++;
+        }
+        else
+            i++;
+    }
+
+    // return pivot's index
+    return j - 1;
+}
+void quickSort(vector<int> &nums, int lo, int hi)
+{
+    if (lo > hi)
+        return;
+
+    int pivot = nums[hi];
+    int pidx = partition(nums, lo, hi, pivot);
+
+    quickSort(nums, lo, pidx - 1);
+    quickSort(nums, pidx + 1, hi);
+}
+vector<int> sortArray(vector<int> &nums)
+{
+    quickSort(nums, 0, nums.size() - 1);
+    return nums;
+}
+
+// Bucket Sort
+void bucketSort(vector<double> &arr)
+{
+    int n = arr.size();
+
+    // 1) Create n empty buckets
+    vector<float> b[n];
+
+    // 2) Put array elements
+    // in different buckets
+    for (int i = 0; i < n; i++)
+    {
+        int bi = n * arr[i]; // Index in bucket
+        b[bi].push_back(arr[i]);
+    }
+
+    // 3) Sort individual buckets
+    for (int i = 0; i < n; i++)
+        sort(b[i].begin(), b[i].end());
+
+    // 4) Concatenate all buckets into arr[]
+    int index = 0;
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < b[i].size(); j++)
+            arr[index++] = b[i][j];
 }
 
 int main()
