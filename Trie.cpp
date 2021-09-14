@@ -106,13 +106,11 @@ public:
 class Node
 {
 public:
-    char ch; // we can remove ch, as we are not actually using this anywhere
     bool endOfWord;
     vector<Node *> children;
 
-    Node(char ch)
+    Node()
     {
-        this->ch = ch;
         this->endOfWord = false;
         children.assign(26, nullptr);
     }
@@ -125,7 +123,7 @@ public:
     /** Initialize your data structure here. */
     WordDictionary()
     {
-        root = new Node('#');
+        root = new Node();
     }
 
     void addWord(string word)
@@ -136,7 +134,7 @@ public:
         {
             if (curr->children[word[i] - 'a'] == nullptr)
             {
-                Node *node = new Node(word[i]);
+                Node *node = new Node();
                 curr->children[word[i] - 'a'] = node;
             }
 
@@ -229,6 +227,82 @@ int findMaximumXOR(vector<int> &nums)
     }
 
     return res;
+}
+
+// 677. Map Sum Pairs
+class Node
+{
+public:
+    int val;
+    vector<Node *> children;
+
+    Node(int val)
+    {
+        this->val = val;
+        this->children.assign(26, nullptr);
+    }
+};
+class MapSum
+{
+private:
+    Node *root;
+
+public:
+    /** Initialize your data structure here. */
+    MapSum()
+    {
+        root = new Node(0);
+    }
+
+    void insert(string key, int val)
+    {
+        Node *curr = root;
+
+        for (int i = 0; i < key.size(); i++)
+        {
+            if (curr->children[key[i] - 'a'] == nullptr)
+            {
+                Node *node = new Node(0);
+                curr->children[key[i] - 'a'] = node;
+            }
+
+            curr = curr->children[key[i] - 'a'];
+        }
+
+        curr->val = val;
+    }
+
+    int getSum(Node *node)
+    {
+        int sum = node->val;
+
+        for (Node *child : node->children)
+        {
+            if (child != nullptr)
+                sum += getSum(child);
+        }
+
+        return sum;
+    }
+    int sum(string prefix)
+    {
+        Node *curr = root;
+
+        for (int i = 0; i < prefix.size(); i++)
+        {
+            if (curr->children[prefix[i] - 'a'] == nullptr)
+                return 0;
+
+            curr = curr->children[prefix[i] - 'a'];
+        }
+
+        return getSum(curr);
+    }
+};
+
+// 472. Concatenated Words
+vector<string> findAllConcatenatedWordsInADict(vector<string> &words)
+{
 }
 
 int main()
