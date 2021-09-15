@@ -27,13 +27,11 @@ At the end if the whole prefix exists in trie, then return true.
 class Node
 {
 public:
-    char ch; // we can remove ch, as we are not actually using this anywhere
     bool endOfWord;
     vector<Node *> children;
 
-    Node(char ch)
+    Node()
     {
-        this->ch = ch;
         this->endOfWord = false;
         children.assign(26, nullptr);
     }
@@ -47,7 +45,7 @@ public:
     /** Initialize your data structure here. */
     Trie()
     {
-        root = new Node('#');
+        root = new Node();
     }
 
     /** Inserts a word into the trie. */
@@ -59,7 +57,7 @@ public:
         {
             if (curr->children[word[i] - 'a'] == nullptr)
             {
-                Node *node = new Node(word[i]);
+                Node *node = new Node();
                 curr->children[word[i] - 'a'] = node;
             }
 
@@ -174,10 +172,17 @@ height of trie will be 32 max because int has 32 bits.
 Then for each number while traversing we calculate the sum by adding 2^pos to the sum for every XOR = 1
 Like for 11010 we have: 2^4 + 2^3 + 0 + 2^1 + 0
 
-So, first to create trie for each number we will need O(32*n)
-And same for finding the max for each number.
+So, first to create trie for each number we will need O(32*n).
+Since int has only 32 bits, so just go over each bit from leftmost bit, and put it into Trie
 
+And same iteration for finding the max for each number.
+For each bit you check if its opposite bit is present as the next child, then add 2*i to the sum
+If opposite bit is not present then go to next node, but sum remains the same.
+To find the opposite bit we can just use (bit ^ 1) as ^ flips the bit so it will give the opposite bit.
 
+To get the ith bit of a number, we right shift i times, so that ith bit is now rightmost
+num >> i, will bring ith bit to rightmost position 
+now (num >> i) & 1, will give if last bit is 0 or 1, as 0 & 1 = 0, 1 & 1 = 1
 
 Eg: 3, 10, 5, 25, 2, 8
 3: 00011
@@ -194,27 +199,62 @@ each number by finding the next favorable bit in trie.
 class Node
 {
 public:
-    int val;
     vector<Node *> children; //{0, 1}
 
-    Node(int val)
+    Node()
     {
-        this->val = val;
         this->children.assign(2, nullptr);
     }
 };
 void insert(int num, Node *root)
 {
+    Node *curr = root;
+
+    // iterate over all 32 bits i.e. 0 - 31 of the number
+    for (int i = 31; i >= 0; i--)
+    {
+        // to get the ith bit of num
+        int bit = (num >> i) & 1;
+
+        if (curr->children[bit] == nullptr)
+        {
+            Node *node = new Node();
+            curr->children[bit] = node;
+        }
+
+        curr = curr->children[bit];
+    }
 }
 int maxXOR(int num, Node *root)
 {
     int sum = 0;
 
+    Node *curr = root;
+
+    // iterate over all 32 bits i.e. 0 - 31 of the number
+    for (int i = 31; i >= 0; i--)
+    {
+        // to get the ith bit of num
+        int bit = (num >> i) & 1;
+
+        // if opposite bit is available
+        if (curr->children[(bit ^ 1)] != nullptr)
+        {
+            curr = curr->children[(bit ^ 1)];
+            sum += (1 << i); // sum = sum + 2^i
+        }
+        // else
+        else
+        {
+            curr = curr->children[bit];
+        }
+    }
+
     return sum;
 }
 int findMaximumXOR(vector<int> &nums)
 {
-    Node *root = new Node(-1);
+    Node *root = new Node();
 
     for (int val : nums)
         insert(val, root);
@@ -301,8 +341,199 @@ public:
 };
 
 // 472. Concatenated Words
+/*
+Approach: O(n * maxWordLength^2), Trie + DP
+First make a Trie using all words.
+Then similar to word break, for each word we iterate over it until it is present in Trie.
+If at any character, we find that a word has ended here, then we make a call to check for the remaining 
+word again from the top of the trie. And after the whole word has ended if the count is 2 or more then return true.
+
+Eg: 
+Input: words = ["cat","cats","catsdogcats","dog","dogcatsdog","hippopotamuses","rat","ratcatdogcat"]
+Here for "catsdogcats"
+We start checking for 0th index. This goes until it finds that 'cat' is a word.
+So, then we check for the remaining "sdogcats" from the top of the trie again.
+We cannot just keep checking after the 't' node in trie, because then we will find that 
+'cats' is also a word, and the count will become 2. But althought there are 2 words in 'cats' i.e. cat and cats
+but they are not concatenated.
+So, we need to check for the next word from the root again.
+
+Also, for eg: [a, aa,aaa,aaaaa,aaaaaa]
+In this case we will keep checking for same case again and again
+So, use memoization to improve the solution.
+*/
+class Node
+{
+public:
+    bool endOfWord;
+    vector<Node *> children;
+
+    Node()
+    {
+        this->endOfWord = false;
+        children.assign(26, nullptr);
+    }
+};
+Node *root;
+void insert(string word)
+{
+    Node *curr = root;
+
+    for (int i = 0; i < word.size(); i++)
+    {
+        if (curr->children[word[i] - 'a'] == nullptr)
+        {
+            Node *node = new Node();
+            curr->children[word[i] - 'a'] = node;
+        }
+
+        curr = curr->children[word[i] - 'a'];
+    }
+
+    curr->endOfWord = true;
+}
+bool isConcatenated(string &word, int idx, int count, vector<int> &dp)
+{
+    // if word is finished, then if count >= 2, then return true, else false
+    if (idx == word.size())
+        return count > 1;
+
+    if (dp[idx] != -1)
+        return dp[idx];
+
+    // start checking from root of Trie
+    Node *curr = root;
+
+    for (int i = idx; i < word.size(); i++)
+    {
+        // if the next character is not present in trie, then just return false
+        if (curr->children[word[i] - 'a'] == nullptr)
+            return dp[idx] = false;
+
+        curr = curr->children[word[i] - 'a'];
+
+        // if current character is a end of word, then we increase count by 1, and check if the remaining string is concatenated
+        if (curr->endOfWord)
+        {
+            if (isConcatenated(word, i + 1, count + 1, dp))
+                return dp[idx] = true;
+        }
+    }
+
+    return dp[idx] = false;
+}
 vector<string> findAllConcatenatedWordsInADict(vector<string> &words)
 {
+    root = new Node();
+
+    // Insert all words into Trie
+    for (string &word : words)
+        insert(word);
+
+    vector<string> res;
+    for (string &word : words)
+    {
+        // create a new dp for this word
+        vector<int> dp(word.size(), -1);
+
+        // if this word is concatenated, then push it into result
+        if (isConcatenated(word, 0, 0, dp))
+            res.push_back(word);
+    }
+
+    return res;
+}
+
+// 212. Word Search II
+/*
+Approach: 
+Put all words into Trie. For each node also keep the word that end there.
+Then go to each element in the matrix, if the root has a child for that character, then start searching for any
+words in the trie starting from that character
+For searching check all 4 directions of the current cell, and if the current trie node has a child
+with that character, then move to that cell.
+For each cell check if the endOfWord for the current node is true, then add the word into result, and mark 
+the endOfWord as false so that same word is not added more than once.
+Also mark each cell visited so that you dont visit again, and unmark while backtracking.
+*/
+class Node
+{
+public:
+    bool endOfWord;
+    string word;
+    vector<Node *> children;
+
+    Node()
+    {
+        this->endOfWord = false;
+        children.assign(26, nullptr);
+    }
+};
+Node *root;
+vector<string> res;
+void insert(string word)
+{
+    Node *curr = root;
+
+    for (int i = 0; i < word.size(); i++)
+    {
+        if (curr->children[word[i] - 'a'] == nullptr)
+        {
+            Node *node = new Node();
+            curr->children[word[i] - 'a'] = node;
+        }
+
+        curr = curr->children[word[i] - 'a'];
+    }
+
+    curr->endOfWord = true;
+    curr->word = word;
+}
+void search(vector<vector<char>> &board, int i, int j, Node *curr)
+{
+    int n = board.size(), m = board[0].size();
+
+    if (curr->endOfWord)
+    {
+        res.push_back(curr->word);
+        curr->endOfWord = false;
+    }
+
+    int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+
+    char ch = board[i][j];
+    board[i][j] = '#';
+
+    for (int d = 0; d < 4; d++)
+    {
+        int x = i + dir[d][0];
+        int y = j + dir[d][1];
+
+        if (x >= 0 && y >= 0 && x < n && y < m && board[x][y] != '#' && curr->children[board[x][y] - 'a'] != nullptr)
+            search(board, x, y, curr->children[board[x][y] - 'a']);
+    }
+
+    board[i][j] = ch;
+}
+vector<string> findWords(vector<vector<char>> &board, vector<string> &words)
+{
+    int n = board.size(), m = board[0].size();
+
+    root = new Node();
+
+    for (string &word : words)
+        insert(word);
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            if (root->children[board[i][j] - 'a'] != nullptr)
+                search(board, i, j, root->children[board[i][j] - 'a']);
+        }
+    }
+
+    return res;
 }
 
 int main()
