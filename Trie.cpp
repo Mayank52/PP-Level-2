@@ -446,7 +446,7 @@ vector<string> findAllConcatenatedWordsInADict(vector<string> &words)
 
 // 212. Word Search II
 /*
-Approach: 
+Approach: O((n*m)*(4^(n*m)))
 Put all words into Trie. For each node also keep the word that end there.
 Then go to each element in the matrix, if the root has a child for that character, then start searching for any
 words in the trie starting from that character
