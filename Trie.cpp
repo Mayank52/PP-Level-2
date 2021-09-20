@@ -101,27 +101,16 @@ public:
 };
 
 // 211. Design Add and Search Words Data Structure
-class Node
-{
-public:
-    bool endOfWord;
-    vector<Node *> children;
-
-    Node()
-    {
-        this->endOfWord = false;
-        children.assign(26, nullptr);
-    }
-};
 class WordDictionary
 {
+private:
     Node *root;
 
 public:
     /** Initialize your data structure here. */
     WordDictionary()
     {
-        root = new Node();
+        this->root = new Node();
     }
 
     void addWord(string word)
@@ -142,19 +131,27 @@ public:
         curr->endOfWord = true;
     }
 
+    bool search(string &word, int idx, Node *curr)
+    {
+        if (idx == word.size())
+            return curr->endOfWord;
+
+        if (word[idx] == '.')
+        {
+            for (int i = 0; i < curr->children.size(); i++)
+            {
+                if (curr->children[i] != nullptr && search(word, idx + 1, curr->children[i]))
+                    return true;
+            }
+        }
+        else if (curr->children[word[idx] - 'a'] != nullptr)
+            return search(word, idx + 1, curr->children[word[idx] - 'a']);
+
+        return false;
+    }
     bool search(string word)
     {
-        Node *curr = root;
-
-        for (int i = 0; i < word.size(); i++)
-        {
-            if (curr->children[word[i] - 'a'] != nullptr)
-                curr = curr->children[word[i] - 'a'];
-            else
-                return false;
-        }
-
-        return curr->endOfWord;
+        return search(word, 0, root);
     }
 };
 
