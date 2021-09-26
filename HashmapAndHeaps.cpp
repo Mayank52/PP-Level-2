@@ -2232,6 +2232,243 @@ int minSubArrayLen(int target, vector<int> &nums)
     return minLen == INT_MAX ? 0 : minLen;
 }
 
+// 706. Design HashMap
+class Node
+{
+public:
+    int key;
+    int val;
+    Node *next;
+
+    Node(int k, int v)
+    {
+        this->key = k;
+        this->val = v;
+        this->next = nullptr;
+    }
+};
+class MyHashMap
+{
+private:
+    vector<Node *> buckets;
+    int size;
+    double loadFactor;
+
+    int hashfunction(int key)
+    {
+        return key % buckets.size();
+    }
+    Node *findNode(int idx, int key)
+    {
+        // if node with key is present, return that node, else return the last node of list,
+        // so that we can attach the new node to its end
+        Node *curr = buckets[idx], *prev = nullptr;
+
+        while (curr != nullptr && curr->key != key)
+        {
+            prev = curr;
+            curr = curr->next;
+        }
+
+        return curr == nullptr ? prev : curr;
+    }
+    void rehash()
+    {
+        // copy the current buckets into a temporary array
+        vector<Node *> arr = buckets;
+
+        // double the size of buckets
+        buckets.assign(buckets.size() * 2, new Node(-1, -1));
+
+        // add all elements in buckets into the new buckets
+        for (Node *node : arr)
+        {
+            Node *curr = node->next; // skip the dummy head
+            while (curr != nullptr)
+            {
+                put(curr->key, curr->val);
+                curr = curr->next;
+            }
+        }
+    }
+
+public:
+    /** Initialize your data structure here. */
+    MyHashMap()
+    {
+        this->buckets.resize(4, new Node(-1, -1)); // dummy heads
+        this->size = 0;
+        this->loadFactor = 2.0;
+    }
+
+    /** value will always be non-negative. */
+    void put(int key, int value)
+    {
+        int idx = hashfunction(key);
+        Node *node = findNode(idx, key);
+
+        // not already present
+        if (node->key != key)
+        {
+            Node *newNode = new Node(key, value);
+            node->next = newNode;
+            size++;
+        }
+        // already present
+        else
+            node->val = value;
+
+        // rehash
+        if (size * 1.0 / buckets.size() > loadFactor)
+            rehash();
+    }
+
+    /** Returns the value to which the specified key is mapped, or -1 if this map contains no mapping for the key */
+    int get(int key)
+    {
+        int idx = hashfunction(key);
+        Node *node = findNode(idx, key);
+
+        return node->key == key ? node->val : -1;
+    }
+
+    /** Removes the mapping of the specified value key if this map contains a mapping for the key */
+    void remove(int key)
+    {
+        int idx = hashfunction(key);
+
+        Node *curr = buckets[idx], *prev = nullptr;
+
+        while (curr != nullptr && curr->key != key)
+        {
+            prev = curr;
+            curr = curr->next;
+        }
+
+        // if node is present, then remove it
+        if (curr != nullptr)
+        {
+            prev->next = curr->next;
+            size--;
+        }
+    }
+};
+
+// 705. Design HashSet
+class Node
+{
+public:
+    int key;
+    Node *next;
+
+    Node(int k)
+    {
+        this->key = k;
+        this->next = nullptr;
+    }
+};
+class MyHashSet
+{
+private:
+    vector<Node *> buckets;
+    int size;
+    double loadFactor;
+
+    int hashfunction(int key)
+    {
+        return key % buckets.size();
+    }
+    Node *findNode(int idx, int key)
+    {
+        // if node with key is present, return that node, else return the last node of list,
+        // so that we can attach the new node to its end
+        Node *curr = buckets[idx], *prev = nullptr;
+
+        while (curr != nullptr && curr->key != key)
+        {
+            prev = curr;
+            curr = curr->next;
+        }
+
+        return curr == nullptr ? prev : curr;
+    }
+    void rehash()
+    {
+        // copy the current buckets into a temporary array
+        vector<Node *> arr = buckets;
+
+        // double the size of buckets
+        buckets.assign(buckets.size() * 2, new Node(-1));
+
+        // add all elements in buckets into the new buckets
+        for (Node *node : arr)
+        {
+            Node *curr = node->next; // skip the dummy head
+            while (curr != nullptr)
+            {
+                add(curr->key);
+                curr = curr->next;
+            }
+        }
+    }
+
+public:
+    /** Initialize your data structure here. */
+    MyHashSet()
+    {
+        this->buckets.resize(4, new Node(-1)); // dummy heads
+        this->size = 0;
+        this->loadFactor = 2.0;
+    }
+
+    void add(int key)
+    {
+        int idx = hashfunction(key);
+        Node *node = findNode(idx, key);
+
+        // not already present
+        if (node->key != key)
+        {
+            Node *newNode = new Node(key);
+            node->next = newNode;
+            size++;
+        }
+
+        // rehash
+        if (size * 1.0 / buckets.size() > loadFactor)
+            rehash();
+    }
+
+    void remove(int key)
+    {
+        int idx = hashfunction(key);
+
+        Node *curr = buckets[idx], *prev = nullptr;
+
+        while (curr != nullptr && curr->key != key)
+        {
+            prev = curr;
+            curr = curr->next;
+        }
+
+        // if node is present, then remove it
+        if (curr != nullptr)
+        {
+            prev->next = curr->next;
+            size--;
+        }
+    }
+
+    /** Returns true if this set contains the specified element */
+    bool contains(int key)
+    {
+        int idx = hashfunction(key);
+        Node *node = findNode(idx, key);
+
+        return node->key == key;
+    }
+};
+
 int main()
 {
     ios_base::sync_with_stdio(false);
