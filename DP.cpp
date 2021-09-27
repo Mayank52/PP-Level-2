@@ -2990,6 +2990,77 @@ int findTargetSumWays(vector<int> &nums, int target)
     return targetSum(nums, 0, target, 0, dp);
 }
 
+// Digit DP=====================================================================================
+
+// 233. Number of Digit One
+/*
+Approach: 
+We go to each position in the number one by one
+
+Eg: 2101832
+3 Cases:
+1. digit > 1:
+Like in given eg we are at digit 8
+If we put 1 at this position, then the remaining positions are:
+(2101)8(32)
+Replace 8 by 1, now the final number <= given number
+As we lowered the current digit, so increasing any digit on its right will keep the overall number < given number
+So, number of ways to fill positions to right is 0 - 99 i.e. 100 ways as there are only 2 digits to its right
+For 3 digits it would be 1000(0-999) and so on
+In general number of ways for right = position of current number, like 8 is at 100s position
+
+Now for the left side, we cannot increase left side as it will increase the overall number
+So, number of ways to fill left side = 0 - 2101(2102 ways) i.e. the number on left side + 1
+So, total ways = (leftNumber + 1) * (position of current Number)
+
+2. digit == 1:
+Eg: 2101132
+(2101)1(32)
+If the digit is already 1, then we have 2 cases:
+    a. We lower the left side number, in (0 - 2100) i.e. 2101 ways then on right side we can have 0-99 ways. Because if left side is lowered, 
+        then overall wont increase.
+        So, total ways = leftNumber * position of current digit
+    b. When left remains equal to the original number then right side can be in (0 - 32) i.e. 33 ways.
+        So, right can be anything between 0 and original right side 
+        So, in this case left side is only filled in 1 way, and right side in rightNumber + 1 ways
+        So, total = rightNumber + 1
+So, total ways = (leftNumber * position of current digit) + (rightNumber + 1)
+
+3. digit < 1:
+Eg: 2101032
+(2101)0(32)
+If digit is < 1, then by putting 1, we are increasing this digit, so putting anything on right will increase it.
+So, left side can be filled by any number lower can original left side i.e. 0 - 2100 ways
+And since left side is smaller than original number, right side can be filled in current digit position number of ways
+So, total ways = leftNumber * current digit's position
+
+
+
+*/
+int countDigitOne(int n)
+{
+    long mul = 1;
+    int res = 0;
+
+    while (n / mul > 0)
+    {
+        int leftNum = n / (mul * 10);
+        int rightNum = n % mul;
+        int currDigit = (n / mul) % 10;
+
+        if (currDigit > 1)
+            res += (leftNum + 1) * mul;
+        else if (currDigit == 1)
+            res += (leftNum * mul) + (rightNum + 1);
+        else
+            res += leftNum * mul;
+
+        mul *= 10;
+    }
+
+    return res;
+}
+
 // Misc================================================================================================
 
 // 264. Ugly Number II
@@ -3871,6 +3942,29 @@ long long int maxSumWithK(long long int a[], long long int n, long long int k)
 }
 
 // 45. Jump Game II
+/*
+Approach 1: DP, Time: O(n^2), Space: O(n)
+For each index go to every index in range [curridx, currIdx + arr[i]]
+Worst Case will be like [6,5,4,3,2,1,0,5] here it will be n^2
+
+Approach 2: Greedy, O(n), O(1)
+Suppose we are at index i, from here farthest we can go will be (i + arr[i])
+So, let currBegin = i, currEnd = i + arr[i]
+In this range [currBegin, currEnd] we can reach anywhere with 1 jump from i.
+Now, we find the farthest we can go from this range
+To do this we keep a 
+int canReach;
+And for every index in the current range we find the max index we can reach from here by 
+canReach = max(canReach, i + arr[i]) for every i in [currBegin, currEnd]
+And wherever we get the max canReach, is the start of next interval.
+And then the next interval will be [index that gives max canReach, canReach]
+
+And when the canReach >= last index, then we have our answer
+So, we are basically jumping from one interval to other, and it takes 1 jump to go from one interval to next
+So, in this manner when canReach becomes >= destination, then we have our minimum jumps
+
+
+*/
 // Approach 1: O(n^2), O(n)
 int jumps(vector<int> &nums, int idx, vector<int> &dp)
 {
@@ -3884,7 +3978,7 @@ int jumps(vector<int> &nums, int idx, vector<int> &dp)
         return dp[idx];
 
     int minCount = nums.size();
-    
+
     // for current index, go to every index this index can jump to
     for (int i = 1; i <= nums[idx]; i++)
     {
@@ -3904,6 +3998,222 @@ int jump(vector<int> &nums)
     vector<int> dp(n, -1);
 
     return jumps(nums, 0, dp);
+}
+// Approach 2: O(n)
+int jump(vector<int> &nums)
+{
+    int n = nums.size();
+
+    if (n <= 1)
+        return 0;
+
+    int canReach = nums[0], currBegin = 0, jumps = 0;
+    // until canReach is less than last index
+    while (canReach < n - 1)
+    {
+        jumps++;
+
+        int currEnd = currBegin + nums[currBegin], nextBegin;
+
+        // find the canReach for current interval
+        for (int i = currBegin; i <= currEnd; i++)
+        {
+            if (i + nums[i] > canReach)
+            {
+                canReach = i + nums[i];
+                nextBegin = i;
+            }
+        }
+
+        // update the begin for next interval
+        currBegin = nextBegin;
+    }
+
+    return jumps + 1;
+}
+// Approach 2: Shorter Code
+int jump(vector<int> &nums)
+{
+    int canReach = 0, currEnd = 0, jumps = 0;
+
+    for (int i = 0; i < nums.size() - 1; i++)
+    {
+        // update canReach for current interval
+        canReach = max(canReach, i + nums[i]);
+
+        // if this index is the end of current interval, then update with the end of next interval
+        if (i == currEnd)
+        {
+            jumps++;
+            currEnd = canReach;
+        }
+    }
+
+    return jumps;
+}
+
+// 55. Jump Game
+/*
+Approach: Greedy, O(n)
+Same as Jump Game 2
+*/
+// Approach : Greedy
+bool canJump(vector<int> &nums)
+{
+    int n = nums.size();
+
+    if (n <= 1)
+        return true;
+
+    int canReach = nums[0], currBegin = 0;
+
+    // until canReach is less than last index
+    while (true)
+    {
+        // currEnd will be the min(last index, max index that can be reached from this index)
+        int currEnd = min(currBegin + nums[currBegin], n - 1), nextBegin;
+
+        // find the canReach for current interval
+        for (int i = currBegin; i <= currEnd; i++)
+        {
+            if (i + nums[i] > canReach)
+            {
+                canReach = i + nums[i];
+                nextBegin = i;
+            }
+        }
+
+        // can reach end from current interval
+        if (canReach >= n - 1)
+            return true;
+
+        // cannot never go outside current interval, so cannot reach the end
+        if (canReach <= currEnd)
+            return false;
+
+        // update the begin for next interval
+        currBegin = nextBegin;
+    }
+
+    return false;
+}
+// Same Approach, Shorter Code
+bool canJump(vector<int> &nums)
+{
+    int canReach = 0, currEnd = 0;
+
+    for (int i = 0; i < nums.size() - 1; i++)
+    {
+        // update canReach for current interval
+        canReach = max(canReach, i + nums[i]);
+
+        // if this index is the end of current interval, then update with the end of next interval
+        if (i == currEnd)
+            currEnd = canReach;
+    }
+
+    return currEnd >= nums.size() - 1;
+}
+
+// 1306. Jump Game III
+/*
+Approach: DFS, O(n)
+From each index, if it is in range and not visited yet
+Mark current index as visited
+go to idx + arr[idx], idx - arr[idx]
+If current arr[idx] == 0, then return true
+
+We dont unmark visited, as if that index cannot reach any index with 0, then it
+doesn't matter what path we take to that index, it will still never be able to reach the destination
+
+So, Every index is visited atmost once
+So, Time: O(n)
+*/
+bool canReach(vector<int> &arr, int start)
+{
+    // if not in range, or visited, then return false
+    if (start < 0 || start >= arr.size() || arr[start] == -1)
+        return false;
+
+    // if current element is 0, then return true
+    if (arr[start] == 0)
+        return true;
+
+    int val = arr[start];
+    arr[start] = -1; // mark visited
+
+    // if any call returns true then return true
+    if (canReach(arr, start + val) || canReach(arr, start - val))
+        return true;
+
+    return false;
+}
+
+// 1871. Jump Game VII
+/*
+Approach 1: DFS
+For each index, mark it as visited
+then go to all index in range [i + minJump, i + maxJump] if s[i] == 0
+If you reach the end return true
+
+This gives TLE
+
+Approach 2: DP + Sliding Window, O(n)
+For do it in reverse.
+For each index i, we find all indexes it can be reached from 
+The indexes it can be reached from will lie in range [i - maxJump, i - minJump]
+
+To do this we use Sliding window approach.
+We maintain the count of ways the current index i can be reached.
+Then for the current index, the number of ways = number of i - minJump can be reached - number of ways i - maxJump can be reached
+= count(i - minJump) - count(i - maxJump)
+
+This way for each index i, we will find the count of ways it can be reached.
+And then if the current index has s[i] == 0 and count > 1, then dp[i] = true
+
+
+*/
+// Approach 1: DFS (TLE)
+bool canReach(string &s, int idx, int minJump, int maxJump)
+{
+    if (s[idx] == '#')
+        return false;
+    if (idx == s.size() - 1)
+        return true;
+
+    s[idx] = '#';
+
+    // for current index, go to every index this index can jump to
+    for (int i = idx + minJump; i <= min(idx + maxJump, (int)s.size() - 1); i++)
+    {
+        if (s[i] == '0' && canReach(s, i, minJump, maxJump))
+            return true;
+    }
+
+    return false;
+}
+bool canReach(string s, int minJump, int maxJump)
+{
+    return canReach(s, 0, minJump, maxJump);
+}
+// Approach 2: Sliding Window + DP, O(n)
+bool canReach(string s, int minJump, int maxJump)
+{
+    int count = 0;
+    vector<bool> dp(s.size());
+
+    dp[0] = true;
+    for (int i = minJump; i < s.size(); i++)
+    {
+        count += dp[i - minJump];
+        if (i - maxJump > 0)
+            count -= dp[i - maxJump - 1];
+
+        if (s[i] == '0' && count > 0)
+            dp[i] = true;
+    }
+
+    return dp[s.size() - 1];
 }
 
 // Extra========================================================================================
