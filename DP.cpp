@@ -4159,6 +4159,7 @@ If you reach the end return true
 This gives TLE
 
 Approach 2: DP + Sliding Window, O(n)
+Explanation is not accurate
 For do it in reverse.
 For each index i, we find all indexes it can be reached from 
 The indexes it can be reached from will lie in range [i - maxJump, i - minJump]
