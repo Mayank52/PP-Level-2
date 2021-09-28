@@ -87,7 +87,7 @@ int ternarySearch(int key, vector<int> &arr)
 /*
 Approach: Binary Search, Time: O(log(min(n,m))), Space: O(1)
 Find the size of the split half of the merged array: (nums1.size() + nums2.size() + 1) / 2
-We take +1 beacuse we want ceil in case of odd number length
+We take +1 because we want ceil in case of odd number length
 
 Then, We perform binary search on the smaller length array
 mid1 = mid of arr1
@@ -151,6 +151,11 @@ double findMedianSortedArrays(vector<int> &nums1, vector<int> &nums2)
     }
 
     return -1;
+}
+
+// K-th element of two sorted Arrays  (https://practice.geeksforgeeks.org/problems/k-th-element-of-two-sorted-array1317/1)
+int kthElement(int arr1[], int arr2[], int n, int m, int k)
+{
 }
 
 // 1283. Find the Smallest Divisor Given a Threshold

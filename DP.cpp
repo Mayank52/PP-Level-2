@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <queue>
 #include <algorithm>
 #include <limits.h>
 #include <unordered_map>
@@ -4151,12 +4152,15 @@ bool canReach(vector<int> &arr, int start)
 
 // 1871. Jump Game VII
 /*
-Approach 1: DFS
+Approach 1: BFS, O(n)
 For each index, mark it as visited
 then go to all index in range [i + minJump, i + maxJump] if s[i] == 0
-If you reach the end return true
-
-This gives TLE
+Also, like if you have checked the range (4, 10) for a certain index, then if another index after it
+is checking (6, 15), then you can directly start from 11 instead.
+So, for each index the range would be: max(i + minJump, alreadyReached) to min(i + maxJump, n - 1)
+i.e. you start from the i + minJump and if some part of that range is already checked, then start from the end of
+the checked range, and the upper limit is the i + maxJump, if that is in the array bounds.
+If you reach the end return true.
 
 Approach 2: DP + Sliding Window, O(n)
 Explanation is not accurate
@@ -4174,28 +4178,39 @@ And then if the current index has s[i] == 0 and count > 1, then dp[i] = true
 
 
 */
-// Approach 1: DFS (TLE)
-bool canReach(string &s, int idx, int minJump, int maxJump)
+// Approach 1: BFS O(n)
+bool canReach(string s, int minJump, int maxJump)
 {
-    if (s[idx] == '#')
-        return false;
-    if (idx == s.size() - 1)
-        return true;
+    int n = s.size();
 
-    s[idx] = '#';
+    queue<int> que;
+    que.push(0);
 
-    // for current index, go to every index this index can jump to
-    for (int i = idx + minJump; i <= min(idx + maxJump, (int)s.size() - 1); i++)
+    int alreadyReached = 0;
+
+    while (que.size() > 0)
     {
-        if (s[i] == '0' && canReach(s, i, minJump, maxJump))
-            return true;
+        int rIdx = que.front();
+        que.pop();
+
+        for (int i = max(rIdx + minJump, alreadyReached); i <= min(rIdx + maxJump, n - 1); i++)
+        {
+            if (s[i] == '0')
+            {
+                // if last reached return true
+                if (i == n - 1)
+                    return true;
+
+                s[i] = '#'; // mark visited
+                que.push(i);
+            }
+        }
+
+        // upper limit of currrent range is now the max index we already checked
+        alreadyReached = rIdx + maxJump;
     }
 
     return false;
-}
-bool canReach(string s, int minJump, int maxJump)
-{
-    return canReach(s, 0, minJump, maxJump);
 }
 // Approach 2: Sliding Window + DP, O(n)
 bool canReach(string s, int minJump, int maxJump)
@@ -4215,6 +4230,88 @@ bool canReach(string s, int minJump, int maxJump)
     }
 
     return dp[s.size() - 1];
+}
+
+// 1345. Jump Game IV
+/*
+Approach: BFS O(n)
+(Always try BFS for questions where minimum steps to destination is asked. BFS ensures minimum steps)
+
+Make a map of {element : list of indexes that element is present at}
+Then, use BFS. For each level jumps increase by 1
+Every indexes that get removed from queue adds idx - 1, idx + 1, all indexes where that same element is present into queue
+Mark every index visited when it is added to queue.
+Also, after adding all same element into queue, clear that list from map
+Because when it goes to those indexes it will again check for all of them
+And even though they wont be added into queue because their visited would be true, but still that
+for loop will run completely increasing complexity to O(n^2)
+
+For Eg: [7,7,7,7,7,7,7,6]
+Now, the first 7 will check all remaining 7s, add them to queue and mark them as visited
+Now when it goes to those 7s, they will again check all 7s. Even though they wont be added to queue but that
+for loop still runs for all of them. To avoid that clear the list when the first 7 is reached
+Because after that every time a 7 is reached, it will be with more steps.
+*/
+int minJumps(vector<int> &arr)
+{
+    int n = arr.size();
+
+    unordered_map<int, vector<int>> mp;
+    vector<bool> vis(n);
+    queue<int> que;
+
+    for (int i = 0; i < n; i++)
+    {
+        mp[arr[i]].push_back(i);
+    }
+
+    int jumps = 0;
+    que.push(0);
+    vis[0] = true;
+
+    while (que.size() > 0)
+    {
+        int size = que.size();
+
+        while (size--)
+        {
+            int rIdx = que.front();
+            que.pop();
+
+            if (rIdx == n - 1)
+                return jumps;
+
+            if (rIdx - 1 >= 0 && !vis[rIdx - 1])
+            {
+                vis[rIdx - 1] = true;
+                que.push(rIdx - 1);
+            }
+            if (rIdx + 1 < n && !vis[rIdx + 1])
+            {
+                vis[rIdx + 1] = true;
+                que.push(rIdx + 1);
+            }
+
+            for (int idx : mp[arr[rIdx]])
+            {
+                if (!vis[idx])
+                {
+                    vis[idx] = true;
+                    que.push(idx);
+                }
+            }
+
+            // after going to all indexes where same element is present, erase it from the 
+            // map so that you dont check again for it at those indexes, because even though they would
+            // be marked visited and not added in queue, but still the for loop will run for all of
+            // them to check if they can be visited
+            mp.erase(arr[rIdx]);
+        }
+
+        jumps++;
+    }
+
+    return -1;
 }
 
 // Extra========================================================================================
