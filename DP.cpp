@@ -4375,31 +4375,68 @@ int maxJumps(vector<int> &arr, int d)
 }
 
 // 1696. Jump Game VI
-int maxResult(vector<int> &nums, int k, int idx, vector<int> &dp)
-{
-    int n = nums.size();
+/*
+Approach 1: DP, Time: O(nk), Space: O(n)
+Start from end, and for each index find the max ans from next k indexes
+This way you can form the dp and get the ans
 
-    if (idx == n - 1)
-        return nums[idx];
-
-    if (dp[idx] != -1)
-        return dp[idx];
-
-    int res = 0;
-    for (int i = idx + 1; i <= min(n - 1, i + k); i++)
-    {
-        res = max(res, maxResult(nums, k, i, dp));
-    }
-
-    return dp[idx] = res;
-}
+Approach 2: Time: O(n), Space: O(k)
+Using Sliding Window Maximum technique using a queue
+We can find greatest in k size window in O(1)
+Rest is the same method, at each index get max of next k elements
+This makes complexity O(n)
+*/
+// Approach 1: DP, O(nk)
 int maxResult(vector<int> &nums, int k)
 {
     int n = nums.size();
 
-    vector<int> dp(n, -1);
+    vector<int> dp(n);
 
-    return maxResult(nums, k, 0, dp);
+    dp[n - 1] = nums[n - 1];
+
+    for (int i = n - 2; i >= 0; i--)
+    {
+        int maxVal = dp[i + 1];
+
+        // find max in next k elements
+        for (int j = i + 1; j <= min(n - 1, i + k); j++)
+            maxVal = max(maxVal, dp[j]);
+
+        dp[i] = maxVal + nums[i];
+    }
+
+    return dp[0];
+}
+// Approach 2: DP + Queue, O(n)
+int maxResult(vector<int> &nums, int k)
+{
+    int n = nums.size();
+
+    vector<int> dp(n);
+    deque<int> que;
+
+    dp[n - 1] = nums[n - 1];
+    que.push_back(n - 1);
+
+    for (int i = n - 2; i >= 0; i--)
+    {   
+        // pop front until front element is out of current window
+        while (que.size() > 0 && que.front() > i + k)
+            que.pop_front();
+        
+        // now front gives the max of current window
+        dp[i] = dp[que.front()] + nums[i];        
+        
+        // now remove last element until it is less than current element
+        while(que.size() > 0 && dp[que.back()] < dp[i])
+            que.pop_back();
+
+        // add current element
+        que.push_back(i);
+    }
+    
+    return dp[0];
 }
 
 // Extra========================================================================================
