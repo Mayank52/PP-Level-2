@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <stack>
 #include <algorithm>
 #include <limits.h>
 #include <unordered_map>
@@ -4301,7 +4302,7 @@ int minJumps(vector<int> &arr)
                 }
             }
 
-            // after going to all indexes where same element is present, erase it from the 
+            // after going to all indexes where same element is present, erase it from the
             // map so that you dont check again for it at those indexes, because even though they would
             // be marked visited and not added in queue, but still the for loop will run for all of
             // them to check if they can be visited
@@ -4312,6 +4313,93 @@ int minJumps(vector<int> &arr)
     }
 
     return -1;
+}
+
+// 1340. Jump Game V
+/*
+Approach 1: O(nd), DP
+Start from every index and apply dfs to find the max jumps from that start
+In the DFS, for the current index, go right until you have a currHeight > that height 
+And same for left side
+Make calls from every index, and return the max answer.
+
+Approach 2: O(n)
+If you have like [7,3,2,1]
+Then you only need to check 7 -> 3 -> 2 -> 1
+Checking 7 -> 2 -> 1 or 7 -> 1 cannot give maximum answer
+So, we need to check for decreasing sequences
+Not done here
+
+*/
+// Approach 1: O(nd)
+int maxJumps(vector<int> &arr, int d, int idx, vector<int> &dp)
+{
+    int n = arr.size();
+
+    if (dp[idx] != -1)
+        return dp[idx];
+
+    int count = 0;
+
+    // go right until you dont get a >= element
+    for (int i = idx + 1; i <= min(n - 1, idx + d); i++)
+    {
+        if (arr[i] < arr[idx])
+            count = max(count, maxJumps(arr, d, i, dp));
+        else
+            break;
+    }
+
+    // go left until you dont get a >= element
+    for (int i = idx - 1; i >= max(0, idx - d); i--)
+    {
+        if (arr[i] < arr[idx])
+            count = max(count, maxJumps(arr, d, i, dp));
+        else
+            break;
+    }
+
+    return dp[idx] = count + 1;
+}
+int maxJumps(vector<int> &arr, int d)
+{
+    int n = arr.size();
+
+    int res = 0;
+    vector<int> dp(n, -1);
+
+    for (int i = 0; i < n; i++)
+        res = max(res, maxJumps(arr, d, i, dp));
+
+    return res;
+}
+
+// 1696. Jump Game VI
+int maxResult(vector<int> &nums, int k, int idx, vector<int> &dp)
+{
+    int n = nums.size();
+
+    if (idx == n - 1)
+        return nums[idx];
+
+    if (dp[idx] != -1)
+        return dp[idx];
+
+    int res = 0;
+    for (int i = idx + 1; i <= min(n - 1, i + k); i++)
+    {
+        res = max(res, maxResult(nums, k, i, dp));
+    }
+
+    return dp[idx] = res;
+}
+int maxResult(vector<int> &nums, int k)
+{
+    int n = nums.size();
+
+    vector<int> dp(n, -1);
+
+    return maxResult(nums, k, 0, dp);
 }
 
 // Extra========================================================================================
