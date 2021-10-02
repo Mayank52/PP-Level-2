@@ -2200,6 +2200,12 @@ vector<double> medianSlidingWindow(vector<int> &nums, int k)
     return res;
 }
 
+// 992. Subarrays with K Different Integers
+int subarraysWithKDistinct(vector<int> &nums, int k)
+{
+    
+}
+
 // 209. Minimum Size Subarray Sum
 /*
 Approach: 2 Pointers, O(n)
