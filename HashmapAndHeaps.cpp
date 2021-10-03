@@ -2201,7 +2201,190 @@ vector<double> medianSlidingWindow(vector<int> &nums, int k)
 }
 
 // 992. Subarrays with K Different Integers
+/*
+Approach: Time: O(n), Space: O(k)
+We cannot directly find exactly k distinct in O(n).
+But we can find at most k distinct using 2 pointers. 
+And count of exactly k distinct = count of at most k distinct - count of at most k - 1 distinct
+
+Eg: 
+[1,2,1,2,3], k = 2
+
+i = 0, j = 0, count = 0
+
+First iteration: i = 0, j = 0
+j = 0 -> freq: {1: 1}, count = 1
+j = 1 -> freq: {1: 1, 2: 1}, count = 1 + 2
+j = 2 -> freq: {1: 2, 2: 1}, count = 1 + 2 + 3
+j = 3 -> freq: {1: 2, 2: 2}, count = 1 + 2 + 3 + 4
+j = 4 -> freq: {1: 2, 2: 2, 3: 1}, Now freq.size() == 3 > 2, so , decrease the current element's frequency by 1
+    As, we will count it in the next iteration when it is actually needed, otherwise it is counted twice
+
+Then increase i, until freq.size() is 2 again. And so on...
+
+Do this once for k = 2, then k = 1, and then return the difference to get count of exactly k.
+*/
+int atMostKDistinct(vector<int> &nums, int k)
+{
+    int i = 0, count = 0;
+    unordered_map<int, int> freq;
+
+    for (int j = 0; j < nums.size(); j++)
+    {
+        // include current element
+        freq[nums[j]]++;
+
+        // after including, if distinct count > k, then start exlcuding from left
+        while (freq.size() > k)
+        {
+            freq[nums[i]]--;
+
+            if (freq[nums[i]] == 0)
+                freq.erase(nums[i]);
+
+            i++;
+        }
+
+        // now include the count of subarrays with start = i, end = j
+        count += j - i + 1;
+    }
+
+    return count;
+}
 int subarraysWithKDistinct(vector<int> &nums, int k)
+{
+    return atMostKDistinct(nums, k) - atMostKDistinct(nums, k - 1);
+}
+
+// 1248. Count Number of Nice Subarrays
+/*
+Approach: Time: O(n), Space: O(1)
+Same as previous question (992. Subarrays with K Different Integers)
+We dont a need a map since we only need a odd count
+*/
+int atMostKOdd(vector<int> &nums, int k)
+{
+    int i = 0, count = 0;
+    int oddCount = 0;
+
+    for (int j = 0; j < nums.size(); j++)
+    {
+        // include current element
+        if (nums[j] % 2 != 0)
+            oddCount++;
+
+        // after including, if odd count > k, then start exlcuding from left
+        while (oddCount > k)
+        {
+            if (nums[i] % 2 != 0)
+                oddCount--;
+
+            i++;
+        }
+
+        // now include the count of subarrays with start = i, end = j
+        count += j - i + 1;
+    }
+
+    return count;
+}
+int numberOfSubarrays(vector<int> &nums, int k)
+{
+    return atMostKOdd(nums, k) - atMostKOdd(nums, k - 1);
+}
+
+// 1358. Number of Substrings Containing All Three Characters
+/*
+Approach: O(n)
+Same as k distinct
+
+*/
+int atMostKDistinct(string &s, int k)
+{
+    int i = 0, count = 0;
+    unordered_map<char, int> freq;
+
+    for (int j = 0; j < s.size(); j++)
+    {
+        // include current element
+        freq[s[j]]++;
+
+        // after including, if distinct count > k, then start exlcuding from left
+        while (freq.size() > k)
+        {
+            freq[s[i]]--;
+
+            if (freq[s[i]] == 0)
+                freq.erase(s[i]);
+
+            i++;
+        }
+
+        // now include the count of subarrays with start = i, end = j
+        count += j - i + 1;
+    }
+
+    return count;
+}
+int numberOfSubstrings(string s)
+{
+    return atMostKDistinct(s, 3) - atMostKDistinct(s, 2);
+}
+
+// 904. Fruit Into Baskets
+/*
+Approach: O(n)
+We need to find the max length subarray with distinct at most 2
+Same approach as at most k distinct 
+Just instead of count we keep the max length
+*/
+int totalFruit(vector<int> &fruits)
+{
+    int maxLen = 0;
+    unordered_map<int, int> freq;
+
+    int i = 0;
+    for (int j = 0; j < fruits.size(); j++)
+    {
+        // add current element's frequency
+        freq[fruits[j]]++;
+
+        // while distinct element count > 2
+        while (freq.size() > 2)
+        {
+            freq[fruits[i]]--;
+
+            if (freq[fruits[i]] == 0)
+                freq.erase(fruits[i]);
+
+            i++;
+        }
+
+        // update max length
+        maxLen = max(maxLen, j - i + 1);
+    }
+
+    return maxLen;
+}
+
+// 1234. Replace the Substring for Balanced String
+/*
+Approach: O(n)
+We find the min length substring, so that in the remaining string
+no character has frequency > n / 4
+This means that by changing the characters in the chosen substring 
+we can make the frequency of each character n / 4
+
+eg: "WWEQERQWQWWRWWERQWEQ", answer = 4
+Here total length = 20
+So, each character should have freq = 20 / 4 = 5
+Frequency of each character = W: 8, Q: 5, R: 3, E: 4
+So, if we choose the substring WQWW (index 7 to 10)
+Because this is the shortest subtring after removing which every character will have frequency <= n / 4
+So, by changing the characters in this substring, we can correct the frequency for the remaining characters
+Like, here we need 2 R, 1 E, and we 3 extra W. So, we can make it RQRE. Now each character will have n / 4 frequecy.
+*/
+int balancedString(string s)
 {
     
 }
