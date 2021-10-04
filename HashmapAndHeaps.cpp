@@ -2386,7 +2386,33 @@ Like, here we need 2 R, 1 E, and we 3 extra W. So, we can make it RQRE. Now each
 */
 int balancedString(string s)
 {
-    
+    int n = s.size();
+
+    unordered_map<char, int> freq;
+    int minLen = n;
+
+    for (char ch : s)
+    {
+        freq[ch]++;
+    }
+
+    if (freq['W'] == n / 4 && freq['R'] == n / 4 && freq['Q'] == n / 4 && freq['E'] == n / 4)
+        return 0;
+
+    int i = 0;
+    for (int j = 0; j < n; j++)
+    {
+        freq[s[j]]--;
+
+        while (i <= j && freq['W'] <= n / 4 && freq['R'] <= n / 4 && freq['Q'] <= n / 4 && freq['E'] <= n / 4)
+        {
+            minLen = min(minLen, j - i + 1);
+            freq[s[i]]++;
+            i++;
+        }
+    }
+
+    return minLen;
 }
 
 // 209. Minimum Size Subarray Sum
@@ -2401,24 +2427,89 @@ int minSubArrayLen(int target, vector<int> &nums)
 {
     int n = nums.size();
 
-    int i = 0, j = 0, currSum = 0, minLen = INT_MAX;
-    while (j < n)
-    {
-        if (currSum < target)
-        {
-            currSum += nums[j];
-            j++;
-        }
+    int i = 0, minLen = n + 1, currSum = 0;
 
-        while (i < j && currSum >= target)
+    for (int j = 0; j < n; j++)
+    {
+        currSum += nums[j];
+
+        while (currSum >= target)
         {
-            minLen = min(minLen, j - i);
+            minLen = min(minLen, j - i + 1);
+
             currSum -= nums[i];
             i++;
         }
     }
 
-    return minLen == INT_MAX ? 0 : minLen;
+    return minLen <= n ? minLen : 0;
+}
+
+// 862. Shortest Subarray with Sum at Least K
+/*
+Wrong Approach: 2 Pointers
+We cannot use 2 pointer approach here as -ve numbers are also present
+Eg: [84,-37,32,40,95], K = 167
+Here i = 0, j = 4, sum = 214
+So, you increase i to 1 and sum = 130
+Now i wont increase, but we should increase i as increasing it will increase the sum
+because it will be 130 - (-37)
+So, because of negative numbers 2 pointer approach cannot be used.
+
+Correct Approach: O(n), Monotonic queue
+In the normal 2 pointer approach, we increase the end pointer(j) until sum < k
+Then when sum becomes >= k, we increase the start pointer to find the minimum range
+We can do this in case of positive numbers as we know on increasing the start the sum
+will decrease. But with -ve numbers sum may increase as well.
+
+So, we maintain a monotonic queue of start points
+In this queue we have a order of start points on in increasing order of sum b/w [start, current end]
+So, now for the current end, while the sum b/w [current end, start at front of queue] >= k
+We move to the next start which is the next element in queue.
+So, just pop_front until sum is >= k, this way we shorten the current range
+Since we are maintaining a queue in which the sum of next start point is definitely smaller than previous one
+So, now the 2 pointer approach logic works.
+Now to maintain the monotonic queue before pushing current index to its end
+pop_back until the sum in range [start, current back] > current sum
+
+Also, we maintain a prefix sum so that we can find the sum in range [start, end] in O(1) time
+No need to take seperate prefixSum array. Just modify the given array.
+
+*/
+int shortestSubarray(vector<int> &nums, int k)
+{
+    int n = nums.size();
+
+    int res = n + 1;
+    deque<int> que;
+    que.push_back(0);
+
+    for (int j = 0; j < n; j++)
+    {
+        // find prefix sum for current index
+        if (j > 0)
+            nums[j] += nums[j - 1];
+
+        // if the current sum >= k, then update the result
+        if (nums[j] >= k)
+            res = min(res, j + 1);
+
+        // increase the start of range until sum b/w [start, end] >= k
+        while (que.size() > 0 && nums[j] - nums[que.front()] >= k)
+        {
+            res = min(res, j - que.front());
+            que.pop_front();
+        }
+
+        // remove all elements from end of queue that are > current element to maintain increasing queue
+        while (que.size() > 0 && nums[que.back()] >= nums[j])
+            que.pop_back();
+
+        // push current element into queue
+        que.push_back(j);
+    }
+
+    return res == n + 1 ? -1 : res;
 }
 
 // 706. Design HashMap
