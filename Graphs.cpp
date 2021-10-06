@@ -3869,6 +3869,90 @@ int networkDelayTime(vector<vector<int>> &times, int n, int k)
     return res;
 }
 
+// Web of Lies (https://codeforces.com/problemset/problem/1548/A)
+/*
+Approach: 
+Preprocess: O(n)
+Query: O(1)
+
+Consider it as a directed graph with edges going from smaller to larger node
+Every node with zero outdegree is safe as it has no neighbor greater than itself
+So, from the given edges just count the outdegree of each node.
+Then every node with zero outdegree is safe.
+
+For Query 1, Add an edge
+The question says that the edge will not be present before
+So, if the outdegree of the min(u, v) for the new edge is 0, then it was safe
+But it has a > neighbor now, so decrease safe nodes
+
+For Query 2, Remove an edge
+The question says that the edge will be present
+So, if the outdegree of the min(u, v) for that edge is 1, then it was not safe
+But its neighbor got removed so it is safe now
+
+For Query 3, 
+Just print the safe nodes count
+*/
+void webOfLies()
+{
+    int n, m;
+    cin >> n >> m;
+
+    vector<int> outdegree(n);
+    int safeNodes = 0;
+
+    for (int i = 0; i < m; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+
+        // increase outdegree of smaller node
+        outdegree[min(u, v)]++;
+    }
+
+    // count number of safe nodes
+    for (int deg : outdegree)
+        if (deg == 0)
+            safeNodes++;
+
+    int q;
+    cin >> q;
+
+    while (q--)
+    {
+        int query;
+        cin >> query;
+
+        // add edge
+        if (query == 1)
+        {
+            int u, v;
+            cin >> u >> v;
+
+            if (outdegree[min(u, v)] == 0)
+                safeNodes--;
+
+            outdegree[min(u, v)]++;
+        }
+        // remove edge
+        else if (query == 2)
+        {
+            int u, v;
+            cin >> u >> v;
+
+            if (outdegree[min(u, v)] == 1)
+                safeNodes++;
+
+            outdegree[min(u, v)]--;
+        }
+        // print safe node count
+        else
+        {
+            cout << safeNodes << "\n";
+        }
+    }
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
