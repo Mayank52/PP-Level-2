@@ -4420,23 +4420,85 @@ int maxResult(vector<int> &nums, int k)
     que.push_back(n - 1);
 
     for (int i = n - 2; i >= 0; i--)
-    {   
+    {
         // pop front until front element is out of current window
         while (que.size() > 0 && que.front() > i + k)
             que.pop_front();
-        
+
         // now front gives the max of current window
-        dp[i] = dp[que.front()] + nums[i];        
-        
+        dp[i] = dp[que.front()] + nums[i];
+
         // now remove last element until it is less than current element
-        while(que.size() > 0 && dp[que.back()] < dp[i])
+        while (que.size() > 0 && dp[que.back()] < dp[i])
             que.pop_back();
 
         // add current element
         que.push_back(i);
     }
-    
+
     return dp[0];
+}
+
+// 1755. Closest Subsequence Sum
+/*
+Approach: Time: O(n*2^(n/2)), Space: O(2^(n/2))
+If we just brute force and generate all sums of subsequences of the original array,
+the time complexity would be O(2^n) which is too slow for n=40.
+Instead we can break the array in half and generate all possible sums of each half. 
+For each possible sum of the 1st half, we binary seach for the sum in the 2nd half 
+that gives the closest value to goal.
+
+While searching (goal - value of first half), in second half:
+1. If you find the exact value then difference is 0, so just return 0
+2. Else find the difference with both the just greater value and just smaller value.
+*/
+void subsetSum(vector<int> &nums, int si, int ei, int currSum, vector<int> &subsets)
+{
+    if (si == ei)
+    {
+        subsets.push_back(currSum);
+        return;
+    }
+
+    subsetSum(nums, si + 1, ei, currSum + nums[si], subsets);
+    subsetSum(nums, si + 1, ei, currSum, subsets);
+}
+int minAbsDifference(vector<int> &nums, int goal)
+{
+    int n = nums.size();
+
+    vector<int> left, right;
+
+    subsetSum(nums, 0, n / 2, 0, left); // all possible sums of first half
+    subsetSum(nums, n / 2, n, 0, right); // all possible sums of second half
+
+    // sort the second half
+    sort(right.begin(), right.end());
+
+    int res = INT_MAX;
+
+    // for every sum in first half
+    for (int val1 : left)
+    {   
+        // binary search it in second half
+        int idx = lower_bound(right.begin(), right.end(), goal - val1) - right.begin();
+
+        // update the answer with just difference b/w just greater value        
+        if (idx < right.size())
+        {
+            // if exact value, then return 0
+            if (right[idx] == goal - val1)
+                return 0;
+
+            res = min(res, abs(goal - (val1 + right[idx])));
+        }
+        
+        // update the answer with just difference b/w just smaller value  
+        if (idx - 1 >= 0)
+            res = min(res, abs(goal - (val1 + right[idx - 1])));
+    }
+
+    return res;
 }
 
 // Extra========================================================================================
