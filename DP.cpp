@@ -4439,6 +4439,8 @@ int maxResult(vector<int> &nums, int k)
     return dp[0];
 }
 
+// Extra========================================================================================
+
 // 1755. Closest Subsequence Sum
 /*
 Approach: Time: O(n*2^(n/2)), Space: O(2^(n/2))
@@ -4572,7 +4574,48 @@ int countSquares(vector<vector<int>> &matrix)
     return res;
 }
 
-// Extra========================================================================================
+// 1395. Count Number of Teams
+/*
+Approach 1: O(n^2)
+For each element find count of 
+1. smaller elements on left
+2. smaller elements on right
+3. greater elements on left
+4. greater elements on right
+
+Then the count for current element of [a,b,c] where a > b > c OR a < b < c
+= leftSmaller*rightGreater(for increasing)  + rightSmaller*leftGreater(for decreasing)
+
+Approach 2: O(nlogn), Using BST or Fenwick Tree or similar approaches
+
+*/
+// Approach 1: O(n^2)
+int numTeams(vector<int> &rating)
+{
+    int n = rating.size();
+
+    int res = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        int leftGreater = 0, rightGreater = 0;
+        int leftSmaller = 0, rightSmaller = 0;
+
+        for (int j = 0; j < n; j++)
+        {
+            if (rating[j] > rating[i])
+                (i < j) ? leftGreater++ : rightGreater++;
+            if (rating[j] < rating[i])
+                (i < j) ? leftSmaller++ : rightSmaller++;
+        }
+
+        res += leftGreater * rightSmaller + leftSmaller * rightGreater;
+    }
+
+    return res;
+}
+
+
 
 // Not a subset sum (https://practice.geeksforgeeks.org/problems/smallest-number-subset1220/1)
 /*

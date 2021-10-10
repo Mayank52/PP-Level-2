@@ -835,6 +835,89 @@ void kthZero()
     }
 }
 
+// 136. Single Number
+/*
+Approach 1: O(n)
+Using XOR
+
+Approach 2: O(nlogn), Binary Search
+If in this array every number duplicate number was present adjacent to each other
+Eg: 2 2 3 3 4 4 7 7 5 5 1 6 6
+
+Here every element that is present twice is adjacent.
+In this case we can use binary search.
+
+Array: 2 2 3 3 4 4 7 7 5 5 1  6  6
+Index: 0 1 2 3 4 5 6 7 8 9 10 11 12
+If we look at the array now, the single element divides the array into 2 parts:
+1. Left part: Here if an element is present at odd index, then its duplicate is at its previous index.
+                And if it is at even index, then duplicate is at next index
+2. Right part: Here it is reverse of left side
+        Here if the element is present at odd index, then duplicate is at its next index
+        And for even index, duplicate is at previous index
+
+So, we start our binary search with
+lo = 0, hi = n - 1
+mid = (lo + hi) / 2
+
+Now for the mid element we check the above condition to check which region we are in
+If mid is in left side, then we update lo = mid + 1, to go to right side, and 
+if mid is right side, then update hi = mid - 1, to go to left side
+This way, when lo==hi, then mid element is the single element
+
+Also, this same approach works if every element is duplicate, and one is 3 times
+Because it is the same case, we can consider 2 out of 3 copies of that element as different elements
+
+Using this approach when duplicates are not adjacent is O(nlogn) as will have to sort to bring them 
+adjacent first or bring them adjacent some other way.
+Then binary search is just O(logn)
+
+However this approach is O(logn) so it will be better than XOR sum if elements are adjacent from starting.
+*/
+int singleNumber(vector<int> &nums)
+{
+    int n = nums.size();
+
+    sort(nums.begin(), nums.end());
+
+    if (n > 1 && nums[0] != nums[1])
+        return nums[0];
+    if (n > 1 && nums[n - 1] != nums[n - 2])
+        return nums[n - 1];
+
+    int lo = 1, hi = n - 2;
+
+    while (lo <= hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+
+        if (lo == hi)
+            return nums[mid];
+        // mid is odd
+        else if (mid % 2 != 0)
+        {
+            // go to right side
+            if (nums[mid] == nums[mid - 1])
+                lo = mid + 1;
+            // go to left side
+            else
+                hi = mid - 1;
+        }
+        // mid even
+        else
+        {
+            // go to right side
+            if (nums[mid] == nums[mid + 1])
+                lo = mid + 1;
+            // go to left side
+            else
+                hi = mid - 1;
+        }
+    }
+
+    return -1;
+}
+
 // Sorting=================================================================================================
 
 // 912. Sort an Array (Merge Sort)
