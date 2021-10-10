@@ -587,7 +587,7 @@ int minimumMountainRemovals(vector<int> &nums)
 Approach: O(n)
 Keep 2 counts: 
 1. Number of ways to paint 2 fences with same color
-2. Number of ways to paint 2 fences with different color
+2. Number of ways to paint 2 fences with different colkor
 
 Number of ways to paint current fence:
 1. Same as last fence: ways to paint last fence different color than its previous fence
@@ -4469,7 +4469,7 @@ int minAbsDifference(vector<int> &nums, int goal)
 
     vector<int> left, right;
 
-    subsetSum(nums, 0, n / 2, 0, left); // all possible sums of first half
+    subsetSum(nums, 0, n / 2, 0, left);  // all possible sums of first half
     subsetSum(nums, n / 2, n, 0, right); // all possible sums of second half
 
     // sort the second half
@@ -4479,11 +4479,11 @@ int minAbsDifference(vector<int> &nums, int goal)
 
     // for every sum in first half
     for (int val1 : left)
-    {   
+    {
         // binary search it in second half
         int idx = lower_bound(right.begin(), right.end(), goal - val1) - right.begin();
 
-        // update the answer with just difference b/w just greater value        
+        // update the answer with just difference b/w just greater value
         if (idx < right.size())
         {
             // if exact value, then return 0
@@ -4492,10 +4492,81 @@ int minAbsDifference(vector<int> &nums, int goal)
 
             res = min(res, abs(goal - (val1 + right[idx])));
         }
-        
-        // update the answer with just difference b/w just smaller value  
+
+        // update the answer with just difference b/w just smaller value
         if (idx - 1 >= 0)
             res = min(res, abs(goal - (val1 + right[idx - 1])));
+    }
+
+    return res;
+}
+
+// 221. Maximal Square
+/*
+Approach: O(mn)
+Each i,j stores the side of largest square with that index at its bottom right corner
+So, the side of largest square for i, j = min((i-1,j-1), (i-1,j), (i,j-1))
+From these 3 cells we can find the max length of square with i,j as bottom right corner
+*/
+int maximalSquare(vector<vector<char>> &matrix)
+{
+    int n = matrix.size(), m = matrix[0].size();
+
+    vector<vector<int>> dp(n, vector<int>(m));
+    int res = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            if (i == 0 || j == 0)
+                dp[i][j] = matrix[i][j] - '0';
+            else if (matrix[i][j] == '1')
+                dp[i][j] = min({dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]}) + 1;
+
+            // update the max area
+            res = max(res, dp[i][j] * dp[i][j]);
+        }
+    }
+
+    return res;
+}
+
+// 1277. Count Square Submatrices with All Ones
+/*
+Approach: O(mn)
+Same approach as maximal square.
+We can use the matrix itself as DP.
+And every cell stores the max length of square with that cell as bottom right corner
+Then the number of squares with that corner is also equal to that length
+Eg: 
+1 1 1
+1 1 1
+1 1 1
+
+So, for {2,2}, we have 3 squares with that index as bottom right corner
+As from {2,2} you have max length 3, so you have 3 squares of length 1,2,3
+
+In this way each index stores count of squares with that corner
+And their sum gives total count
+*/
+int countSquares(vector<vector<int>> &matrix)
+{
+    int n = matrix.size(), m = matrix[0].size();
+
+    int res = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            // update length of max square
+            if (matrix[i][j] == 1 && i > 0 && j > 0)
+                matrix[i][j] = min({matrix[i - 1][j - 1], matrix[i - 1][j], matrix[i][j - 1]}) + 1;
+
+            // add the count
+            res += matrix[i][j];
+        }
     }
 
     return res;
