@@ -1932,6 +1932,111 @@ int minCost(int n, vector<int> &cuts)
     return dp[0][k - 1];
 }
 
+// 1130. Minimum Cost Tree From Leaf Values
+/*
+https://leetcode.com/problems/minimum-cost-tree-from-leaf-values/discuss/478708/RZ-Summary-of-all-the-solutions-I-have-learned-from-Discuss-in-Python
+Approach 1: DP, O(n^3)
+
+
+Approach 2: Greedy, O(n^2)
+
+Approach 3: Monotonic Stack, O(n)
+*/
+// Approach 1: DP, O(n^3)
+// Memoization
+int getMax(vector<int> &arr, int left, int right)
+{
+    int maxVal = INT_MIN;
+
+    for (int i = left; i <= right; i++)
+        maxVal = max(maxVal, arr[i]);
+
+    return maxVal;
+}
+int getMinCost(vector<int> &arr, int left, int right, vector<vector<int>> &dp)
+{
+    if (left >= right)
+        return 0;
+
+    if (dp[left][right] != -1)
+        return dp[left][right];
+
+    int minCost = INT_MAX;
+
+    for (int i = left; i < right; i++)
+    {
+        int myCost = getMax(arr, left, i) * getMax(arr, i + 1, right);
+        int leftCost = getMinCost(arr, left, i, dp);
+        int rightCost = getMinCost(arr, i + 1, right, dp);
+
+        minCost = min(minCost, leftCost + myCost + rightCost);
+    }
+
+    return dp[left][right] = minCost;
+}
+int mctFromLeafValues(vector<int> &arr)
+{
+    int n = arr.size();
+
+    vector<vector<int>> dp(n, vector<int>(n, -1));
+
+    return getMinCost(arr, 0, n - 1, dp);
+}
+// Iterative
+int mctFromLeafValues(vector<int> &arr)
+{
+    int n = arr.size();
+
+    vector<vector<int>> dp(n, vector<int>(n));
+
+    for (int gap = 1; gap < n; gap++)
+    {
+        for (int left = 0, right = gap; right < n; left++, right++)
+        {
+            int minCost = INT_MAX;
+
+            for (int i = left; i < right; i++)
+            {
+                int myCost = getMax(arr, left, i) * getMax(arr, i + 1, right);
+                int leftCost = dp[left][i];
+                int rightCost = dp[i + 1][right];
+
+                minCost = min(minCost, leftCost + myCost + rightCost);
+            }
+
+            dp[left][right] = minCost;
+        }
+    }
+
+    return dp[0][n - 1];
+}
+// Approach 2: Greedy, O(n^2)
+int mctFromLeafValues(vector<int> &arr)
+{
+    int res = 0;
+
+    while (arr.size() > 1)
+    {
+        // find the min value index
+        int minIdx = min_element(arr.begin(), arr.end()) - arr.begin();
+
+        // from its two neighbors, use the smaller one
+        if (minIdx > 0 && minIdx < arr.size() - 1)
+            res += arr[minIdx] * min(arr[minIdx - 1], arr[minIdx + 1]);
+        else
+            res += arr[minIdx] * (minIdx == 0 ? arr[minIdx + 1] : arr[minIdx - 1]);
+
+        // remove the minIdx element from array
+        arr.erase(arr.begin() + minIdx);
+    }
+
+    return res;
+}
+// Approach 3: Monotonic Stack,O(n)
+int mctFromLeafValues(vector<int> &arr)
+{
+}
+
 // Strings====================================================================================================
 
 // 1143. Longest Common Subsequence
@@ -4614,8 +4719,6 @@ int numTeams(vector<int> &rating)
 
     return res;
 }
-
-
 
 // Not a subset sum (https://practice.geeksforgeeks.org/problems/smallest-number-subset1220/1)
 /*

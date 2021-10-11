@@ -880,6 +880,9 @@ int singleNumber(vector<int> &nums)
 
     sort(nums.begin(), nums.end());
 
+    // base cases, as we start lo = 1, hi = n - 2 to avoid conditions in while loop
+    if (n == 1)
+        return nums[0];
     if (n > 1 && nums[0] != nums[1])
         return nums[0];
     if (n > 1 && nums[n - 1] != nums[n - 2])
@@ -891,26 +894,20 @@ int singleNumber(vector<int> &nums)
     {
         int mid = lo + (hi - lo) / 2;
 
-        if (lo == hi)
+        if (nums[mid] != nums[mid - 1] && nums[mid] != nums[mid + 1])
             return nums[mid];
-        // mid is odd
-        else if (mid % 2 != 0)
+        else if (mid % 2 != 0) // mid is odd
         {
-            // go to right side
-            if (nums[mid] == nums[mid - 1])
+            if (nums[mid] == nums[mid - 1]) // move to right side
                 lo = mid + 1;
-            // go to left side
-            else
+            else // move to left side
                 hi = mid - 1;
         }
-        // mid even
-        else
+        else // mid even
         {
-            // go to right side
-            if (nums[mid] == nums[mid + 1])
+            if (nums[mid] == nums[mid + 1]) // move to right side
                 lo = mid + 1;
-            // go to left side
-            else
+            else // move to left side
                 hi = mid - 1;
         }
     }
