@@ -1936,24 +1936,44 @@ int minCost(int n, vector<int> &cuts)
 /*
 https://leetcode.com/problems/minimum-cost-tree-from-leaf-values/discuss/478708/RZ-Summary-of-all-the-solutions-I-have-learned-from-Discuss-in-Python
 Approach 1: DP, O(n^3)
-
+This is the brute force.
+For the current array, we make each index the pivot and divide the array into left and right parts.
+Now the current node would be = max element if left part * max element in right part
+And then make the call for the left and right parts.
+This way at each step we divide the array into two halves and choose the pivot that gives the minimum cost.
+The complexity of this would be O(n^4) as O(n^3) for the cut based DP and we find the max
+in left and right of cut for every cut.
+We can find the max for any range (i, j) in O(1) if we preprocess and keep a maxArray[i][j] for 
+every range in O(n^2) time. And then overall complexity is O(n^3).
 
 Approach 2: Greedy, O(n^2)
+Above approach is kind of like brute force since we calculate and compare the results all possible pivots.
+To achieve a better time complexity, one important observation is that when we build each level of the binary tree, 
+it is the max left leaf node and max right lead node that are being used, 
+so we would like to put big leaf nodes close to the root. As if you put them farther away, then they will 
+add up on each level. So, we need to keep the greater values closer to the root.
+Otherwise, taking the leaf node with max value in the array as an example, 
+if its level is deep, for each level above it, its value will be used to calculate the non-leaf node value, 
+which will result in a big total sum.
+
+With above observation, the greedy approach is to find the smallest value in the array, 
+use it and its smaller neighbor to build a non-leaf node, 
+then we can safely delete it from the array since it has a smaller value than its neightbor so it will never be used again. 
+Repeat this process until there is only one node left in the array (which means we cannot build a new level any more)
 
 Approach 3: Monotonic Stack, O(n)
+This approach is similar to greater element on right and maximum area under histogram.
+We keep a strictly decreasing stack.
+So, for the current element we resolve the top of stack until it is <= current element.
+So, for that top its neighbor on right is current element and its neighbor on left is the element
+just below it in the stack. So, the top element is min element that we found in greedy. Then 
+we find its cost with smaller of its two neighbors i.e. current element and element below it in stack.
+In this way keeping a decreasing stack we can find the answer in O(n).
+
 */
 // Approach 1: DP, O(n^3)
 // Memoization
-int getMax(vector<int> &arr, int left, int right)
-{
-    int maxVal = INT_MIN;
-
-    for (int i = left; i <= right; i++)
-        maxVal = max(maxVal, arr[i]);
-
-    return maxVal;
-}
-int getMinCost(vector<int> &arr, int left, int right, vector<vector<int>> &dp)
+int getMinCost(vector<int> &arr, int left, int right, vector<vector<int>> &dp, vector<vector<int>> &maxInRange)
 {
     if (left >= right)
         return 0;
@@ -1963,11 +1983,12 @@ int getMinCost(vector<int> &arr, int left, int right, vector<vector<int>> &dp)
 
     int minCost = INT_MAX;
 
+    // make a cut at each index in current range and find the min cost
     for (int i = left; i < right; i++)
     {
-        int myCost = getMax(arr, left, i) * getMax(arr, i + 1, right);
-        int leftCost = getMinCost(arr, left, i, dp);
-        int rightCost = getMinCost(arr, i + 1, right, dp);
+        int myCost = maxInRange[left][i] * maxInRange[i + 1][right];
+        int leftCost = getMinCost(arr, left, i, dp, maxInRange);
+        int rightCost = getMinCost(arr, i + 1, right, dp, maxInRange);
 
         minCost = min(minCost, leftCost + myCost + rightCost);
     }
@@ -1979,8 +2000,19 @@ int mctFromLeafValues(vector<int> &arr)
     int n = arr.size();
 
     vector<vector<int>> dp(n, vector<int>(n, -1));
+    vector<vector<int>> maxInRange(n, vector<int>(n));
 
-    return getMinCost(arr, 0, n - 1, dp);
+    // calculate the max in range for every (i,j)
+    for (int i = 0; i < n; i++)
+    {
+        maxInRange[i][i] = arr[i];
+        for (int j = i + 1; j < n; j++)
+        {
+            maxInRange[i][j] = max(maxInRange[i][j - 1], arr[j]);
+        }
+    }
+
+    return getMinCost(arr, 0, n - 1, dp, maxInRange);
 }
 // Iterative
 int mctFromLeafValues(vector<int> &arr)
@@ -1988,6 +2020,17 @@ int mctFromLeafValues(vector<int> &arr)
     int n = arr.size();
 
     vector<vector<int>> dp(n, vector<int>(n));
+    vector<vector<int>> maxInRange(n, vector<int>(n));
+
+    // calculate the max in range for every (i,j)
+    for (int i = 0; i < n; i++)
+    {
+        maxInRange[i][i] = arr[i];
+        for (int j = i + 1; j < n; j++)
+        {
+            maxInRange[i][j] = max(maxInRange[i][j - 1], arr[j]);
+        }
+    }
 
     for (int gap = 1; gap < n; gap++)
     {
@@ -1995,9 +2038,10 @@ int mctFromLeafValues(vector<int> &arr)
         {
             int minCost = INT_MAX;
 
+            // make a cut at each index in current range and find the min cost
             for (int i = left; i < right; i++)
             {
-                int myCost = getMax(arr, left, i) * getMax(arr, i + 1, right);
+                int myCost = maxInRange[left][i] * maxInRange[i + 1][right];
                 int leftCost = dp[left][i];
                 int rightCost = dp[i + 1][right];
 
@@ -2035,6 +2079,34 @@ int mctFromLeafValues(vector<int> &arr)
 // Approach 3: Monotonic Stack,O(n)
 int mctFromLeafValues(vector<int> &arr)
 {
+    stack<int> st;
+    st.push(-1);
+
+    int res = 0;
+
+    for (int i = 0; i < arr.size(); i++)
+    {
+        while (st.top() != -1 && arr[st.top()] < arr[i])
+        {
+            int mid = st.top();
+            st.pop();
+
+            res += st.top() == -1 ? arr[mid] * arr[i] : arr[mid] * min(arr[st.top()], arr[i]);
+        }
+
+        st.push(i);
+    }
+
+    while (st.top() != -1)
+    {
+        int mid = st.top();
+        st.pop();
+
+        if (st.top() != -1)
+            res += arr[mid] * arr[st.top()];
+    }
+
+    return res;
 }
 
 // Strings====================================================================================================
@@ -4826,6 +4898,51 @@ int countVowelStrings(int n)
     vector<vector<int>> dp(n + 1, vector<int>(5, -1));
     // return countVowelStrings_(n, 0, dp);
     return countVowelStrings_dp(n);
+}
+
+// 118. Pascal's Triangle
+/*
+Approach: O(n^2)
+Just find the values for current row using previous row
+and do this for every row
+*/
+vector<vector<int>> generate(int numRows)
+{
+    vector<vector<int>> triangle(numRows);
+    triangle[0].push_back(1);
+
+    for (int i = 1; i < numRows; i++)
+    {
+        triangle[i].push_back(1);
+
+        for (int j = 1; j < triangle[i - 1].size(); j++)
+            triangle[i].push_back(triangle[i - 1][j - 1] + triangle[i - 1][j]);
+
+        triangle[i].push_back(1);
+    }
+
+    return triangle;
+}
+
+// 119. Pascal's Triangle II
+/*
+Approach: Time: O(n^2), Space: O(n)
+For the current we can make changes in the previous row array itself
+Just start adding from the end.
+This way you wont lose any values of previous row until you have used them.
+*/
+vector<int> getRow(int rowIndex)
+{
+    vector<int> currRow(rowIndex + 1);
+    currRow[0] = 1;
+
+    for (int i = 1; i <= rowIndex; i++)
+    {
+        for (int j = i; j > 0; j--)
+            currRow[j] = currRow[j] + currRow[j - 1];
+    }
+
+    return currRow;
 }
 
 int main()
