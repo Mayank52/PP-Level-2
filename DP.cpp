@@ -2709,6 +2709,91 @@ int numDistinct(string s, string t)
     return dp[n][m];
 }
 
+// 940. Distinct Subsequences II
+/*
+Approach: O(n)
+Eg:
+abca
+So, suppose we have all the subsequences of ca = a,c,ca
+Now for b, we will have all the previous subsequences + we put b infront of all of them
+So total = 2 * subsequences of ca
+
+Now for abca, a repeats so it will get double counts for every subsequence infront of which a was already added
+So, for eg: abacde
+So, the a at index 2 would have added itself infront of all subseq of cde
+Now for a at index 0, we have 2 * count(bacde) - count(cde) because those would already have been counted with previous a.
+Also, when the character occurs the first time, then count +1 for that single character
+Eg: for a at index 2, add 1 for 'a' subseq, and for every other a, we wont do +1 as then it will generate duplicates
+So, For an index i, the number of distinct subsequences =
+dp[i] = 2 * dp[i + 1] - dp[last position of ith char + 1]
+
+Also dp[i] only depends on i + 1, so just keep a variable with previous answer,
+and for dp[last position of ith char + 1], store it in the last position array itself
+*/
+// Approach 1: Time: O(n), Space: O(n)
+int distinctSubseqII(string s)
+{
+    int n = s.size();
+    long MOD = 1e9 + 7;
+
+    vector<int> dp(n + 1);
+    vector<int> prevPos(26, -1);
+
+    for (int i = n - 1; i >= 0; i--)
+    {
+        dp[i] = 2 * dp[i + 1];
+
+        if (prevPos[s[i] - 'a'] == -1) // first occurence
+            dp[i]++;
+        else // repeated occurences
+            dp[i] -= dp[prevPos[s[i] - 'a'] + 1];
+
+        // taking MOD
+        if (dp[i] < 0)
+            dp[i] += MOD;
+        else
+            dp[i] %= MOD;
+
+        // update last position of ith character
+        prevPos[s[i] - 'a'] = i;
+    }
+
+    return dp[0];
+}
+// Approach 1 with O(1) space
+int distinctSubseqII(string s)
+{
+    int n = s.size();
+    long MOD = 1e9 + 7;
+
+    int count = 0;
+    vector<int> prevPos(26, -1);
+
+    for (int i = n - 1; i >= 0; i--)
+    {
+        // save the ans for i + 1
+        int prevAns = count;
+
+        count = 2 * count;
+
+        if (prevPos[s[i] - 'a'] == -1) // first occurence
+            count++;
+        else // repeated occurences
+            count -= prevPos[s[i] - 'a'];
+
+        // taking MOD
+        if (count < 0)
+            count += MOD;
+        else
+            count %= MOD;
+
+        // the answer of i + 1 becomes the duplicate count for i which we need to remove in its next occurence
+        prevPos[s[i] - 'a'] = prevAns;
+    }
+
+    return count;
+}
+
 // 734 · Number of Subsequences of Form a^i b^j c^k (Lintcode)
 /*
 Approach: O(n)
