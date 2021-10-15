@@ -154,8 +154,72 @@ double findMedianSortedArrays(vector<int> &nums1, vector<int> &nums2)
 }
 
 // K-th element of two sorted Arrays  (https://practice.geeksforgeeks.org/problems/k-th-element-of-two-sorted-array1317/1)
+/*
+Brute Force: O(K)
+Same as merge two sorted arrays using 2 pointers.
+
+Best Approach: Binary Search, O(log(min(m,n)))
+Same as median of 2 sorted arrays.
+We take the smaller array as arr1 to get O(log(min(m,n)))
+Then we find the
+mid1 = lo + (hi - lo) / 2
+And mid2 = k - mid1
+This way we get k elements on left side and remaining on right side
+
+Now, if the condition:
+leftMax1 <= rightMin2 && leftMax2 <= rightMin1
+is satisfied then max(leftMax1, leftMax2) is the answer
+Else if leftMax1 > rightMin2 then we go to right side
+Else we go to left side
+
+Also, we take
+lo == max(0, k - m)
+Because if k = 7 and n = 4, m = 6
+Then even if we take the complete second array, we still need atleast 1 element
+from 1st array. So, the lo cannot start from 0.
+So, lo = max(0, k - m)
+Similarly hi = min(k, n)
+As if k = 3, n = 4, m = 6
+Then we can never get the 4th element of first array as answer.
+
+Edge Case: if the kth element of one array is the kth smallest element.
+Then the other array will contribute 0 elements to the left side
+So, check this in base case
+*/
 int kthElement(int arr1[], int arr2[], int n, int m, int k)
 {
+    // take the smaller array as arr1
+    if (n > m)
+        return kthElement(arr2, arr1, m, n, k);
+
+    // if kth element of 1st array is the answer
+    if (n >= k && arr1[k - 1] <= arr2[0])
+        return arr1[k - 1];
+    // if kth element of 2nd array is the answer
+    if (m >= k && arr2[k - 1] <= arr1[0])
+        return arr2[k - 1];
+
+    int lo = max(0, k - m), hi = min(k, n);
+
+    while (lo <= hi)
+    {
+        int mid1 = lo + (hi - lo) / 2;
+        int mid2 = k - mid1;
+
+        int leftMax1 = mid1 - 1 > 0 ? arr1[mid1 - 1] : INT_MIN;
+        int leftMax2 = mid2 - 1 > 0 ? arr2[mid2 - 1] : INT_MIN;
+        int rightMin1 = mid1 < n ? arr1[mid1] : INT_MAX;
+        int rightMin2 = mid2 < m ? arr2[mid2] : INT_MAX;
+
+        if (leftMax1 <= rightMin2 && leftMax2 <= rightMin1)
+            return max(leftMax1, leftMax2);
+        else if (leftMax1 > rightMin2)
+            hi = mid1 - 1;
+        else
+            lo = mid1 + 1;
+    }
+
+    return -1;
 }
 
 // 1283. Find the Smallest Divisor Given a Threshold
