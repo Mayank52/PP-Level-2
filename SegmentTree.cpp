@@ -3,6 +3,7 @@
 using namespace std;
 
 // Range Maximum Query with Node Update
+// (https://www.pepcoding.com/resources/data-structures-and-algorithms-in-java-interview-prep/segment-tree/max-in-a-interval-range-query-point-update-official/ojquestion)
 /*
 Approach: 
 Update: O(logn)
@@ -90,6 +91,85 @@ public:
         return query(1, 0, arr.size() - 1, l, r);
     }
 };
+
+// 307. Range Sum Query - Mutable
+class NumArray
+{
+private:
+    vector<int> tree;
+    vector<int> nums;
+
+    void buildTree(int nodeIdx, int lo, int hi)
+    {
+        if (lo == hi)
+        {
+            tree[nodeIdx] = nums[lo];
+            return;
+        }
+
+        int mid = lo + (hi - lo) / 2;
+
+        buildTree(2 * nodeIdx, lo, mid);
+        buildTree(2 * nodeIdx + 1, mid + 1, hi);
+
+        tree[nodeIdx] = tree[2 * nodeIdx] + tree[2 * nodeIdx + 1];
+    }
+
+    void update(int nodeIdx, int lo, int hi, int index, int val)
+    {
+        if (lo == hi)
+        {
+            tree[nodeIdx] = val;
+            nums[index] = val;
+            return;
+        }
+
+        int mid = lo + (hi - lo) / 2;
+
+        if (index > mid)
+            update(2 * nodeIdx + 1, mid + 1, hi, index, val);
+        else
+            update(2 * nodeIdx, lo, mid, index, val);
+        
+        tree[nodeIdx] = tree[2 * nodeIdx] + tree[2 * nodeIdx + 1];
+    }
+
+    int sumRange(int nodeIdx, int lo, int hi, int left, int right)
+    {
+        if (lo > right || hi < left)
+            return 0;
+
+        if (lo == hi || lo >= left && hi <= right)
+            return tree[nodeIdx];
+
+        int mid = lo + (hi - lo) / 2;
+
+        int leftSum = sumRange(2 * nodeIdx, lo, mid, left, right);
+        int rightSum = sumRange(2 * nodeIdx + 1, mid + 1, hi, left, right);
+
+        return leftSum + rightSum;
+    }
+    
+public:
+    NumArray(vector<int> &nums)
+    {
+        this->nums = nums;
+        this->tree.resize(4 * nums.size());
+        buildTree(1, 0, nums.size() - 1);
+    }
+
+    void update(int index, int val)
+    {
+        update(1, 0, this->nums.size() - 1, index, val);
+    }
+
+    int sumRange(int left, int right)
+    {
+        return sumRange(1, 0, this->nums.size() - 1, left, right);
+    }
+};
+
+
 
 int main()
 {
