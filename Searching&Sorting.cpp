@@ -1241,6 +1241,198 @@ void bucketSort(vector<double> &arr)
             arr[index++] = b[i][j];
 }
 
+// Misc=============================================================================
+// 729. My Calendar I
+/*
+Approach 1: O(n^2)
+Keep an array of intervals.
+For every new interval, check if it overlaps with any existing interval.
+This takes O(n) for each interval.
+
+Approach 2: O(nlogn)
+If we keep BST, then we can check if it overlaps in O(logn) and add in O(logn)
+So, just use a ordered_set, and using binary search to find the <= interval for 
+the current interval and check if the current interval overlaps with the next or previous 
+interval.
+For eg: 
+the lower bound gives the equal or just greater element
+So, like we searched [20,30], then we got [25,35]
+Then this [20,30] interval can overlap with the just greater if currEnd > nextStart
+OR, it can overlap with previous interval like [5,15] if currStart < prevEnd
+*/
+// Approach 1: O(n^2)
+class MyCalendar
+{
+public:
+    vector<pair<int, int>> intervals;
+    MyCalendar()
+    {
+    }
+
+    bool book(int start, int end)
+    {
+        int i = 0;
+
+        while (i < intervals.size())
+        {
+            if (intervals[i].first <= start && start < intervals[i].second ||
+                intervals[i].first < end && end < intervals[i].second ||
+                intervals[i].first >= start && intervals[i].second <= end)
+                return false;
+            else if (end <= intervals[i].first)
+            {
+                intervals.insert(intervals.begin() + i, {start, end});
+                return true;
+            }
+            else
+                i++;
+        }
+
+        intervals.push_back({start, end});
+
+        return true;
+    }
+};
+// Approach 2: O(nlogn)
+class MyCalendar
+{
+private:
+    set<pair<int, int>> intervals;
+
+public:
+    MyCalendar()
+    {
+    }
+
+    bool book(int start, int end)
+    {
+        auto itr = intervals.lower_bound({start, end});
+
+        // current interval does not overlap with next interval
+        if (itr != intervals.end() && itr->first < end)
+            return false;
+
+        // current interval does not overlap with previous interval
+        if (itr != intervals.begin())
+        {
+            itr--;
+            if (start < itr->second)
+                return false;
+        }
+
+        intervals.insert({start, end});
+
+        return true;
+    }
+};
+
+// 731. My Calendar II
+/*
+Wrong Approach: O(nlogn)
+We can keep 2 ordered sets: intervals, all overlaps that are double booked
+Now for current interval, check if it overlaps with any present overlaps
+If it is present, then that overlap is triple booked, so return false.
+Else find if it overlaps with any interval and add the overlap in the overlaps set
+as that overlap is now double booked. 
+But the current interval can overlap with more that just the previous and next interval.
+So, if we only check with those two, then overlap set wont have all the overlaps.
+Eg:
+Intervals: 42 61, 44 55, 58 73, 70 82, 60 70
+
+i = 1
+intervals: 42 61
+overlaps:
+
+i = 2
+intervals: 42 61, 44 55
+overlaps: 44 55
+
+i = 3
+intervals: 42 61, 44 55, 58 73
+overlaps: 44 55
+
+So, here we got 58, 73. The overlaps will be
+[58 61] with [42 61]
+But we will not check that because we are only checking with prev and next intervals
+So, the logn approach does not work.
+As the current interval can overlap with any interval before it
+Because their end time may be after the current interval 
+So, [58 61] wont be added to the overlaps.
+So, if that interval gets booked again then it will return true.
+
+i = 4
+intervals: 42 61, 44 55, 58 73, 70 82
+overlaps: 44 55, 70 73
+
+i = 5
+intervals: 42 61, 44 55, 58 73, 60, 70, 70 82
+overlaps: 44 55, 60, 70, 70 73
+
+As the [58 61] was not added so it got triple booked now.
+
+Correct Approach: O(n^2)
+
+
+
+
+*/
+// Wrong Approach
+class MyCalendarTwo
+{
+private:
+    set<pair<int, int>> intervals, overlaps;
+
+public:
+    MyCalendarTwo()
+    {
+    }
+
+    bool book(int start, int end)
+    {
+        //check if it overlaps with any doubly booked intervals
+        // then return false
+        auto itr = overlaps.lower_bound({start, end});
+
+        if (itr != overlaps.end() && itr->first < end)
+            return false;
+        if (itr != overlaps.begin())
+        {
+            itr--;
+            if (start < itr->second)
+                return false;
+        }
+
+        // check if it overlaps with any singly booked intervals,
+        // then add the intersection in the doubly booked intervals
+        auto itr = intervals.lower_bound({start, end});
+
+        if (itr != intervals.end() && itr->first < end)
+            overlaps.insert({max(start, itr->first), min(end, itr->second)});
+        if (itr != intervals.begin())
+        {
+            itr--;
+            if (start < itr->second)
+                overlaps.insert({max(start, itr->first), min(end, itr->second)});
+        }
+
+        intervals.insert({start, end});
+
+        return true;
+    }
+};
+// Correct Approach
+class MyCalendarTwo
+{
+public:
+    MyCalendarTwo()
+    {
+    }
+
+    bool book(int start, int end)
+    {
+    }
+};
+
 int main()
 {
     ios_base::sync_with_stdio(false);
