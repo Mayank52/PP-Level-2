@@ -3953,6 +3953,150 @@ void webOfLies()
     }
 }
 
+// Extra==========================================================================
+
+// 127. Word Ladder
+/*
+Eg:
+beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log","cog"]
+
+Approach 1: BFS, Time: O(n^2 * m), Space: O(n^2) 
+where, n = length of wordList, m = length of word
+Preprocess and make an adjacency list
+For every word, make an edge between that word and every other word which only
+differs by 1 character.
+So, we will use O(n^2) time to run the loop to find the similar words and 
+O(m) to compare them
+Like in above example, for we will have
+hot: dot, lot
+dot: hot, lot, dog
+dog: dot, log, cog
+and so on...
+
+Then just run a BFS and find the shortest path between beginWord, endWord
+
+Approach 2: BFS, Time: O(n * m^2), Space: O(n * m^2)
+Instead of running the O(n^2) loop, we can do the following
+hot can have the transformations: *ot, h*t, ho*
+So, make hashmap of {transformation: list of words with that transformation}
+Eg: In above example, we will have a hashmap:
+*ot: hot, dot, lot
+h*t: hot
+ho*: hot
+do*: dot, dog
+d*t: dot
+and so on ...
+
+And then use this to run the BFS
+
+Approach 3: Bidirectional BFS, Time: O(n * m^2), Space: O(n * m^2)
+We start a BFS from both the beginWord, and endWord.
+Then it will meet in the middle and the time compelxity will become half of the 
+normal BFS.
+
+*/
+// Approach 1
+bool isSimilar(string &word1, string &word2)
+{
+    if (word1.size() != word2.size())
+        return false;
+
+    bool flag = false;
+    for (int i = 0; i < word1.size(); i++)
+    {
+        if (word1[i] != word2[i])
+        {
+            if (!flag)
+                flag = true;
+            else
+                return false;
+        }
+    }
+
+    return true;
+}
+int ladderLength(string beginWord, string endWord, vector<string> &wordList)
+{
+    unordered_map<int, vector<int>> similarWords;
+    queue<int> que;
+    vector<bool> vis(wordList.size());
+    int count = 1;
+
+    for (int i = 0; i < wordList.size(); i++)
+    {
+        for (int j = i + 1; j < wordList.size(); j++)
+        {
+            if (isSimilar(wordList[i], wordList[j]))
+            {
+                similarWords[i].push_back(j);
+                similarWords[j].push_back(i);
+            }
+        }
+
+        if (wordList[i] == beginWord)
+            vis[i] = true;
+        else if (isSimilar(beginWord, wordList[i]))
+        {
+            que.push(i);
+            vis[i] = true;
+
+            if (wordList[i] == endWord)
+                return count + 1;
+        }
+    }
+
+    while (que.size() > 0)
+    {
+        int size = que.size();
+        count++;
+
+        while (size--)
+        {
+            int rIdx = que.front();
+            que.pop();
+
+            for (int idx : similarWords[rIdx])
+            {
+                if (wordList[idx] == endWord)
+                    return count + 1;
+
+                if (!vis[idx])
+                {
+                    que.push(idx);
+                    vis[idx] = true;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+// Approach 2
+int ladderLength(string beginWord, string endWord, vector<string> &wordList)
+{
+    unordered_map<string, vector<int>> graph;
+
+    for (int i = 0; i < wordList.size(); i++)
+    {
+        string &word = wordList[i];
+        for (int j = 0; j < wordList[i].size(); j++)
+        {
+            char ch = word[j];
+            word[j] = '*';
+            graph[word].push_back(i);
+            word[j] = ch;
+        }
+    }
+
+    queue<int> que;
+    for (int i = 0; i < beginWord.size(); i++)
+    {
+        char ch = beginWord[i];
+        beginWord[i] = '*';
+        graph[beginWord].push_back(i);
+        beginWord[i] = ch;
+    }
+}
 int main()
 {
     ios_base::sync_with_stdio(false);
