@@ -1041,6 +1041,99 @@ public:
     }
 };
 
+// Extra=======================================================================
+
+// 1047. Remove All Adjacent Duplicates In String
+/*
+Approach 1: Stack, Time: O(n), Space: O(n)
+For each element if it is equal to stack's top, then pop until equal and then dont 
+push this element into it either
+If it is not equal then only push into the stack
+At the end pop everything from stack and add it into the answer string and reverse it.
+
+Approach 2: Without Stack, Time: O(n), Space: O(n)
+Instead of using a stack we can directly push_back(), pop_back() in the result itself
+
+Approach 3: 2 Pointers, Time: O(n), Space: O(1)
+Keep 2 pointers to use the Approach 2 in the given string itself without any extra space.
+We will use i, j
+i is the current index for the string that we are checking
+j is the current index where we are at in the answer
+
+So, for every i, do
+s[i] = s[j]
+Then check if s[j] == s[j - 1] means duplicates
+So, to remove the duplicate do j-=2
+
+As We are moving ahead in the string, so, we dont need the previous indexes
+So, we can just store the answer there.
+At the end the answer = s.subtring(0,j)
+
+*/
+// Approach 1: Stack, Time: O(n), Space: O(n)
+string removeDuplicates(string s)
+{
+    stack<int> st;
+    st.push(-1);
+
+    for (int i = 0; i < s.size(); i++)
+    {
+        if (st.top() == -1 || s[i] != s[st.top()])
+            st.push(i);
+        else
+        {
+            while (st.top() != -1 && s[i] == s[st.top()])
+                st.pop();
+        }
+    }
+
+    string res = "";
+
+    while (st.top() != -1)
+    {
+        res += s[st.top()];
+        st.pop();
+    }
+
+    reverse(res.begin(), res.end());
+
+    return res;
+}
+// Approach 2: Without Stack, Time: O(n), Space: O(n)(for answer string)
+string removeDuplicates(string s)
+{
+    string res = "";
+
+    for (int i = 0; i < s.size(); i++)
+    {
+        if (res.size() == 0 || s[i] != res[res.size() - 1])
+            res.push_back(s[i]);
+        else
+        {
+            while (res.size() != 0 && s[i] == res[res.size() - 1])
+                res.pop_back();
+        }
+    }
+
+    return res;
+}
+// Approach 3: 2 Pointers, Time: O(n), Space: O(1)
+string removeDuplicates(string s)
+{
+    int j = 0;
+    for (int i = 0; i < s.size(); i++)
+    {
+        s[j] = s[i];
+
+        if (j > 0 && s[j] == s[j - 1])
+            j -= 2;
+
+        j++;
+    }
+
+    return s.substr(0, j);
+}
+
 int main()
 {
     return 0;

@@ -3989,10 +3989,15 @@ and so on ...
 
 And then use this to run the BFS
 
+In these 2 approaches, we avoid the preprocessing if we put whole wordList in a hashset
+Then for each pattern instead of putting *, just put every letter one by one 
+and search for that word in the set directly
+This will make the complexity Time: O(n * m^2 * 26)
+
 Approach 3: Bidirectional BFS, Time: O(n * m^2), Space: O(n * m^2)
 We start a BFS from both the beginWord, and endWord.
-Then it will meet in the middle and the time compelxity will become half of the 
-normal BFS.
+Then it will meet in the middle and the time complexity will become half of the 
+normal BFS in first 2 approaches.
 
 */
 // Approach 1
@@ -4024,6 +4029,7 @@ int ladderLength(string beginWord, string endWord, vector<string> &wordList)
 
     for (int i = 0; i < wordList.size(); i++)
     {
+        // add all words similar to current word to the hashmap
         for (int j = i + 1; j < wordList.size(); j++)
         {
             if (isSimilar(wordList[i], wordList[j]))
@@ -4033,8 +4039,10 @@ int ladderLength(string beginWord, string endWord, vector<string> &wordList)
             }
         }
 
+        // if this is the beginWord, then mark it as true
         if (wordList[i] == beginWord)
             vis[i] = true;
+        // if this word is similar to beginWord, then push it into the queue for BFS
         else if (isSimilar(beginWord, wordList[i]))
         {
             que.push(i);
@@ -4055,6 +4063,7 @@ int ladderLength(string beginWord, string endWord, vector<string> &wordList)
             int rIdx = que.front();
             que.pop();
 
+            // push all similar words for the current word into the queue
             for (int idx : similarWords[rIdx])
             {
                 if (wordList[idx] == endWord)
@@ -4074,29 +4083,358 @@ int ladderLength(string beginWord, string endWord, vector<string> &wordList)
 // Approach 2
 int ladderLength(string beginWord, string endWord, vector<string> &wordList)
 {
-    unordered_map<string, vector<int>> graph;
+    unordered_map<string, vector<int>> patterns;
+    vector<bool> vis(wordList.size());
 
+    // make the pattern hashmap
     for (int i = 0; i < wordList.size(); i++)
     {
         string &word = wordList[i];
+        // add the current word to every pattern that it can be made
         for (int j = 0; j < wordList[i].size(); j++)
         {
             char ch = word[j];
             word[j] = '*';
-            graph[word].push_back(i);
+            patterns[word].push_back(i);
             word[j] = ch;
         }
     }
 
     queue<int> que;
+    int count = 1;
+
+    // for all the patterns of beginWord, add all those words into the queue for BFS
     for (int i = 0; i < beginWord.size(); i++)
     {
         char ch = beginWord[i];
         beginWord[i] = '*';
-        graph[beginWord].push_back(i);
+
+        for (int idx : patterns[beginWord])
+        {
+            if (wordList[idx] == endWord)
+                return count + 1;
+
+            que.push(idx);
+            vis[idx] = true;
+        }
+
+        patterns.erase(beginWord);
         beginWord[i] = ch;
     }
+
+    while (que.size() > 0)
+    {
+        int size = que.size();
+        count++;
+
+        while (size--)
+        {
+            string word = wordList[que.front()];
+            que.pop();
+
+            // for the current word, make its patterns and add those words into the queue
+            for (int i = 0; i < word.size(); i++)
+            {
+                char ch = word[i];
+                word[i] = '*';
+
+                for (int idx : patterns[word])
+                {
+                    if (vis[idx])
+                        continue;
+
+                    if (wordList[idx] == endWord)
+                        return count + 1;
+
+                    que.push(idx);
+                    vis[idx] = true;
+                }
+
+                patterns.erase(word);
+                word[i] = ch;
+            }
+        }
+    }
+
+    return 0;
 }
+// Approach 2: Without preprocessing
+int ladderLength(string beginWord, string endWord, vector<string> &wordList)
+{
+    unordered_set<string> words(wordList.begin(), wordList.end());
+    unordered_map<string, bool> vis;
+
+    if (words.find(endWord) == words.end())
+        return 0;
+
+    queue<string> que;
+    que.push(beginWord);
+    int count = 0;
+
+    while (que.size() > 0)
+    {
+        int size = que.size();
+        count++;
+
+        while (size--)
+        {
+            string word = que.front();
+            que.pop();
+
+            // for the current word, make its patterns and add those words into the queue
+            for (int i = 0; i < word.size(); i++)
+            {
+                char ch = word[i];
+
+                for (int j = 0; j < 26; j++)
+                {
+                    word[i] = (j + 'a');
+
+                    if (word == endWord)
+                        return count + 1;
+
+                    if (vis[word])
+                        continue;
+
+                    if (words.find(word) != words.end())
+                    {
+                        que.push(word);
+                        vis[word] = true;
+                    }
+                }
+
+                word[i] = ch;
+            }
+        }
+    }
+
+    return 0;
+}
+// Approach 3:
+int ladderLength(string beginWord, string endWord, vector<string> &wordList)
+{
+    int n = wordList.size();
+
+    unordered_map<string, vector<int>> patterns;
+    bool flag = false;
+
+    // make the pattern hashmap
+    for (int i = 0; i < wordList.size(); i++)
+    {
+        string &word = wordList[i];
+        // add the current word to every pattern that it can be made
+        for (int j = 0; j < wordList[i].size(); j++)
+        {
+            char ch = word[j];
+            word[j] = '*';
+            patterns[word].push_back(i);
+            word[j] = ch;
+        }
+
+        if (wordList[i] == endWord)
+            flag = true;
+    }
+
+    if (!flag)
+        return 0;
+
+    queue<int> beginQue, endQue;
+    vector<int> beginVis(n), endVis(n);
+    int count = 1;
+
+    // for all the patterns of beginWord, add all those words into the beginQueue for BFS
+    for (int i = 0; i < beginWord.size(); i++)
+    {
+        char ch = beginWord[i];
+        beginWord[i] = '*';
+
+        for (int idx : patterns[beginWord])
+        {
+            if (wordList[idx] == endWord)
+                return count + 1;
+
+            beginQue.push(idx);
+            beginVis[idx] = count + 1;
+        }
+
+        patterns.erase(beginWord);
+        beginWord[i] = ch;
+    }
+    // for all the patterns of endWord, add all those words into the endQueue for BFS
+    for (int i = 0; i < endWord.size(); i++)
+    {
+        char ch = endWord[i];
+        endWord[i] = '*';
+
+        for (int idx : patterns[endWord])
+        {
+            if (beginVis[idx] > 0)
+                return beginVis[idx] + count;
+
+            endQue.push(idx);
+            endVis[idx] = count + 1;
+        }
+
+        patterns.erase(endWord);
+        endWord[i] = ch;
+    }
+    // mark beginWord and endWord visited as well
+    for (int i = 0; i < wordList.size(); i++)
+    {
+        if (wordList[i] == beginWord)
+            beginVis[i] = 1;
+        else if (wordList[i] == endWord)
+            endVis[i] = 1;
+    }
+
+    while (beginQue.size() > 0 && endQue.size() > 0)
+    {
+        count++;
+
+        int size = beginQue.size();
+        while (size--)
+        {
+            string word = wordList[beginQue.front()];
+            beginQue.pop();
+
+            // for the current word, make its patterns and add those words into the queue
+            for (int i = 0; i < word.size(); i++)
+            {
+                char ch = word[i];
+                word[i] = '*';
+
+                for (int idx : patterns[word])
+                {
+                    // already visited by endQue
+                    if (endVis[idx] > 0)
+                        return count + endVis[idx];
+
+                    beginQue.push(idx);
+                    beginVis[idx] = count + 1;
+                }
+
+                patterns.erase(word);
+                word[i] = ch;
+            }
+        }
+
+        size = endQue.size();
+        while (size--)
+        {
+            string word = wordList[endQue.front()];
+            endQue.pop();
+
+            // for the current word, make its patterns and add those words into the queue
+            for (int i = 0; i < word.size(); i++)
+            {
+                char ch = word[i];
+                word[i] = '*';
+
+                for (int idx : patterns[word])
+                {
+                    // already visited by beginQue
+                    if (beginVis[idx] > 0)
+                        return count + beginVis[idx];
+
+                    endQue.push(idx);
+                    endVis[idx] = count + 1;
+                }
+
+                patterns.erase(word);
+                word[i] = ch;
+            }
+        }
+    }
+
+    return 0;
+}
+
+// 126. Word Ladder II
+/*
+Approach: BFS
+Use the Approach 2 of Word Ladder
+In the queue, push the entire vector of words till now
+And in visited, mark it visited for the next level
+Eg:
+"red"
+"tax"
+["ted","tex","red","tax","tad","den","rex","pee"]
+
+Ans: [["red","ted","tad","tax"],["red","ted","tex","tax"],["red","rex","tex","tax"]]
+Here we will mark "tex" visited for the next level
+We should still be able to use it for the current level.
+So, in visited instead of bool put the level number
+*/
+vector<vector<string>> findLadders(string beginWord, string endWord, vector<string> &wordList)
+{
+    int n = wordList.size();
+
+    unordered_map<string, vector<int>> patterns;
+    vector<vector<string>> res;
+    vector<int> vis(n, n + 1);
+
+    // make the pattern hashmap
+    for (int i = 0; i < wordList.size(); i++)
+    {
+        string &word = wordList[i];
+        // add the current word to every pattern that it can be made
+        for (int j = 0; j < wordList[i].size(); j++)
+        {
+            char ch = word[j];
+            word[j] = '*';
+            patterns[word].push_back(i);
+            word[j] = ch;
+        }
+    }
+
+    queue<vector<string>> que;
+    que.push({beginWord});
+
+    while (que.size() > 0)
+    {
+        int size = que.size();
+
+        while (size--)
+        {
+            vector<string> list = que.front();
+            string word = list[list.size() - 1];
+            que.pop();
+
+            for (int i = 0; i < word.size(); i++)
+            {
+                char ch = word[i];
+                word[i] = '*';
+
+                for (int idx : patterns[word])
+                {
+                    // if visited on previous levels then skip
+                    if (vis[idx] < list.size())
+                        continue;
+
+                    list.push_back(wordList[idx]);
+
+                    if (wordList[idx] == endWord)
+                        res.push_back(list);
+                    else
+                    {
+                        que.push(list);
+                        vis[idx] = list.size() - 1;
+                    }
+
+                    list.pop_back();
+                }
+
+                word[i] = ch;
+            }
+        }
+
+        if (res.size() > 0)
+            return res;
+    }
+
+    return {};
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
