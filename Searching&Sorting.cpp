@@ -1241,7 +1241,7 @@ void bucketSort(vector<double> &arr)
             arr[index++] = b[i][j];
 }
 
-// Misc=============================================================================
+// Extra=============================================================================
 // 729. My Calendar I
 /*
 Approach 1: O(n^2)
@@ -1371,9 +1371,14 @@ overlaps: 44 55, 60, 70, 70 73
 As the [58 61] was not added so it got triple booked now.
 
 Correct Approach: O(n^2)
+For bookings > 1, it becomes same as Minimum Number of Platforms/Stations Required
+We are basically saying that you cannot have more than 2 stations at the same time.
+Here instead of maintaing 2 sorted arrays: start and end times
+Just maintain an ordered map in which we will do +1 for start times and -1 for end times
 
-
-
+So, for each booking just add the current interval
+Then check if there are more than 2 bookings required at a time, then return false
+Else return true
 
 */
 // Wrong Approach
@@ -1423,6 +1428,9 @@ public:
 // Correct Approach
 class MyCalendarTwo
 {
+private:
+    map<int, int> bookings;
+
 public:
     MyCalendarTwo()
     {
@@ -1430,6 +1438,62 @@ public:
 
     bool book(int start, int end)
     {
+        // add current booking
+        bookings[start]++;
+        bookings[end]--;
+
+        int currBookings = 0;
+        for (auto ele : bookings)
+        {
+            currBookings += ele.second;
+
+            // if bookings > 2, then remove current booking and return false
+            if (currBookings > 2)
+            {
+                bookings[start]--;
+                bookings[end]++;
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
+
+// 732. My Calendar III
+/*
+Approach: Time: O(n^2), Space: O(n)
+Same as Minimum Number of Platforms/Stations required or Meeting Rooms II
+Here instead of maintaing 2 sorted arrays: start and end times
+Just maintain an ordered map in which we will do +1 for start times and -1 for end times
+We use O(n) for each book() so for n calls it becomes O(n^2)
+*/
+class MyCalendarThree
+{
+private:
+    map<int, int> bookings;
+
+public:
+    MyCalendarThree()
+    {
+    }
+
+    int book(int start, int end)
+    {
+        // add current booking      
+        bookings[start]++;
+        bookings[end]--;
+
+        // find the max simultaneous bookings
+        int res = 0, currBookings = 0;
+        for (auto ele : bookings)
+        {
+            currBookings += ele.second;
+            res = max(res, currBookings);
+        }
+
+        return res;
     }
 };
 

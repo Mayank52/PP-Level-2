@@ -1281,6 +1281,42 @@ bool canAttendMeetings(vector<Interval> &intervals)
     return true;
 }
 
+// 919 · Meeting Rooms II
+int minMeetingRooms(vector<Interval> &intervals)
+{
+    // Write your code here
+    int n = intervals.size();
+
+    vector<int> startTimes, endTimes;
+    for (Interval &i : intervals)
+    {
+        startTimes.push_back(i.start);
+        endTimes.push_back(i.end);
+    }
+
+    sort(startTimes.begin(), startTimes.end());
+    sort(endTimes.begin(), endTimes.end());
+
+    int i = 0, j = 0, currRooms = 0, res = 0;
+    while (i < n)
+    {
+        if (startTimes[i] < endTimes[j])
+        {
+            currRooms++;
+            i++;
+        }
+        else
+        {
+            currRooms--;
+            j++;
+        }
+
+        res = max(res, currRooms);
+    }
+
+    return res;
+}
+
 // 43. Multiply Strings
 /*
 Approach:
