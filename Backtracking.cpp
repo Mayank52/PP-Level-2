@@ -285,7 +285,6 @@ vector<string> generateParenthesis(int n)
 
 // 797. All Paths From Source to Target
 vector<vector<int>> res;
-
 void dfs(vector<vector<int>> &graph, int u, vector<int> &path)
 {
     if (u == graph.size() - 1)
@@ -354,7 +353,6 @@ void minimumTimeRequired(vector<int> &jobs, int k, int idx, vector<int> &workers
         }
     }
 }
-
 int minimumTimeRequired(vector<int> &jobs, int k)
 {
     res = INT_MAX;
@@ -368,6 +366,121 @@ int minimumTimeRequired(vector<int> &jobs, int k)
     minimumTimeRequired(jobs, k, 0, workers, 0);
 
     return res;
+}
+
+// CrossWord Puzzle (https://www.hackerrank.com/challenges/crossword-puzzle/problem)
+bool canPlaceV(vector<string> &arr, string &word, int sr, int sc)
+{
+    // enough cells available
+    if (sr + word.size() - 1 >= arr.size())
+        return false;
+
+    // either each index empty OR the right character already present
+    for (int i = 0; i < word.length(); i++)
+    {
+        if (arr[sr + i][sc] != '-' && arr[sr + i][sc] != word[i])
+            return false;
+    }
+
+    return true;
+}
+bool canPlaceH(vector<string> &arr, string &word, int sr, int sc)
+{
+    // enough cells available
+    if (sc + word.size() - 1 >= arr[0].size())
+        return false;
+
+    // either each index empty OR the right character already present
+    for (int j = 0; j < word.length(); j++)
+    {
+        if (arr[sr][sc + j] != '-' && arr[sr][sc + j] != word[j])
+            return false;
+    }
+
+    return true;
+}
+void placeV(vector<string> &arr, string &word, int r, int c)
+{
+    for (int i = 0; i < word.size(); i++)
+    {
+        arr[i + r][c] = word[i];
+    }
+}
+void unplaceV(vector<string> &arr, string &word, int r, int c)
+{
+    for (int i = 0; i < word.size(); i++)
+    {
+        arr[i + r][c] = '-';
+    }
+}
+void placeH(vector<string> &arr, string &word, int r, int c)
+{
+    for (int j = 0; j < word.size(); j++)
+    {
+        arr[r][j + c] = word[j];
+    }
+}
+void unplaceH(vector<string> &arr, string &word, int r, int c)
+{
+    for (int j = 0; j < word.size(); j++)
+    {
+        arr[r][j + c] = '-';
+    }
+}
+bool solveCrossword(vector<string> &arr, vector<string> &words, int idx, vector<string> &solved)
+{
+    if (idx == words.size())
+    {
+        solved = arr;
+        return true;
+    }
+
+    string word = words[idx];
+
+    bool res = false;
+
+    for (int i = 0; i < arr.size(); i++)
+    {
+        for (int j = 0; j < arr[0].size(); j++)
+        {
+            if (canPlaceH(arr, word, i, j))
+            {
+                placeH(arr, word, i, j);
+                res = res || solveCrossword(arr, words, idx + 1, solved);
+                unplaceH(arr, word, i, j);
+            }
+            if (canPlaceV(arr, word, i, j))
+            {
+                placeV(arr, word, i, j);
+                res = res || solveCrossword(arr, words, idx + 1, solved);
+                unplaceV(arr, word, i, j);
+            }
+        }
+    }
+
+    return res;
+}
+vector<string> crosswordPuzzle(vector<string> crossword, string words)
+{
+    vector<string> solved;
+    vector<string> wordList;
+
+    string currWord = "";
+    for (char ch : words)
+    {
+        if (ch == ';')
+        {
+            wordList.push_back(currWord);
+            currWord = "";
+        }
+        else
+            currWord += ch;
+    }
+    wordList.push_back(currWord);
+
+    solveCrossword(crossword, wordList, 0, solved);
+
+    return solved;
 }
 
 int main()
