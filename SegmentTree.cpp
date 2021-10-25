@@ -484,7 +484,112 @@ public:
     }
 };
 
-int main()
+// Maximum Sum (https://www.spoj.com/problems/KGSS/)
+/*
+Approach: O(logn)
+Store the {maxSum, maxVal} in each node
+where maxSum = max val + 2nd max val
+
+So, for build each node will have the value
+maxSum = max(max sum of left child, max sum of right child, max val of left + max val of right)
+maxVal = max(max val of left child, max val of right child)
+
+And same for query, we will get the {maxSum, maxVal} from both children and
+return the max of both
+*/
+class SegmentTree
+{
+private:
+    vector<pair<int, int>> tree;
+    vector<int> arr;
+
+    void updateCurrentNode(int nodeIdx)
+    {
+        // every node stores {max sum of 2 values, max value}
+
+        pair<int, int> left = tree[2 * nodeIdx];
+        pair<int, int> right = tree[2 * nodeIdx + 1];
+
+        int maxSum = max({left.first, right.first, left.second + right.second});
+        int maxVal = max(left.second, right.second);
+
+        tree[nodeIdx] = {maxSum, maxVal};
+    }
+
+    void build(int nodeIdx, int lo, int hi)
+    {
+        if (lo == hi)
+        {
+            tree[nodeIdx] = {arr[lo], arr[lo]};
+            return;
+        }
+
+        int mid = lo + (hi - lo) / 2;
+
+        build(2 * nodeIdx, lo, mid);
+        build(2 * nodeIdx + 1, mid + 1, hi);
+
+        updateCurrentNode(nodeIdx);
+    }
+
+    void update(int nodeIdx, int lo, int hi, int idx, int val)
+    {
+        if (lo == hi)
+        {
+            tree[nodeIdx] = {val, val};
+            arr[idx] = val;
+            return;
+        }
+
+        int mid = lo + (hi - lo) / 2;
+
+        if (idx > mid)
+            update(2 * nodeIdx + 1, mid + 1, hi, idx, val);
+        else
+            update(2 * nodeIdx, lo, mid, idx, val);
+
+        updateCurrentNode(nodeIdx);
+    }
+
+    pair<int, int> query(int nodeIdx, int lo, int hi, int l, int r)
+    {
+        if (hi < l || lo > r)
+            return {INT_MIN, INT_MIN};
+
+        if (lo == hi || l <= lo && hi <= r)
+            return tree[nodeIdx];
+
+        int mid = lo + (hi - lo) / 2;
+
+        pair<int, int> leftMax = query(2 * nodeIdx, lo, mid, l, r);
+        pair<int, int> rightMax = query(2 * nodeIdx + 1, mid + 1, hi, l, r);
+
+        int maxSum = max({leftMax.first, rightMax.first, leftMax.second + rightMax.second});
+        int maxVal = max(leftMax.second, rightMax.second);
+
+        return {maxSum, maxVal};
+    }
+
+public:
+    SegmentTree(vector<int> &arr)
+    {
+        this->arr = arr;
+        this->tree.resize(4 * arr.size());
+        build(1, 0, arr.size() - 1);
+    }
+
+    void update(int idx, int val)
+    {
+        update(1, 0, arr.size() - 1, idx, val);
+    }
+
+    int query(int l, int r)
+    {
+        return query(1, 0, arr.size() - 1, l, r).first;
+    }
+};
+
+main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
@@ -504,10 +609,10 @@ int main()
 
     while (q--)
     {
-        int x;
+        char x;
         cin >> x;
 
-        if (x == 0)
+        if (x == 'U')
         {
             int pos, val;
             cin >> pos >> val;
