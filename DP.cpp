@@ -5134,9 +5134,44 @@ int maximumSum(vector<int> &arr)
 }
 
 // 857 · Minimum Window Subsequence (Lintcode)
+/*
+
+*/
+int findSubseq(string &s, string &t, int i, int j, vector<vector<int>> &dp)
+{
+    if (i == s.size() || j == t.size())
+        return INT_MAX;
+    if (j == t.size() - 1 && s[i] == t[j])
+        return i;
+
+    if (dp[i][j] != -1)
+        return dp[i][j];
+
+    if (s[i] == t[j])
+        return dp[i][j] = findSubseq(s, t, i + 1, j + 1, dp);
+    else
+        return dp[i][j] = findSubseq(s, t, i + 1, j, dp);
+}
 string minWindow(string &S, string &T)
 {
-    
+    int ansStart = 0, ansEnd = INT_MAX;
+    vector<vector<int>> dp(S.size(), vector<int>(T.size(), -1));
+
+    for (int si = 0; si < S.size(); si++)
+    {
+        if (S[si] == T[0])
+        {
+            int ei = findSubseq(S, T, si + 1, 1, dp);
+
+            if (ei != INT_MAX && ei - si + 1 < ansEnd - ansStart + 1)
+            {
+                ansStart = si;
+                ansEnd = ei;
+            }
+        }
+    }
+
+    return (ansEnd == INT_MAX) ? "" : S.substr(ansStart, ansEnd - ansStart + 1);
 }
 
 int main()
