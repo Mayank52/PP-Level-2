@@ -5030,6 +5030,115 @@ vector<int> getRow(int rowIndex)
     return currRow;
 }
 
+// 53. Maximum Subarray
+/*
+Approach 1: Kadanne's Algo, O(n)
+This is the standard Kadanne' Algo to get the maximum subarray sum
+
+Approach 2: DP, O(n)
+This is the exact same as Kadanne's Algo
+You just dont reset the currMax value with 0 if it goes -ve.
+like this, if (currMax < 0) currMax = 0;
+
+Instead we do
+currMax = max(currMax + arr[i], arr[i]);
+So, we are basically just ignoring the previous value if current is more, which 
+is same as setting to 0 in previous step
+
+*/
+int maxSubArray(vector<int> &arr)
+{
+    int n = arr.size();
+    long maxSoFar = arr[0];
+    long currMax = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        currMax += arr[i];
+        if (maxSoFar < currMax)
+            maxSoFar = currMax;
+        if (currMax < 0)
+            currMax = 0;
+    }
+
+    return maxSoFar;
+}
+int maxSubArray(vector<int> &arr)
+{
+    int currMax = arr[0], res = arr[0];
+
+    for (int i = 1; i < arr.size(); i++)
+    {
+        currMax = max(currMax + arr[i], arr[i]);
+        res = max(res, currMax);
+    }
+
+    return res;
+}
+
+// 1186. Maximum Subarray Sum with One Deletion
+/*
+Approach: Time: O(n), Space: O(n)
+We keep track of 2 things
+Max sum till now with no deletions which is basically the Kadanne's array
+And a max till now with 1 deletion
+
+So, for no deletion
+noDelete[i] = max(max till now + current value, current value) = max(noDelete[i-1] + arr[i], arr[i])
+
+And for one deletion, 
+If we remove the current element, then we have to take the noDelete[i-1] as that will have max till now
+with no deletions and we removed this one.
+And if we dont remove the current element, then we take oneDelete[i-1] + arr[i], so we took
+the max till now with one removed already, so we cannot remove this one as only one deletion is allowed.
+So, oneDelete[i] = max(noDelete[i - 1], oneDelete[i - 1] + arr[i])
+
+We can just use variables for oneDelete, noDelete, and make the space O(1)
+For this we will have to calculate oneDelete before noDelete, as oneDelete depends on
+previous value of noDelete
+*/
+int maximumSum(vector<int> &arr)
+{
+    int n = arr.size();
+
+    vector<int> noDelete(n), oneDelete(n);
+    noDelete[0] = arr[0];
+    oneDelete[0] = max(arr[0], 0);
+
+    int res = arr[0];
+
+    for (int i = 1; i < n; i++)
+    {
+        noDelete[i] = max(noDelete[i - 1] + arr[i], arr[i]);
+        oneDelete[i] = max(noDelete[i - 1], oneDelete[i - 1] + arr[i]);
+
+        res = max({res, noDelete[i], oneDelete[i]});
+    }
+
+    return res;
+}
+// Approach 1: Time: O(n), Space: O(1)
+int maximumSum(vector<int> &arr)
+{
+    int noDelete = arr[0], oneDelete = max(arr[0], 0), res = arr[0];
+
+    for (int i = 1; i < arr.size(); i++)
+    {
+        oneDelete = max(noDelete, oneDelete + arr[i]);
+        noDelete = max(noDelete + arr[i], arr[i]);
+
+        res = max({res, noDelete, oneDelete});
+    }
+
+    return res;
+}
+
+// 857 · Minimum Window Subsequence (Lintcode)
+string minWindow(string &S, string &T)
+{
+    
+}
+
 int main()
 {
     return 0;
