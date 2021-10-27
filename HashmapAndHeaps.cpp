@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#include <limits.h>
 #include <algorithm>
 #include <unordered_map>
 #include <map>
@@ -2510,6 +2511,105 @@ int shortestSubarray(vector<int> &nums, int k)
     }
 
     return res == n + 1 ? -1 : res;
+}
+
+// 567. Permutation in String
+/*
+Approach: 2 pointers, O(n)
+Use 2 pointers, to find a substring in s2 whose frequency map is equal to s1 string's frequency map
+*/
+bool checkInclusion(string s1, string s2)
+{
+    vector<int> freq1(26), freq2(26);
+
+    for (char ch : s1)
+        freq1[ch - 'a']++;
+
+    int i = 0;
+
+    for (int j = 0; j < s2.size(); j++)
+    {
+        // if current character not present in s1, then reset values
+        if (freq1[s2[j] - 'a'] == 0)
+        {
+            freq2.assign(26, 0);
+            i = j + 1;
+            continue;
+        }
+
+        // include current character
+        freq2[s2[j] - 'a']++;
+
+        // exclude until extra character is removed
+        while (freq2[s2[j] - 'a'] > freq1[s2[j] - 'a'])
+        {
+            freq2[s2[i] - 'a']--;
+            i++;
+        }
+
+        // if all characters
+        if (j - i + 1 == s1.size())
+            return true;
+    }
+
+    return false;
+}
+
+// 632. Smallest Range Covering Elements from K Lists
+/*
+Approach: O(nlogk)
+Similar to Merge K sorted Lists
+Push the first element of each list into a Min PQ
+Also, find the max element of these first elements
+
+Now, that max element is the max of current range, and top of PQ is min of current range
+So, at every step, pop the top element, that is min of current range, and max we 
+already have, using this update the overall shortest range
+Then push the next element of that list into the PQ.
+Also, while pushing the next element update the current max.
+*/
+vector<int> smallestRange(vector<vector<int>> &nums)
+{
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+    int start = INT_MAX, end = INT_MIN, currMax = INT_MIN;
+
+    // push first element of each list into PQ
+    for (int i = 0; i < nums.size(); i++)
+    {
+        pq.push({nums[i][0], i, 0});
+        currMax = max(currMax, nums[i][0]);
+    }
+
+    start = pq.top()[0];
+    end = currMax;
+
+    while (pq.size() > 0)
+    {
+        int num = pq.top()[0];
+        int i = pq.top()[1];
+        int j = pq.top()[2];
+
+        pq.pop();
+
+        // update the current range
+        if (currMax - num < end - start)
+        {
+            start = num;
+            end = currMax;
+        }
+
+        // push next element into PQ
+        if (j + 1 < nums[i].size())
+        {
+            // update the current max with new element
+            currMax = max(currMax, nums[i][j + 1]);
+            pq.push({nums[i][j + 1], i, j + 1});
+        }
+        else
+            break;
+    }
+
+    return {start, end};
 }
 
 // 706. Design HashMap

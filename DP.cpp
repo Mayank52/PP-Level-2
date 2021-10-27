@@ -5135,7 +5135,10 @@ int maximumSum(vector<int> &arr)
 
 // 857 · Minimum Window Subsequence (Lintcode)
 /*
-
+Approach: O(nm)
+From every index in string s, if it is equal to t[0], then find the if there is a subsequence starting 
+from that index that is equal to t, if there is than update the min length using the start and end point
+of that subsequence.
 */
 int findSubseq(string &s, string &t, int i, int j, vector<vector<int>> &dp)
 {
@@ -5159,10 +5162,12 @@ string minWindow(string &S, string &T)
 
     for (int si = 0; si < S.size(); si++)
     {
+        // if this character is equal to t[0], find the end of subsequence
         if (S[si] == T[0])
         {
             int ei = findSubseq(S, T, si + 1, 1, dp);
 
+            // if subsequence is present, then update the shortest length
             if (ei != INT_MAX && ei - si + 1 < ansEnd - ansStart + 1)
             {
                 ansStart = si;
@@ -5172,6 +5177,76 @@ string minWindow(string &S, string &T)
     }
 
     return (ansEnd == INT_MAX) ? "" : S.substr(ansStart, ansEnd - ansStart + 1);
+}
+
+// 877. Stone Game
+/*
+Approach 1: Game Theory, O(1)
+There are always even number of piles.
+So, whoever goes first wins.
+
+Eg: [5,3,4,5]
+Here the sum of 0th + 2nd element is greater than 1st + 3rd
+So, Alice will pick 0th, and then Bob has to pick 2nd or 4th, and Alice picks 3rd and total will be more
+So, basically for every n, Alice will choose either all even positions, or all odd positions
+whichever has more total sum.
+So, eg [1,2,3,4,5,6]
+Here 1 + 3 + 5 < 2 + 4 + 6
+So, Alice picks all odd positions(2,4,6)
+Once she picks a odd position, both ends will only have the even positions so
+bob is forced to pick an even position and this continues.
+Similarly if even had more sum, she will only pick even positions
+So, in this way for any even n, alice always wins
+
+This only works because n here is even
+In case of odd number of piles we need to use DP
+
+Approach 2: DP, O(n^2)
+Let dp(i, j) be the largest score Alex can achieve where the piles remaining are 
+piles[i], piles[i+1], ..., piles[j]. 
+So, instead of storing seperate scores, we just the current difference of their scores
+And in case of Alice she will add the sum to that, and Bob will remove it so 
+at the end we will have the difference between both their scores
+
+When the piles remaining are piles[i], piles[i+1], ..., piles[j], 
+the player who's turn it is can pick the first or last stone
+
+If the player is Alice, then she either takes piles[i] or piles[j], 
+increasing her score by that amount. 
+Afterwards, the total score is either piles[i] + dp(i+1, j), or piles[j] + dp(i, j-1)
+and we want the maximum possible score because Alice plays optimally
+
+If the player is Bob, then he either takes piles[i] or piles[j], 
+decreasing Alice's score by that amount. 
+Afterwards, the total score is either -piles[i] + dp(i+1, j), or -piles[j] + dp(i, j-1); 
+and we want the minimum possible score, as Bob plays optimally
+*/
+// Approach 1: Game Theory, O(1)
+bool stoneGame(vector<int> &piles)
+{
+    return true;
+}
+// Approach 2: DP, O(n^2)
+int getMaxScore(vector<int> &piles, int start, int end, int turn, vector<vector<int>> &dp)
+{
+    if (start == end)
+        return piles[start];
+
+    if (dp[start][end] != -1)
+        return dp[start][end];
+
+    // turn -> 1 is Alice, 0 is Bob
+    if (turn)
+        return dp[start][end] = max(getMaxScore(piles, start + 1, end, 0, dp) + piles[start], getMaxScore(piles, start, end - 1, 1, dp) + piles[end]);
+    else
+        return dp[start][end] = min(getMaxScore(piles, start + 1, end, 0, dp) - piles[start], getMaxScore(piles, start, end - 1, 1, dp) - piles[end]);
+}
+bool stoneGame(vector<int> &piles)
+{
+    int n = piles.size();
+
+    vector<vector<int>> dp(n, vector<int>(n, -1));
+    return getMaxScore(piles, 0, n - 1, 1, dp);
 }
 
 int main()
