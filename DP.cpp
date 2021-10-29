@@ -5249,6 +5249,46 @@ bool stoneGame(vector<int> &piles)
     return getMaxScore(piles, 0, n - 1, 1, dp);
 }
 
+// 1140. Stone Game II
+int getAliceScore(vector<int> &piles, int m, int idx, int turn)
+{
+    if (idx + 2 * m >= piles.size())
+    {
+        int currScore = 0;
+
+        while (idx < piles.size())
+            currScore += piles[idx++];
+
+        return currScore;
+    }
+
+    if (turn)
+    {
+        int res = 0, currScore = 0;
+        for (int x = 1; x <= 2 * m && idx + x < piles.size(); x++)
+        {
+            currScore += piles[idx + x];
+            res = max(res, getAliceScore(piles, max(x, m), idx + x, 0) + currScore);
+        }
+
+        return res;
+    }
+    else
+    {
+        int res = 0;
+        for (int x = 1; x <= 2 * m && idx + x < piles.size(); x++)
+        {
+            res = min(res, getAliceScore(piles, max(x, m), idx + x, 0));
+        }
+
+        return res;
+    }
+}
+int stoneGameII(vector<int> &piles)
+{
+    return getAliceScore(piles, 1, 0, 1);
+}
+
 int main()
 {
     return 0;
