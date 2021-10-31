@@ -589,6 +589,25 @@ int subarraysDivByK(vector<int> &nums, int k)
     return count;
 }
 
+// Count pairs in array whose sum is divisible by K
+// (https://www.geeksforgeeks.org/count-pairs-in-array-whose-sum-is-divisible-by-k/)
+int count4Divisibiles(int arr[], int n)
+{
+    int k = 4;
+
+    // Complete the function
+    unordered_map<int, int> mp;
+    int count = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        count += mp[(arr[i] % k)];
+        mp[arr[i] % k]++;
+    }
+
+    return count;
+}
+
 // Subarrays with equal 1s and 0s
 /*
 Approach 1: O(n)

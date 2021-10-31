@@ -5289,6 +5289,34 @@ int stoneGameII(vector<int> &piles)
     return getAliceScore(piles, 1, 0, 1);
 }
 
+// 97. Interleaving String
+bool isSubsequence(string &s1, string &s2, string &s3, int i1, int i2, int j)
+{
+    if (i1 == s1.size() && i2 == s2.size())
+        return true;
+    if (j == s2.size())
+        return false;
+
+    bool res = false;
+
+    if (i1 < s1.size() && s1[i1] == s3[j])
+        res = res || isSubsequence(s1, s2, s3, i1 + 1, i2, j + 1);
+
+    if (i2 < s2.size() && s2[i2] == s3[j])
+        res = res || isSubsequence(s1, s2, s3, i1, i2 + 1, j + 1);
+
+    res = res || isSubsequence(s1, s2, s3, i1, i2, j + 1);
+
+    return res;
+}
+bool isInterleave(string s1, string s2, string s3)
+{
+    if (s3.size() != s1.size() + s2.size())
+        return false;
+
+    return isSubsequence(s1, s2, s3, 0, 0, 0);
+}
+
 int main()
 {
     return 0;
