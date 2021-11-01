@@ -591,21 +591,59 @@ int subarraysDivByK(vector<int> &nums, int k)
 
 // Count pairs in array whose sum is divisible by K
 // (https://www.geeksforgeeks.org/count-pairs-in-array-whose-sum-is-divisible-by-k/)
-int count4Divisibiles(int arr[], int n)
-{
-    int k = 4;
+/*
+Approach: O(n)
+If a + b is divisible by k
+So, (q1 * k + rem1) + (q2 * k + rem2) is divisible by k
+(q1 + q2) * k + rem1 + rem2
+Here, (q1 + q2) * k is obviously divisible by k
+To make rem1 + rem2 divisible by k:
+Case 1:
+rem1 + rem2 = 0
+rem1 = -rem2
 
-    // Complete the function
+Case 2: 
+rem1 + rem2 = k
+rem1 = k - rem2
+
+So, maintain a remainder count in map
+And for every element, do
+count += mp[-(arr[i] % k)] + mp[k - (arr[i] % k)];
+And then add this element's remainder to map
+
+Eg:
+Arr: 5 9 36 74 52 31 42, K = 4
+
+Arr:   5 9 36 74 52 31 42
+Rem:   1 1 0  2  0  3  2
+Count: 0 0 0  0  1  3  4
+Map:   
+1: 2
+0: 2
+2: 2
+3: 1
+
+
+{5,31},{9,31},{36,52},{74,42}
+
+
+*/
+int pairsDivisibleByK(int arr[], int n, int k)
+{
     unordered_map<int, int> mp;
     int count = 0;
 
     for (int i = 0; i < n; i++)
     {
-        count += mp[(arr[i] % k)];
+        count += mp[-(arr[i] % k)] + mp[k - (arr[i] % k)];
         mp[arr[i] % k]++;
     }
 
     return count;
+}
+int count4Divisibiles(int arr[], int n)
+{
+    return pairsDivisibleByK(arr, n, 4);
 }
 
 // Subarrays with equal 1s and 0s
