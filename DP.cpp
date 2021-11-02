@@ -5250,71 +5250,249 @@ bool stoneGame(vector<int> &piles)
 }
 
 // 1140. Stone Game II
-int getAliceScore(vector<int> &piles, int m, int idx, int turn)
+/*
+Approach 1: DP, Time: O(n^2), Space: O(2 * n * n)
+The function returns Alice's score
+So, At each step,
+Run a loop from idx + 1 to idx + 2*m
+And if its Alice's turn then find the max score she can get from the remaining piles
+And if its Bob's turn then find the min score Alice can get from the remaining piles
+
+And if the all remaining piles can be picked then the current player takes them all.
+
+The DP will be n x n x 2
+
+Approach 2: DP, Time: O(n^2), Space: O(n^2)
+First make a suffix sum array
+Now at each step,
+suffixSum[i] gives the total score from the remaining array
+Now run a loop from i + 1 to i + 2*m
+The current player picks the piles from i to i + x - 1, and the we find the
+min score the next player can get from the piles i+x to end
+So, we dont check whose turn it is, instead as both are playing optimally so just
+find the min score other player can get from remaining piles
+And then current player score is suffixSum[i] - minScore which will automatically be 
+max since we got the min score for the other one.
+*/
+int getAliceScore(vector<int> &piles, int m, int idx, int turn, vector<vector<vector<int>>> &dp)
 {
+    if (dp[idx + 1][m][turn] != -1)
+        return dp[idx + 1][m][turn];
+
+    // if all remaining piles can be taken, then take them all
     if (idx + 2 * m >= piles.size())
     {
+        // if it is Bob's turn then just return 0, as we only need Alice's score
+        if (turn == 0)
+            return 0;
+
+        idx++;
+
         int currScore = 0;
 
         while (idx < piles.size())
             currScore += piles[idx++];
 
-        return currScore;
+        return dp[idx + 1][m][turn] = currScore;
     }
 
-    if (turn)
+    if (turn) // Alice Turn
     {
         int res = 0, currScore = 0;
         for (int x = 1; x <= 2 * m && idx + x < piles.size(); x++)
         {
             currScore += piles[idx + x];
-            res = max(res, getAliceScore(piles, max(x, m), idx + x, 0) + currScore);
+            // Alice's takes max score that she can get
+            res = max(res, getAliceScore(piles, max(x, m), idx + x, 0, dp) + currScore);
         }
 
-        return res;
+        return dp[idx + 1][m][turn] = res;
     }
-    else
+    else // Bob Turn
     {
-        int res = 0;
+        int res = INT_MAX;
         for (int x = 1; x <= 2 * m && idx + x < piles.size(); x++)
         {
-            res = min(res, getAliceScore(piles, max(x, m), idx + x, 0));
+            // Bob will take min score that Alice can get
+            res = min(res, getAliceScore(piles, max(x, m), idx + x, 1, dp));
         }
 
-        return res;
+        return dp[idx + 1][m][turn] = res;
     }
 }
 int stoneGameII(vector<int> &piles)
 {
-    return getAliceScore(piles, 1, 0, 1);
+    int n = piles.size();
+
+    vector<vector<vector<int>>> dp(n + 2, vector<vector<int>>(n + 1, vector<int>(2, -1)));
+
+    return getAliceScore(piles, 1, -1, 1, dp);
+}
+// Approach 2:
+int getScore(vector<int> &suffixSum, int m, int idx, vector<vector<int>> &dp)
+{
+    // if all remaining piles can be taken, then take them all
+    if (idx + 2 * m >= suffixSum.size())
+        return suffixSum[idx];
+
+    if (dp[idx][m] != -1)
+        return dp[idx][m];
+
+    // find min score the other player can get from remaining piles
+    int res = INT_MAX;
+    for (int x = 1; x <= 2 * m; x++)
+    {
+        res = min(res, getScore(suffixSum, max(x, m), idx + x, dp));
+    }
+
+    // current player's score = totalScore in remaining array - other player's score
+    return dp[idx][m] = suffixSum[idx] - res;
+}
+int stoneGameII(vector<int> &piles)
+{
+    int n = piles.size();
+
+    vector<vector<int>> dp(n, vector<int>(n, -1));
+
+    vector<int> suffixSum(n);
+    suffixSum[n - 1] = piles[n - 1];
+    for (int i = n - 2; i >= 0; i--)
+        suffixSum[i] = suffixSum[i + 1] + piles[i];
+
+    return getScore(suffixSum, 1, 0, dp);
+}
+
+// 1406. Stone Game III
+/*
+Approach: DP, Time: O(n), Space: O(1)
+Same as Stone Game II 2nd approach
+Make the suffix array
+At each step find the minimum score other player can get
+
+We can remove the dp and get O(1) space, as we only need last 3 results, so we can just 
+keep those 3.
+*/
+int getScore(vector<int> &suffixSum, int idx, vector<int> &dp)
+{
+    if (idx >= suffixSum.size())
+        return 0;
+
+    if (dp[idx] != -1)
+        return dp[idx];
+
+    int res = INT_MAX;
+    for (int x = 1; x <= 3; x++)
+    {
+        res = min(res, getScore(suffixSum, idx + x, dp));
+    }
+
+    return dp[idx] = suffixSum[idx] - res;
+}
+string stoneGameIII(vector<int> &stoneValue)
+{
+    int n = stoneValue.size();
+
+    vector<int> dp(n, -1);
+
+    vector<int> suffixSum(n);
+    suffixSum[n - 1] = stoneValue[n - 1];
+    for (int i = n - 2; i >= 0; i--)
+        suffixSum[i] = suffixSum[i + 1] + stoneValue[i];
+
+    int aliceScore = getScore(suffixSum, 0, dp);
+    int bobScore = suffixSum[0] - aliceScore;
+
+    if (aliceScore == bobScore)
+        return "Tie";
+    else
+        return aliceScore > bobScore ? "Alice" : "Bob";
+}
+
+// 1510. Stone Game IV
+bool winnerSquareGame(int n)
+{
 }
 
 // 97. Interleaving String
-bool isSubsequence(string &s1, string &s2, string &s3, int i1, int i2, int j)
+/*
+Approach 1: O(n^3)
+We keep 3 pointers:
+i1 = current index of string 1
+i2 = current index of string 2
+j =  current index of string 3
+
+Now, we just match 
+if str1[i1] == str3[j], then call for {i1+1, i2, j+1 }
+and, if str2[i2] == str3[j], then call for {i1, i2+1, j+1 }
+
+And when both i1, i2 reach the end of str1 and str2, then return true
+
+Approach 2: O(n^2)
+j will always be equal to i1 + i2, because the length of str3
+that has been matched is equal to the length of str1 that has been matched + 
+length of str2 that has been matched.
+
+*/
+// Approach 1: O(n^3)
+bool isSubsequence(string &s1, string &s2, string &s3, int i1, int i2, int j, vector<vector<vector<int>>> &dp)
 {
     if (i1 == s1.size() && i2 == s2.size())
         return true;
-    if (j == s2.size())
-        return false;
+
+    if (dp[i1][i2][j] != -1)
+        return dp[i1][i2][j];
 
     bool res = false;
 
     if (i1 < s1.size() && s1[i1] == s3[j])
-        res = res || isSubsequence(s1, s2, s3, i1 + 1, i2, j + 1);
+        res = res || isSubsequence(s1, s2, s3, i1 + 1, i2, j + 1, dp);
 
     if (i2 < s2.size() && s2[i2] == s3[j])
-        res = res || isSubsequence(s1, s2, s3, i1, i2 + 1, j + 1);
+        res = res || isSubsequence(s1, s2, s3, i1, i2 + 1, j + 1, dp);
 
-    res = res || isSubsequence(s1, s2, s3, i1, i2, j + 1);
-
-    return res;
+    return dp[i1][i2][j] = res;
 }
 bool isInterleave(string s1, string s2, string s3)
 {
-    if (s3.size() != s1.size() + s2.size())
+    int n1 = s1.size(), n2 = s2.size(), n3 = s3.size();
+
+    if (n3 != n1 + n2)
         return false;
 
-    return isSubsequence(s1, s2, s3, 0, 0, 0);
+    vector<vector<vector<int>>> dp(n1 + 1, vector<vector<int>>(n2 + 1, vector<int>(n3 + 1, -1)));
+
+    return isSubsequence(s1, s2, s3, 0, 0, 0, dp);
+}
+// Approach 2: O(n^2)
+bool isSubsequence(string &s1, string &s2, string &s3, int i1, int i2, vector<vector<int>> &dp)
+{
+    if (i1 == s1.size() && i2 == s2.size())
+        return true;
+
+    if (dp[i1][i2] != -1)
+        return dp[i1][i2];
+
+    bool res = false;
+    int j = i1 + i2;
+
+    if (i1 < s1.size() && s1[i1] == s3[j])
+        res = res || isSubsequence(s1, s2, s3, i1 + 1, i2, dp);
+
+    if (i2 < s2.size() && s2[i2] == s3[j])
+        res = res || isSubsequence(s1, s2, s3, i1, i2 + 1, dp);
+
+    return dp[i1][i2] = res;
+}
+bool isInterleave(string s1, string s2, string s3)
+{
+    int n1 = s1.size(), n2 = s2.size(), n3 = s3.size();
+
+    if (n3 != n1 + n2)
+        return false;
+
+    vector<vector<int>> dp(n1 + 1, vector<int>(n2 + 1, -1));
+
+    return isSubsequence(s1, s2, s3, 0, 0, dp);
 }
 
 int main()
