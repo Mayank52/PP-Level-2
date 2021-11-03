@@ -1,4 +1,6 @@
 #include <iostream>
+#include <math.h>
+#include <assert.h>
 #include <vector>
 #include <queue>
 #include <stack>
@@ -5267,12 +5269,15 @@ First make a suffix sum array
 Now at each step,
 suffixSum[i] gives the total score from the remaining array
 Now run a loop from i + 1 to i + 2*m
-The current player picks the piles from i to i + x - 1, and the we find the
+The current player picks the piles from i to i + x - 1, and then we find the
 min score the next player can get from the piles i+x to end
 So, we dont check whose turn it is, instead as both are playing optimally so just
 find the min score other player can get from remaining piles
 And then current player score is suffixSum[i] - minScore which will automatically be 
 max since we got the min score for the other one.
+
+So, basically at each step you choose a path in which the opponent gets the least score.
+This approach is common to most stone game questions
 */
 int getAliceScore(vector<int> &piles, int m, int idx, int turn, vector<vector<vector<int>>> &dp)
 {
@@ -5409,8 +5414,82 @@ string stoneGameIII(vector<int> &stoneValue)
 }
 
 // 1510. Stone Game IV
+/*
+Approach: O(n*sqrt(n)) = O(n^1.5)
+At each step start removing squares from n and check if the opponent can
+win with the remaining n. 
+So, start removing from i = 1 till i*i <= n
+If the opponent does not win with that n, that you choose to remove that number
+
+*/
+bool canWin(int n, vector<int> &dp)
+{
+    if (dp[n] != -1)
+        return dp[n];
+
+    // if n is a perfect square then current player wins
+    int root = sqrt(n);
+    if (root * root == n)
+        return dp[n] = true;
+
+    // remove squares from n and check if opponent can win
+    for (int i = 1; i * i <= n; i++)
+    {
+        bool canOpponentWin = canWin(n - i * i, dp);
+
+        // if opponent does not win, then you won, so return true
+        if (!canOpponentWin)
+            return dp[n] = true;
+    }
+
+    // you cannot win
+    return dp[n] == false;
+}
 bool winnerSquareGame(int n)
 {
+    vector<int> dp(n + 1, -1);
+    return canWin(n, dp);
+}
+
+// 1563. Stone Game V
+/*
+  6 2 3  4  5  5
+  0 6 8 11 15 20 25
+
+*/
+int getScore(vector<int> &stoneValue, int si, int ei, vector<int> &prefixSum)
+{
+    if (si == ei)
+        return 0;
+
+    int i = si;
+    while (i <= ei && prefixSum[i + 1] - prefixSum[si] < prefixSum[ei + 1] - prefixSum[i])
+        i++;
+
+    int leftSum = prefixSum[i] - prefixSum[si];
+    int rightSum = prefixSum[ei + 1] - prefixSum[i];
+
+    if (leftSum + stoneValue[i] == rightSum)
+        return max(getScore(stoneValue, si, i, prefixSum), getScore(stoneValue, i + 1, ei, prefixSum));
+    else
+    {
+        if (leftSum > rightSum)
+            return getScore(stoneValue, si, i - 1, prefixSum) + leftSum;
+        else
+            return getScore(stoneValue, i + 1, ei, prefixSum) + rightSum;
+    }
+
+    assert(false);
+}
+int stoneGameV(vector<int> &stoneValue)
+{
+    int n = stoneValue.size();
+
+    vector<int> prefixSum(n + 1);
+    for (int i = 1; i <= n; i++)
+        prefixSum[i] = prefixSum[i - 1] + stoneValue[i - 1];
+
+    return getScore(stoneValue, 0, n - 1, prefixSum);
 }
 
 // 97. Interleaving String
