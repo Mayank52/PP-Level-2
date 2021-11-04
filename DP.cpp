@@ -5453,43 +5453,82 @@ bool winnerSquareGame(int n)
 
 // 1563. Stone Game V
 /*
-  6 2 3  4  5  5
+  6 2 3 4  5  5
   0 6 8 11 15 20 25
 
 */
-int getScore(vector<int> &stoneValue, int si, int ei, vector<int> &prefixSum)
-{
-    if (si == ei)
-        return 0;
-
-    int i = si;
-    while (i <= ei && prefixSum[i + 1] - prefixSum[si] < prefixSum[ei + 1] - prefixSum[i])
-        i++;
-
-    int leftSum = prefixSum[i] - prefixSum[si];
-    int rightSum = prefixSum[ei + 1] - prefixSum[i];
-
-    if (leftSum + stoneValue[i] == rightSum)
-        return max(getScore(stoneValue, si, i, prefixSum), getScore(stoneValue, i + 1, ei, prefixSum));
-    else
-    {
-        if (leftSum > rightSum)
-            return getScore(stoneValue, si, i - 1, prefixSum) + leftSum;
-        else
-            return getScore(stoneValue, i + 1, ei, prefixSum) + rightSum;
-    }
-
-    assert(false);
-}
+// Approach 1: O(n^3)
 int stoneGameV(vector<int> &stoneValue)
 {
     int n = stoneValue.size();
 
-    vector<int> prefixSum(n + 1);
-    for (int i = 1; i <= n; i++)
-        prefixSum[i] = prefixSum[i - 1] + stoneValue[i - 1];
+    vector<int> prefixSum(n);
+    prefixSum[0] = stoneValue[0];
+    for (int i = 1; i < n; i++)
+        prefixSum[i] = prefixSum[i - 1] + stoneValue[i];
 
-    return getScore(stoneValue, 0, n - 1, prefixSum);
+    vector<vector<int>> dp(n, vector<int>(n));
+
+    for (int gap = 1; gap < n; gap++)
+    {
+        for (int si = 0, ei = gap; ei < n; si++, ei++)
+        {
+            for (int cut = si; cut < ei; cut++)
+            {
+                int leftSum = si == 0 ? prefixSum[cut] : prefixSum[cut] - prefixSum[si - 1];
+                int rightSum = prefixSum[ei] - prefixSum[cut];
+
+                int leftAns = dp[si][cut];
+                int rightAns = dp[cut + 1][ei];
+
+                if (leftSum == rightSum)
+                    dp[si][ei] = max(dp[si][ei], max(leftSum + leftAns, rightSum + rightAns));
+                else if (leftSum < rightSum)
+                    dp[si][ei] = max(dp[si][ei], leftSum + leftAns);
+                else
+                    dp[si][ei] = max(dp[si][ei], rightSum + rightAns);
+            }
+        }
+    }
+
+    return dp[0][n - 1];
+}
+// Approach 2: O(n^2 * logn)
+int stoneGameV(vector<int> &stoneValue)
+{
+    int n = stoneValue.size();
+
+    vector<int> prefixSum(n);
+    prefixSum[0] = stoneValue[0];
+    for (int i = 1; i < n; i++)
+        prefixSum[i] = prefixSum[i - 1] + stoneValue[i];
+
+    vector<vector<int>> dp(n, vector<int>(n));
+
+    for (int gap = 1; gap < n; gap++)
+    {
+        for (int si = 0, ei = gap; ei < n; si++, ei++)
+        {
+            int totalSum = si == 0 ? prefixSum[ei] : prefixSum[ei] - prefixSum[si - 1];
+
+            int cut = lower_bound(prefixSum.begin(), prefixSum.end(), totalSum / 2) - prefixSum.begin() - 1;
+
+            int leftSum = si == 0 ? prefixSum[cut] : prefixSum[cut] - prefixSum[si - 1];
+            int rightSum = prefixSum[ei] - prefixSum[cut];
+
+            int leftAns = dp[si][cut];
+            int rightAns = dp[cut + 1][ei];
+
+            if (leftSum == rightSum)
+                dp[si][ei] = max(dp[si][ei], max(leftSum + leftAns, rightSum + rightAns));
+            else if (leftSum < rightSum)
+                dp[si][ei] = max(dp[si][ei], leftSum + leftAns);
+            else
+                dp[si][ei] = max(dp[si][ei], rightSum + rightAns);
+        }
+    }
+
+    return dp[0][n - 1];
 }
 
 // 97. Interleaving String
