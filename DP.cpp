@@ -5498,33 +5498,48 @@ int stoneGameV(vector<int> &stoneValue)
 {
     int n = stoneValue.size();
 
-    vector<int> prefixSum(n);
-    prefixSum[0] = stoneValue[0];
-    for (int i = 1; i < n; i++)
-        prefixSum[i] = prefixSum[i - 1] + stoneValue[i];
+    vector<vector<int>> prefixSum(n, vector<int>(n));
+    for (int i = 0; i < n; i++)
+    {
+        prefixSum[i][i] = stoneValue[i];
+        for (int j = i + 1; j < n; j++)
+        {
+            prefixSum[i][j] = prefixSum[i][j - 1] + stoneValue[j];
+        }
+    }
 
-    vector<vector<int>> dp(n, vector<int>(n));
+    vector<vector<int>> dp(n+1, vector<int>(n+1));
 
     for (int gap = 1; gap < n; gap++)
     {
         for (int si = 0, ei = gap; ei < n; si++, ei++)
         {
-            int totalSum = si == 0 ? prefixSum[ei] : prefixSum[ei] - prefixSum[si - 1];
+            int totalSum = si == 0 ? prefixSum[si][ei] : prefixSum[si][ei] - prefixSum[si][si - 1];
 
-            int cut = lower_bound(prefixSum.begin(), prefixSum.end(), totalSum / 2) - prefixSum.begin() - 1;
-
-            int leftSum = si == 0 ? prefixSum[cut] : prefixSum[cut] - prefixSum[si - 1];
-            int rightSum = prefixSum[ei] - prefixSum[cut];
-
-            int leftAns = dp[si][cut];
-            int rightAns = dp[cut + 1][ei];
+            int cut = lower_bound(prefixSum[si].begin(), prefixSum[si].end(), totalSum / 2) - prefixSum[si].begin();
+            
+            int leftSum = si == 0 ? prefixSum[si][cut] : prefixSum[si][cut] - prefixSum[si][si - 1];
+            int rightSum = prefixSum[si][ei] - prefixSum[si][cut];
 
             if (leftSum == rightSum)
-                dp[si][ei] = max(dp[si][ei], max(leftSum + leftAns, rightSum + rightAns));
-            else if (leftSum < rightSum)
-                dp[si][ei] = max(dp[si][ei], leftSum + leftAns);
+                dp[si][ei] = max(dp[si][ei], max(leftSum + dp[si][cut], rightSum + dp[cut + 1][ei]));
             else
-                dp[si][ei] = max(dp[si][ei], rightSum + rightAns);
+            {
+                if (leftSum < rightSum)
+                    dp[si][ei] = max(dp[si][ei], leftSum + dp[si][cut]);
+                else
+                    dp[si][ei] = max(dp[si][ei], rightSum + dp[cut + 1][ei]);
+
+                if(cut != 0){
+                    leftSum = si == 0 ? prefixSum[si][cut - 1] : prefixSum[si][cut - 1] - prefixSum[si][si - 1];
+                    rightSum = prefixSum[si][ei] - prefixSum[si][cut - 1];
+
+                    if (leftSum < rightSum)
+                        dp[si][ei] = max(dp[si][ei], leftSum + dp[si][cut - 1]);
+                    else
+                        dp[si][ei] = max(dp[si][ei], rightSum + dp[cut][ei]);
+                }
+            }
         }
     }
 
