@@ -5453,11 +5453,18 @@ bool winnerSquareGame(int n)
 
 // 1563. Stone Game V
 /*
-  6 2 3 4  5  5
-  0 6 8 11 15 20 25
+Approach 1: Cut Type DP, O(n^3)
+For every si, ei, make a cut si to ei
+si to cut is left, and cut+1 to ei is right
+If the sum both is equal then take either of them, otherwise take a min of both
+Do so for every cut and take the max of all.
+
+Approach 2: O(n^2 * logn)
+Instead of making a cut at each index we can use binary search.
+Not done yet
 
 */
-// Approach 1: O(n^3)
+// Approach 1: O(n^3)(TLE)
 int stoneGameV(vector<int> &stoneValue)
 {
     int n = stoneValue.size();
@@ -5493,7 +5500,7 @@ int stoneGameV(vector<int> &stoneValue)
 
     return dp[0][n - 1];
 }
-// Approach 2: O(n^2 * logn)
+// Approach 2: O(n^2 * logn)(Not Complete)
 int stoneGameV(vector<int> &stoneValue)
 {
     int n = stoneValue.size();
@@ -5508,7 +5515,7 @@ int stoneGameV(vector<int> &stoneValue)
         }
     }
 
-    vector<vector<int>> dp(n+1, vector<int>(n+1));
+    vector<vector<int>> dp(n + 1, vector<int>(n + 1));
 
     for (int gap = 1; gap < n; gap++)
     {
@@ -5517,7 +5524,7 @@ int stoneGameV(vector<int> &stoneValue)
             int totalSum = si == 0 ? prefixSum[si][ei] : prefixSum[si][ei] - prefixSum[si][si - 1];
 
             int cut = lower_bound(prefixSum[si].begin(), prefixSum[si].end(), totalSum / 2) - prefixSum[si].begin();
-            
+
             int leftSum = si == 0 ? prefixSum[si][cut] : prefixSum[si][cut] - prefixSum[si][si - 1];
             int rightSum = prefixSum[si][ei] - prefixSum[si][cut];
 
@@ -5530,7 +5537,8 @@ int stoneGameV(vector<int> &stoneValue)
                 else
                     dp[si][ei] = max(dp[si][ei], rightSum + dp[cut + 1][ei]);
 
-                if(cut != 0){
+                if (cut != 0)
+                {
                     leftSum = si == 0 ? prefixSum[si][cut - 1] : prefixSum[si][cut - 1] - prefixSum[si][si - 1];
                     rightSum = prefixSum[si][ei] - prefixSum[si][cut - 1];
 
@@ -5544,6 +5552,62 @@ int stoneGameV(vector<int> &stoneValue)
     }
 
     return dp[0][n - 1];
+}
+
+// 1686. Stone Game VI
+/*
+a1 a2 a3 a4 a5
+b1 b2 b3 b4 b5
+
++1 +1 +1 -1 -1
+
+
+*/
+int stoneGameVI(vector<int> &aliceValues, vector<int> &bobValues)
+{
+    priority_queue<pair<int, int>> pq1, pq2;
+    vector<bool> vis(aliceValues.size());
+
+    for (int i = 0; i < aliceValues.size(); i++)
+    {
+        pq1.push({aliceValues[i], i});
+        pq2.push({bobValues[i], i});
+    }
+
+    int aliceScore = 0, bobScore = 0, turn = 1; // turn => 1: Alice, 0: Bob
+
+    while (pq1.size() > 0 && pq2.size() > 0)
+    {
+        if (turn)
+        {
+            pair<int, int> rVal = pq2.top();
+            pq2.pop();
+
+            aliceScore += aliceValues[rVal.second];
+            vis[rVal.second] = true;
+        }
+        else
+        {
+            pair<int, int> rVal = pq1.top();
+            pq1.pop();
+
+            bobScore += bobValues[rVal.second];
+            vis[rVal.second] = true;
+        }
+
+        while (vis[pq2.top().second])
+            pq2.pop();
+
+        while (vis[pq1.top().second])
+            pq1.pop();
+
+        turn ^= 1;
+    }
+
+    if (aliceScore == bobScore)
+        return 0;
+    else
+        return aliceScore > bobScore ? 1 : -1;
 }
 
 // 97. Interleaving String
