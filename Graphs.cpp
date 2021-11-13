@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <map>
 #include <unordered_set>
 #include <set>
 #include <list>
@@ -4433,6 +4434,33 @@ vector<vector<string>> findLadders(string beginWord, string endWord, vector<stri
     }
 
     return {};
+}
+
+// 1615. Maximal Network Rank
+int maximalNetworkRank(int n, vector<vector<int>> &roads)
+{
+    vector<int> degree(n);
+    vector<unordered_map<int, int>> graph(n);
+
+    for (vector<int> &e : roads)
+    {
+        degree[e[0]]++;
+        degree[e[1]]++;
+        graph[e[0]][e[1]] = 1;
+        graph[e[1]][e[0]] = 1;
+    }
+
+    int maxRank = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            maxRank = max(maxRank, degree[i] + degree[j] - graph[i][j]);
+        }
+    }
+
+    return maxRank;
 }
 
 int main()
