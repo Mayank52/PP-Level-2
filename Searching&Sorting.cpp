@@ -1481,7 +1481,7 @@ public:
 
     int book(int start, int end)
     {
-        // add current booking      
+        // add current booking
         bookings[start]++;
         bookings[end]--;
 
@@ -1496,6 +1496,74 @@ public:
         return res;
     }
 };
+
+// Sort and array of strings without converting them to int(912. Sort an Array)
+/*
+Approach : O(nlogn)
+We have to sort an array, where numbers are given as strings.
+And we have sort this array without converting these strings to int.
+
+In sorting strings they are sorted lexicographically.
+So, they are compared at index 0, if they are equal then their index 1 is compared as so on.
+So, to sort them in increasing order, we should first check if they have equal size, 
+then directly use s1 < s2.
+Otherwise if they have different sizes, then sort on basis of size
+This approach works for +ve numbers.
+
+For negative numbers, if both are negative then just sort them in opposite order
+And if one of them is negative, then put the negative one first.
+
+In Code, in lambda function we return s1 < s2 to sort in increasing order
+So, basically if the function returns true, then the order of elements remains the same
+So, if we want to place the -ve string first, and +ve string second then we need to check
+if s1[0] == '-', this means the first string is -ve, so it is already in right order
+So, in this case return true,
+And if s2[0] == '-', then we want to change the order as we want s2 first, so return false.
+
+Below question is to just test this approach, as this specific question is not given anywhere
+to submit.
+*/
+vector<int> sortArray(vector<int> &nums)
+{
+    vector<string> arr;
+    for (int val : nums)
+        arr.push_back(to_string(val));
+
+    // sort in increasing order
+    sort(arr.begin(), arr.end(), [](string &s1, string &s2)
+         {
+             // both negative -> sort them in decreasing order
+             if (s1[0] == '-' && s2[0] == '-')
+             {
+                 if (s1.size() == s2.size())
+                     return s1 > s2;
+                 else
+                     return s1.size() > s2.size();
+             }
+             // any one negative -> put the negative one first
+             else if (s1[0] == '-' || s2[0] == '-')
+             {
+                 return s1[0] == '-';
+             }
+             // both positive -> sort in incresing order
+             else
+             {
+                 // if size is same, then sort lexicographically
+                 if (s1.size() == s2.size())
+                     return s1 < s2;
+                 // if size is different, then smaller number comes first
+                 else
+                     return s1.size() < s2.size();
+             }
+         });
+
+    for (int i = 0; i < arr.size(); i++)
+    {
+        nums[i] = stoi(arr[i]);
+    }
+
+    return nums;
+}
 
 int main()
 {
