@@ -1497,7 +1497,7 @@ public:
     }
 };
 
-// Sort and array of strings without converting them to int(912. Sort an Array)
+// Sort an array of strings without converting them to integers(912. Sort an Array)
 /*
 Approach : O(nlogn)
 We have to sort an array, where numbers are given as strings.
