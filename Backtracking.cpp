@@ -237,6 +237,7 @@ int numberOfMatches(int n)
 }
 
 // 78. Subsets
+// Approach 1: Backtracking (Method 1)
 vector<vector<int>> res;
 void subsets(vector<int> &nums, int idx, vector<int> &subset)
 {
@@ -256,6 +257,174 @@ vector<vector<int>> subsets(vector<int> &nums)
 {
     vector<int> subset;
     subsets(nums, 0, subset);
+    return res;
+}
+// Approach 2: Backtracking (Method 2)
+void subsets(vector<int> &nums, int idx, vector<int> &subset)
+{
+    res.push_back(subset);
+    for (int j = i; j < nums.size(); j++)
+    {
+        subset.push_back(nums[j]);
+        subsets(nums, j + 1, subset);
+        subset.pop_back();
+    }
+}
+vector<vector<int>> subsets(vector<int> &nums)
+{
+    vector<int> subset;
+    subsets(nums, 0, subset);
+    return res;
+}
+// Approach 3: Iterative
+/*
+Approach: 
+Eg: [1,2,3]
+So, we iterate over all elements
+And for each element we add it to all available subsets to get a new subset
+
+Initially: []
+1: [], [1]
+2: adds [2], [1,2]
+3: adds [3], [1,3], [2,3], [1,2,3]
+
+So, total, [],[1],[2],[1,2],[3],[1,3], [2,3], [1,2,3]
+*/
+vector<vector<int>> subsets(vector<int> &nums)
+{
+    vector<vector<int>> res;
+    res.push_back({});
+
+    for (int i = 0; i < nums.size(); i++)
+    {
+        int n = res.size();
+        for (int j = 0; j < n; j++)
+        {
+            res.push_back(res[j]);
+            res[res.size() - 1].push_back(nums[i]);
+        }
+    }
+
+    return res;
+}
+// Approach 4: Bit Manipulation
+/*
+Approach: O(2^n)
+If size of array = n
+Then no. of subsets = 2^n
+So, we iterate from 0 to 2^n
+And for each number we check its bit representation
+Every bit that is 1, we add that index number into the current subset
+
+Eg: [1,2,3]
+n = 3,
+Iterate from 0 to 2^3 = 8
+
+For 0, bits = 0 0 0, so empty set
+1 = 0 0 1 = So, only 3 gets added
+2 = 0 1 0 = So, only 2 gets added
+3 = 0 1 1 = So, 2, 3 get added
+
+And So on...
+*/
+vector<vector<int>> subsets(vector<int> &nums)
+{
+    vector<vector<int>> res;
+
+    for (int i = 0; i < (1 << nums.size()); i++)
+    {
+        int n = i, k = nums.size() - 1;
+        vector<int> subset;
+
+        while (n > 0)
+        {
+            // if current bit is set then add this index element into subset
+            if (n & 1)
+                subset.push_back(nums[k]);
+
+            k--;
+            n >>= 1;
+        }
+
+        res.push_back(subset);
+    }
+
+    return res;
+}
+
+// 90. Subsets II
+/*
+Approach 1: Backtracking, O(nlogn + 2^n) = O(nlogn)
+Sort the array to get all duplicates together
+Then each step, we put every element at the current position and make the next call
+To prevent duplicates, we only add an element if it is not equal to its previous element
+
+Approach 2: Iterative
+Sort the array
+Then for each element first count its frequency
+Then for each subset till now, add the current element to it 1 time, 2 time.....count times
+And add all those new subsets to result
+
+Eg: [1,2,2]
+When you get 2 and have already, [], [1]
+We will get [2],[2,2], [1,2], [1,2,2] new subsets
+*/
+// Approach 1: Backtracking
+void subsets(vector<int> &nums, int idx, vector<vector<int>> &res, vector<int> &subset)
+{
+    res.push_back(subset);
+
+    for (int i = idx; i < nums.size(); i++)
+    {
+        if (i == idx || nums[i] != nums[i - 1])
+        {
+            subset.push_back(nums[i]);
+            subsets(nums, i + 1, res, subset);
+            subset.pop_back();
+        }
+    }
+}
+vector<vector<int>> subsetsWithDup(vector<int> &nums)
+{
+    vector<vector<int>> res;
+    vector<int> subset;
+
+    sort(nums.begin(), nums.end());
+
+    subsets(nums, 0, res, subset);
+
+    return res;
+}
+// Approach 2: Iterative
+vector<vector<int>> subsetsWithDup(vector<int> &nums)
+{
+    vector<vector<int>> res;
+    res.push_back({});
+
+    sort(nums.begin(), nums.end());
+
+    for (int i = 0; i < nums.size(); i++)
+    {
+        int count = 1;
+        while (i < nums.size() - 1 && nums[i] == nums[i + 1])
+        {
+            count++;
+            i++;
+        }
+
+        int n = res.size();
+        for (int j = 0; j < n; j++)
+        {
+            vector<int> subset = res[j];
+
+            for (int k = 0; k < count; k++)
+            {
+                subset.push_back(nums[i]);
+                res.push_back(subset);
+            }
+        }
+    }
+
     return res;
 }
 
