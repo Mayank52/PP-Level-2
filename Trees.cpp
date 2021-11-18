@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <math.h>
 #include <list>
+#include <algorithm>
 #include <unordered_map>
 using namespace std;
 
@@ -791,6 +792,55 @@ int widthOfBinaryTree(TreeNode *root)
     }
 
     return (int)width;
+}
+
+// 1373. Maximum Sum BST in Binary Tree
+/*
+Approach: O(n)
+For each node, for that subtree to be a BST, the current node which is the root of the subtree
+should be greater than max node in its left subtree and smaller than min node in its
+right subtree. Also, its left and right subtree should also be BST
+So, for each node, first check if its left and right subtree is a BST.
+If they are not, then current node cannot be a BST
+and nothing above the current node can be a BST either so return false directly as
+
+And if its subtrees are BSTs, then check
+max in left < current node value < min in right
+for the current node and return the min and max value and subtree sum.
+*/
+vector<int> maxSumBST(TreeNode *root, int &maxSum)
+{
+    // return value: max element in subtree, min element in substree, sum of subtree, isBST(0->false, 1->True)
+    if (root == nullptr)    
+        return {INT_MIN, INT_MAX, 0, 1};
+    // leaf node
+    if (root->left == nullptr && root->right == nullptr)
+    {
+        maxSum = max(maxSum, root->val);
+        return {root->val, root->val, root->val, 1};
+    }
+
+    vector<int> leftAns = maxSumBST(root->left, maxSum);
+    vector<int> rightAns = maxSumBST(root->right, maxSum);
+
+    // if current node is a BST, then update maxSum
+    if (leftAns[3] && rightAns[3] && leftAns[0] < root->val && root->val < rightAns[1])
+    {
+        maxSum = max(maxSum, leftAns[2] + root->val + rightAns[2]);
+        return {max({leftAns[0], rightAns[0], root->val}), min({leftAns[1], rightAns[1], root->val}), leftAns[2] + root->val + rightAns[2], 1};
+    }
+
+    // if current node is not BST, then anything above it wont be either
+    // so values dont matter to them
+    return {0, 0, 0, 0};
+}
+int maxSumBST(TreeNode *root)
+{
+    int maxSum = INT_MIN;
+
+    maxSumBST(root, maxSum);
+
+    return max(maxSum, 0);
 }
 
 int main()
