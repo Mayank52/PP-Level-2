@@ -811,7 +811,7 @@ for the current node and return the min and max value and subtree sum.
 vector<int> maxSumBST(TreeNode *root, int &maxSum)
 {
     // return value: max element in subtree, min element in substree, sum of subtree, isBST(0->false, 1->True)
-    if (root == nullptr)    
+    if (root == nullptr)
         return {INT_MIN, INT_MAX, 0, 1};
     // leaf node
     if (root->left == nullptr && root->right == nullptr)
@@ -841,6 +841,76 @@ int maxSumBST(TreeNode *root)
     maxSumBST(root, maxSum);
 
     return max(maxSum, 0);
+}
+
+// 1483. Kth Ancestor of a Tree Node
+/*
+Approach: Binary Lifting
+Preprocessing: O(nlogn)
+Query: O(logn)
+*/
+class TreeAncestor
+{
+private:
+    vector<vector<int>> ancestors;
+    int maxBitCount;
+
+    void findAllAncestors(vector<int> &parent)
+    {
+        int n = parent.size();
+
+        // count the number of bits in total node count
+        maxBitCount = 0;
+        while (1 << (maxBitCount) <= n)
+            maxBitCount++;
+
+        ancestors.resize(n, vector<int>(maxBitCount, -1));
+
+        // mark the first ancestors of every node with their parents
+        for (int i = 0; i < n; i++)
+            ancestors[i][0] = parent[i];
+
+        for (int i = 1; i < maxBitCount; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                // if (i-1)th ancestor of jth node is not -1
+                if (ancestors[j][i - 1] != -1)
+                    ancestors[j][i] = ancestors[ancestors[j][i - 1]][i - 1];
+            }
+        }
+    }
+
+public:
+    TreeAncestor(int n, vector<int> &parent)
+    {
+        findAllAncestors(parent);
+    }
+
+    int getKthAncestor(int node, int k)
+    {
+        int ancestor = node;
+        for (int i = 0; i < maxBitCount; i++)
+        {
+            if (k & (1 << i))
+                ancestor = ancestors[ancestor][i];
+
+            if (ancestor == -1)
+                return -1;
+        }
+
+        return ancestor;
+    }
+};
+
+// Sum of all nodes whose kth ancestor is even (Interview Experience Question)
+/*
+Question: 
+For a given binary tree, find the sum of values of all nodes whose kth ancestor is even.
+Solution has not been tested as question or solution is not available anywhere
+*/
+int getSumofNodesWithEvenKthAncestor(Node *root)
+{
 }
 
 int main()

@@ -289,9 +289,7 @@ class Trees {
         return temp;
     }
 
-    // Approach 2: without finding the width -> use a hashmap instead of array to
-    // store the
-    // vertical level
+    // Approach 2: without finding the width -> use a hashmap instead of array to store the vertical level
     static ArrayList<Integer> topView(Node node) {
         // add your code
         if (node == null)
