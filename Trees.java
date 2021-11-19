@@ -38,10 +38,11 @@ class Trees {
 
     // 144. Binary Tree Preorder Traversal (Morris Traversal)
     /*
-     * Morris Traversal : O(3n), O(1) Each node is visited 3 times max. When the
-     * root is visited 1st time, make the connection with rightmost child of its
-     * left child, and add root to ans. When root is visited 2nd time, break the
-     * connection and move to right child.
+     * Morris Traversal : O(3n), O(1)
+       Each node is visited 3 times max. 
+       When the root is visited 1st time, make the connection with rightmost child of its
+       left child, and add root to ans. 
+       When root is visited 2nd time, break the connection and move to right child.
      */
     public List<Integer> preorderTraversal(TreeNode root) {
         List<Integer> ans = new ArrayList<>();
@@ -225,6 +226,18 @@ class Trees {
 
     // Top View of Binary Tree
     // (https://practice.geeksforgeeks.org/problems/top-view-of-binary-tree/1)
+    /*
+    Eg: leftWidth = -2, Then in the array, its index is 0, so to map the range 
+    leftWidth to rightWidth to the array of size (rightWidth - leftWidth + 1)
+    We do -leftWidth from all level values
+    So, if the width was -2 to 5, and array size would have been 5 - (-2) + 1 = 8
+    And then the level -1 would be mapped to -1 - (-2) = 1 which is correct
+    Similarly
+    -2 gets mapped to 0
+    -1 to 1
+    0 to 2
+    1 to 3 ..... so on till 5 gets mapped to 7 which is last index
+    */
     static class pair {
         Node node;
         int vl;
@@ -263,7 +276,7 @@ class Trees {
         Arrays.fill(ans, -1);
 
         LinkedList<pair> que = new LinkedList<>();
-        que.addLast(new pair(node, -leftwidth));
+        que.addLast(new pair(node, -leftwidth));    
 
         while (que.size() != 0) {
             int size = que.size();
@@ -443,7 +456,7 @@ class Trees {
     // 987. Vertical Order Traversal of a Binary Tree
     public class Pair implements Comparable<Pair> {
         public TreeNode node;
-        public int level; // stores either vertical or horizontal level
+        public int level; // stores vertical level
 
         public Pair(TreeNode n, int lvl) {
             this.node = n;
@@ -705,6 +718,9 @@ class Trees {
     }
 
     // 222. Count Complete Tree Nodes
+    /*
+    Explanation in c++ code
+    */
     public int getLeftHeight(TreeNode root) {
         int count = 1;
         while (root.left != null) {
@@ -754,7 +770,6 @@ class Trees {
 
         return root;
     }
-
     public TreeNode buildTree(int[] preorder, int[] inorder) {
         HashMap<Integer, Integer> map = new HashMap<>();
         for (int i = 0; i < inorder.length; i++) {
@@ -831,7 +846,6 @@ class Trees {
 
         return isValidBST(root.left, lo, root.val) && isValidBST(root.right, root.val, hi);
     }
-
     public boolean isValidBST(TreeNode root) {
         return isValidBST(root, Long.MIN_VALUE, Long.MAX_VALUE);
     }
@@ -849,7 +863,6 @@ class Trees {
 
         return root;
     }
-
     public static Node constructTree(int post[], int n) {
         // Find the Next Smaller Element in left for postorder elements
         LinkedList<Integer> st = new LinkedList<>();
@@ -870,7 +883,6 @@ class Trees {
 
     // Approach 2: (Better) Using (lower bound, upper bound)
     public static int idx = -1;
-
     public static Node constructTree(int post[], int lb, int ub) {
         if (idx < 0)
             return null;
@@ -887,7 +899,6 @@ class Trees {
 
         return root;
     }
-
     public static Node constructTree(int post[], int n) {
         idx = n - 1;
         return constructTree(post, Integer.MIN_VALUE, Integer.MAX_VALUE);
@@ -896,7 +907,6 @@ class Trees {
     // 1008. Construct Binary Search Tree from Preorder Traversal
     // Approach: Using (lower bound, upper bound)
     public static int idx = -1;
-
     public static TreeNode constructTree(int pre[], int lb, int ub) {
         if (idx == pre.length)
             return null;
@@ -911,7 +921,6 @@ class Trees {
 
         return root;
     }
-
     public TreeNode bstFromPreorder(int[] preorder) {
         idx = 0;
         return constructTree(preorder, Integer.MIN_VALUE, Integer.MAX_VALUE);

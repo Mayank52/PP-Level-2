@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <stack>
 #include <limits.h>
 #include <math.h>
 #include <list>
@@ -23,6 +24,69 @@ struct TreeNode
     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
 };
+
+// 987. Vertical Order Traversal of a Binary Tree
+/*
+Approach: Level Order Traversal
+On leetcode, in case two node in a vertical level are at the same horizontal,
+then we have to sort them in increasing order of their values
+So, we make a map of vertical levels: verticalLevel : list of {value, horizontal level}
+Then after the BFS, we sort every vertical level in order of horizontal level, and if level is =, then 
+in order of values, and add the sorted level to answer.
+*/
+vector<vector<int>> verticalTraversal(TreeNode *root)
+{
+    unordered_map<int, vector<pair<int, int>>> verticalLevels;
+
+    queue<pair<TreeNode *, int>> que;
+    que.push({root, 0});
+
+    int hl = 0, minLeft = INT_MAX, maxRight = INT_MIN;
+    while (que.size() > 0)
+    {
+        int size = que.size();
+
+        while (size--)
+        {
+            pair<TreeNode *, int> rnode = que.front();
+            que.pop();
+
+            minLeft = min(minLeft, rnode.second);
+            maxRight = max(maxRight, rnode.second);
+
+            verticalLevels[rnode.second].push_back({rnode.first->val, hl});
+
+            if (rnode.first->left != nullptr)
+                que.push({rnode.first->left, rnode.second - 1});
+            if (rnode.first->right != nullptr)
+                que.push({rnode.first->right, rnode.second + 1});
+        }
+
+        hl++;
+    }
+
+    vector<vector<int>> res;
+    for (int i = minLeft; i <= maxRight; i++)
+    {
+        // sort according to horizontal level
+        sort(verticalLevels[i].begin(), verticalLevels[i].end(), [&](pair<int, int> p1, pair<int, int> p2)
+             {
+                 if (p1.second == p2.second)
+                     return p1.first < p2.first;
+                 else
+                     return p1.second < p2.second;
+             });
+
+        // add the level to result
+        vector<int> level;
+        for (int j = 0; j < verticalLevels[i].size(); j++)
+            level.push_back(verticalLevels[i][j].first);
+
+        res.push_back(level);
+    }
+
+    return res;
+}
 
 // Diagonal Traversal of Binary Tree (https://practice.geeksforgeeks.org/problems/diagonal-traversal-of-binary-tree/1#)
 /*
@@ -282,6 +346,12 @@ In a Complete tree, of height h, the number of nodes = 2 ^ h - 1
 So, for each node we check if the height of its left and right child is equal
 If it is equal then it is a complete tree and directly return 2 ^ h - 1
 Else do the same thing for its left and right child
+
+At each level, atleast one of the left and right child will be complete,
+So, that call will return directly, so, it will reduce the tree by half at each step
+So, the Time complexity = O(logn * 2logn) = O(logn * logn)
+And in tree height = logn 
+So, Time complexity = O(h*h) 
 */
 int getLeftHeight(TreeNode *root)
 {
@@ -908,9 +978,178 @@ public:
 Question: 
 For a given binary tree, find the sum of values of all nodes whose kth ancestor is even.
 Solution has not been tested as question or solution is not available anywhere
+
+Approach: O(n), DFS
+We use DFS and keep a deque to store the root to node path for the current node
+And we also keep the level count of current node
+
+We use the deque to maintain the root to node path for current node
+Also, we keep the size of queue to k, so that the front of queue is always the kth ancestor
+So, for each node we add it to the deque before calling for its children
+
+For the current node if its level is < k, then just add it to the path i.e. the deque
+As if its level < k, then its kth ancestor does not exist.
+And if level >= k, then the front of queue is kth ancestor, so we check if that is even
+and accordingly add current node to answer
+Then we pop the front element and push the current node value to end so that now the front
+of queue is the kth ancestor of current node's children
+
 */
-int getSumofNodesWithEvenKthAncestor(Node *root)
+void helper(TreeNode *node, int k, int lvl, deque<int> &que, int &evenSum)
 {
+    if (node == nullptr)
+        return;
+
+    // if current node's level >= k, then check front of queue
+    if (lvl >= k)
+    {
+        // if kth ancestor is even, add current value to sum
+        if (que.front() % 2 == 0)
+            evenSum += node->val;
+
+        // pop the front element
+        que.pop_front();
+    }
+
+    // then add current node to the path
+    que.push_back(node->val);
+
+    // call for left and right children
+    helper(node->left, k, lvl + 1, que, evenSum);
+    helper(node->right, k, lvl + 1, que, evenSum);
+
+    // remove current node from path
+    que.pop_back();
+}
+int getSumofNodesWithEvenKthAncestor(TreeNode *root, int k)
+{
+    int evenSum = 0;
+    deque<int> que;
+
+    helper(root, k, 0, que, evenSum);
+
+    return evenSum;
+}
+
+// 173. Binary Search Tree Iterator
+/*
+Approach: Time: O(1), Space: O(h), Using Stack
+Brute Force would be to store the inorder in an array and then just return next element in O(1) time
+But this takes O(n) space.
+We can do in O(h) space using stack
+In the stack we maintain it such that top of stack is always the next element
+So, initially the first element in inorder is the smallest element which is lefmost of the BST
+So, push the root into stack and keep going left and pushing elements until the leftmost element
+
+Then when next is called, we have the next element on top.
+So, we pop that and return it. Also, now we need to put the next element in inorder at top
+So, if the element we just removed has a right child, then the next element again would be
+leftmost of that right child. So, push every node in that path into the stack again.
+And if there is no right child, then the top of the stack would be the removed element's root, 
+which would have been the next element in inorder, so it is correct.
+
+The space in stack can go at most the height of tree.
+Also, although next() seems O(h), it is actually amortised O(1) as every node 
+is only being visited once while being pushed into stack.
+So, when the whole inorder is done, total would have been O(n).
+*/
+class BSTIterator
+{
+private:
+    stack<TreeNode *> st;
+
+public:
+    BSTIterator(TreeNode *root)
+    {
+        TreeNode *curr = root;
+        while (curr != nullptr)
+        {
+            st.push(curr);
+            curr = curr->left;
+        }
+    }
+
+    int next()
+    {
+        TreeNode *nextEle = st.top();
+        st.pop();
+
+        TreeNode *curr = nextEle->right;
+        while (curr != nullptr)
+        {
+            st.push(curr);
+            curr = curr->left;
+        }
+
+        return nextEle->val;
+    }
+
+    bool hasNext()
+    {
+        return st.size() > 0;
+    }
+};
+
+// 653. Two Sum IV - Input is a BST
+/*
+Approach 1: Hashmap, Time: O(n), Space: O(n)
+Go in inorder, and check if sum - val is present in hashmap, then return true
+This works for any tree, not just BST
+
+Approach 2: Inorder Array, Time: O(n), Space: O(n)
+Put the inorder traversal in an array, and use 2 pointers to find the 2sum
+
+Approach 3: 2 Stacks, Time: O(n), Space: O(h)
+Like in BST Iterator, we keep the increasing inorder in first stack, and 
+decreasing inorder in second stack, and use the same 2 pointer technique to get 2sum
+*/
+bool findTarget(TreeNode *root, int k)
+{
+    stack<TreeNode *> leftStack, rightStack;
+
+    TreeNode *curr = root;
+    while (curr != nullptr)
+    {
+        leftStack.push(curr);
+        curr = curr->left;
+    }
+    curr = root;
+    while (curr != nullptr)
+    {
+        rightStack.push(curr);
+        curr = curr->right;
+    }
+
+    // while i < j
+    while (leftStack.size() > 0 && rightStack.size() > 0 && leftStack.top() != rightStack.top())
+    {
+        int sum = leftStack.top()->val + rightStack.top()->val;
+
+        if (sum == k)
+            return true;    
+        else if (sum < k)   // move left pointer forward
+        {
+            TreeNode *curr = leftStack.top()->right;
+            leftStack.pop();
+
+            while (curr != nullptr)
+            {
+                leftStack.push(curr);
+                curr = curr->left;
+            }
+        }
+        else    // move right pointer backward
+        {
+            TreeNode *curr = rightStack.top()->left;
+            rightStack.pop();
+
+            while (curr != nullptr)
+            {
+                rightStack.push(curr);
+                curr = curr->right;
+            }
+        }
+    }
 }
 
 int main()

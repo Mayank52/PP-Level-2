@@ -2166,6 +2166,48 @@ int minBuildTime(vector<int> &blocks, int split)
     return pq.top();
 }
 
+// 295. Find Median from Data Stream
+class MedianFinder
+{
+public:
+    /** initialize your data structure here. */
+    priority_queue<int> leftHalf;
+    priority_queue<int, vector<int>, greater<int>> rightHalf;
+
+    MedianFinder()
+    {
+    }
+
+    void addNum(int num)
+    {
+        if (leftHalf.empty() || num < leftHalf.top())
+            leftHalf.push(num);
+        else
+            rightHalf.push(num);
+
+        if (leftHalf.size() > rightHalf.size() + 1)
+        {
+            rightHalf.push(leftHalf.top());
+            leftHalf.pop();
+        }
+        else if (rightHalf.size() > leftHalf.size())
+        {
+            leftHalf.push(rightHalf.top());
+            rightHalf.pop();
+        }
+    }
+
+    double findMedian()
+    {
+        if (leftHalf.size() == rightHalf.size())
+        {
+            return leftHalf.size() == 0 ? 0 : 1.0 * (leftHalf.top() + rightHalf.top()) / 2;
+        }
+        else
+            return leftHalf.top();
+    }
+};
+
 // 480. Sliding Window Median
 /*
 Approach: O(nlogk) (k = size of window, n = size of array)
