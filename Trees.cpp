@@ -14,7 +14,21 @@ struct Node
     int data;
     Node *left, *right;
 };
+class Node
+{
+public:
+    int val;
+    Node *left;
+    Node *right;
+    Node *next;
 
+    Node() : val(0), left(NULL), right(NULL), next(NULL) {}
+
+    Node(int _val) : val(_val), left(NULL), right(NULL), next(NULL) {}
+
+    Node(int _val, Node *_left, Node *_right, Node *_next)
+        : val(_val), left(_left), right(_right), next(_next) {}
+};
 struct TreeNode
 {
     int val;
@@ -434,8 +448,25 @@ Move in inorder
 For each element if its absolute difference is less than front of queue, then pop the front, and add this element to last
 If current element cant beat the front element then, no element after it can do so either as we are moving in increasing order.
 
-Approach 3:
-For balanced BST,we can get less than O(n)
+Approach 3: O(n), O(n)
+Get the inorder of the BST in an array, then get the lower_bound of target in array
+Then we take 2 pointer, one left just before the target, and one right at the target
+And now left moves backward, and right moves forward.
+Now until we have k values, we check the absolute with both left and right elements
+And whichever one is smaller we add that to answer and move that pointer ahead.
+
+Approach 4: Time: O(logn + k), Space: O(logn)
+Now using approach 3, we can do same thing with 2 stacks like in 653. Two Sum IV - Input is a BST
+This approach is same as 653. Two Sum IV - Input is a BST
+
+Here we use 2 stacks, one to maintain the increasing order, and one to maintain to decreasing order
+So, in increasing stack the top element is min, and in decreasing stack top element is max
+And in the BST, we first find the target in tree in logn, and add the nodes in that path into 2 stacks
+If the current node < target, then add to decreasing stack and go to right
+And if current node > target, then add to increasing stack and go to left
+And start k closest values to result
+Compare the difference of target with top of both left and right stack, and whichever is smaller 
+add it to result and move that ahead.
 */
 //Approach 1:
 void closestKValues(TreeNode *root, double target, int k, priority_queue<vector<double>, vector<vector<double>>> &pq)
@@ -514,6 +545,107 @@ vector<int> closestKValues(TreeNode *root, double target, int k)
         int rVal = window.front();
         window.pop_front();
         res.push_back(rVal);
+    }
+
+    return res;
+}
+// Approach 3:
+void inorderTraversal(TreeNode *node, vector<double> &inorder){
+    if(node == nullptr) return;
+
+    inorderTraversal(node->left, inorder);
+
+    inorder.push_back(node->val);
+
+    inorderTraversal(node->right, inorder);
+}
+vector<int> closestKValues(TreeNode *root, double target, int k)
+{
+    // write your code here
+    vector<double> inorder;
+    inorderTraversal(root, inorder);
+
+    int idx = lower_bound(inorder.begin(), inorder.end(), target) - inorder.begin();
+
+    cout<<idx<<endl;
+
+    int i = (idx == inorder.size()) ? idx - 1 : idx, j = i + 1;
+    vector<int> res;
+    while(k-- > 0){
+        if(j >= inorder.size() || i >= 0 && abs(inorder[i] - target) < abs(inorder[j] - target)){
+            res.push_back(inorder[i]);
+            i--;
+        }
+        else{
+            res.push_back(inorder[j]);
+            j++;
+        }
+    }
+
+    return res;
+}
+//Approach 4:
+void findNode(TreeNode *root, double target, stack<TreeNode *> &leftStack, stack<TreeNode *> &rightStack)
+{
+    TreeNode *curr = root;
+
+    while (curr != nullptr)
+    {
+        if (curr->val < target)
+        {
+            rightStack.push(curr);
+            curr = curr->right;
+        }
+        else
+        {
+            leftStack.push(curr);
+            curr = curr->left;
+        }
+    }
+}
+void moveLeftToNext(stack<TreeNode *> &leftStack)
+{
+    TreeNode *curr = leftStack.top()->right;
+    leftStack.pop();
+
+    while (curr != nullptr)
+    {
+        leftStack.push(curr);
+        curr = curr->left;
+    }
+}
+void moveRightToNext(stack<TreeNode *> &rightStack)
+{
+    TreeNode *curr = rightStack.top()->left;
+    rightStack.pop();
+
+    while (curr != nullptr)
+    {
+        rightStack.push(curr);
+        curr = curr->right;
+    }
+}
+vector<int> closestKValues(TreeNode *root, double target, int k)
+{
+    // write your code here
+    stack<TreeNode *> leftStack, rightStack;
+
+    findNode(root, target, leftStack, rightStack);
+
+    vector<int> res;
+
+    while (k-- > 0)
+    {
+        if (rightStack.size() == 0 || (leftStack.size() > 0 && abs(leftStack.top()->val - target) < abs(rightStack.top()->val - target)))
+        {
+            res.push_back(leftStack.top()->val);
+            moveLeftToNext(leftStack);
+        }
+        else
+        {
+            res.push_back(rightStack.top()->val);
+            moveRightToNext(rightStack);
+        }
     }
 
     return res;
@@ -623,6 +755,64 @@ TreeNode *deserialize(string data)
     idx++;
     root->left = deserialize(data);
     root->right = deserialize(data);
+
+    return root;
+}
+
+// 117. Populating Next Right Pointers in Each Node II
+/*
+Approach: Time: O(n), Space: O(1)
+On each level, 
+Keep a head of next level node, and a previous node
+So, we treat every level like a linked list
+And for every node instead of connecting its children's next to the next node's children, 
+We keep a previous and connect it's next to current node's children, then they become previous, and so on
+So, For the current node, if its left child exists, then connect the previous node's next to the left child
+Also for the first node of each level previous is null, and this node is the head of next level
+And we need to move to this node after current level is done, so if previous is null, then
+current node becomes the head
+*/
+Node *connect(Node *root)
+{
+    Node *curr = root;
+
+    while (curr != nullptr)
+    {
+        Node *nextLevelHead = nullptr;
+        Node *prev = nullptr;
+
+        // connect current level
+        while (curr != nullptr)
+        {
+            // connect previous node's next to left child
+            if (curr->left != nullptr)
+            {
+                if (prev != nullptr)
+                    prev->next = curr->left;
+                else
+                    nextLevelHead = curr->left;
+
+                prev = curr->left;
+            }
+
+            // connect previous node's next to right child
+            if (curr->right != nullptr)
+            {
+                if (prev != nullptr)
+                    prev->next = curr->right;
+                else
+                    nextLevelHead = curr->right;
+
+                prev = curr->right;
+            }
+
+            // move to next node on same level
+            curr = curr->next;
+        }
+
+        // move to next level
+        curr = nextLevelHead;
+    }
 
     return root;
 }
@@ -1126,8 +1316,8 @@ bool findTarget(TreeNode *root, int k)
         int sum = leftStack.top()->val + rightStack.top()->val;
 
         if (sum == k)
-            return true;    
-        else if (sum < k)   // move left pointer forward
+            return true;
+        else if (sum < k) // move left pointer forward
         {
             TreeNode *curr = leftStack.top()->right;
             leftStack.pop();
@@ -1138,7 +1328,7 @@ bool findTarget(TreeNode *root, int k)
                 curr = curr->left;
             }
         }
-        else    // move right pointer backward
+        else // move right pointer backward
         {
             TreeNode *curr = rightStack.top()->left;
             rightStack.pop();

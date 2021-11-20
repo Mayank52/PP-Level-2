@@ -13,260 +13,6 @@
 
 using namespace std;
 
-// Extra Questions==============================================================
-// 997. Find the Town Judge
-/*
-Approach: 
-Find the indegree and outdegree of each node
-The node with indegree == n-1 && outdegree == 0 is the answer
-
-We dont need outdegree seperately, we can just +1 and -1 in indegree itself
-*/
-int findJudge(int n, vector<vector<int>> &trust)
-{
-    vector<int> indegree(n + 1);
-
-    for (vector<int> &e : trust)
-    {
-        indegree[e[1]]++;
-        indegree[e[0]]--;
-    }
-
-    for (int i = 1; i <= n; i++)
-    {
-        if (indegree[i] == n - 1)
-            return i;
-    }
-
-    return -1;
-}
-
-// 1557. Minimum Number of Vertices to Reach All Nodes
-/*
-Approach:
-We have to find nodes with indegree = 0
-Because they cannot be reached from any other node. So, they must be in the answer
-Other nodes with >0 indegree means, they can all be reached from other nodes
-*/
-vector<int> findSmallestSetOfVertices(int n, vector<vector<int>> &edges)
-{
-    vector<int> indegree(n);
-    vector<int> res;
-
-    for (vector<int> &e : edges)
-    {
-        indegree[e[1]]++;
-    }
-
-    for (int i = 0; i < n; i++)
-    {
-        if (indegree[i] == 0)
-            res.push_back(i);
-    }
-
-    return res;
-}
-
-// 1319. Number of Operations to Make Network Connected
-/*
-Approach: DSU
-Count the number of connected components, redundant edges in graph
-Ans = number of components - 1
-
-Eg: To connect 3 different components of a graph you need 3 - 1 = 2 edges
-
-So, redundant edges gives the extra available edges, and if
-reduntantEdgeCount >= componentCount - 1
-*/
-vector<int> par;
-int find(int u)
-{
-    if (par[u] == u)
-        return u;
-    return par[u] = find(par[u]);
-}
-int makeConnected(int n, vector<vector<int>> &connections)
-{
-    par.resize(n);
-
-    // Initially componentCount = no. of nodes
-    int redundantEdgeCount = 0, componentCount = n;
-
-    for (int i = 0; i < n; i++)
-        par[i] = i;
-
-    for (vector<int> &e : connections)
-    {
-        int u = e[0];
-        int v = e[1];
-
-        int p1 = find(e[0]);
-        int p2 = find(e[1]);
-
-        // increase redundant edge count
-        if (p1 == p2)
-        {
-            redundantEdgeCount++;
-        }
-        // merge two sets, reduce component count
-        else
-        {
-            par[p1] = p2;
-            componentCount--;
-        }
-    }
-
-    if (redundantEdgeCount >= componentCount - 1)
-        return componentCount - 1;
-    else
-        return -1;
-}
-
-// 1514. Path with Maximum Probability
-/*
-Approach: Dijsktra's Algo
-*/
-double maxProbability(int n, vector<vector<int>> &edges, vector<double> &succProb, int start, int end)
-{
-    vector<double> res(n);
-    vector<vector<vector<double>>> graph(n);
-    vector<bool> vis(n);
-
-    for (int i = 0; i < edges.size(); i++)
-    {
-        double u = edges[i][0];
-        double v = edges[i][1];
-        double w = succProb[i];
-
-        graph[u].push_back({v, w});
-        graph[v].push_back({u, w});
-    }
-
-    priority_queue<vector<double>, vector<vector<double>>> pq;
-    pq.push({1.0, start * 1.0});
-
-    while (pq.size() > 0)
-    {
-        vector<double> rnode = pq.top();
-        pq.pop();
-
-        double u = rnode[1];
-        double p = rnode[0];
-
-        res[u] = max(res[u], p);
-        vis[u] = true;
-
-        for (vector<double> &e : graph[u])
-        {
-            if (!vis[e[0]])
-            {
-                pq.push({e[1] * p, e[0]});
-            }
-        }
-    }
-
-    return res[end];
-}
-
-// 1466. Reorder Routes to Make All Paths Lead to the City Zero
-/*
-Approach: DFS
-Make a adjacency list, and mark the direction for each edge
-0-> towards node ,1-> away from node
-Now since we have to make each path reach 0, and the graph is a tree
-So, just consider 0 as root, and in dfs from 0 
-count all edges where the edge points away from parent towards child
-*/
-int count = 0;
-void dfs(vector<vector<pair>> &graph, int src, vector<bool> &vis)
-{
-    vis[src] = true;
-
-    for (pair &e : graph[src])
-    {
-        int v = e.first;
-        int dir = e.second;
-        if (!vis[v])
-        {
-            if (dir == 1)
-                count++;
-
-            dfs(graph, v, vis);
-        }
-    }
-}
-int minReorder(int n, vector<vector<int>> &connections)
-{
-    vector<vector<pair>> graph(n);
-    vector<bool> vis(n);
-
-    for (vector<int> &e : connections)
-    {
-        int u = e[0];
-        int v = e[1];
-
-        graph[u].push_back({v, 1});
-        graph[v].push_back({u, 0});
-    }
-
-    dfs(graph, 0, vis);
-
-    return count;
-}
-
-// 947. Most Stones Removed with Same Row or Column
-/*
-Approach : Union Find
-Use the coords x, y as two different nodes, and use union find
-To avoid overlap between equal values of row, col like {0, 1}, and {1, 0}
-use x and ~y
-
-If we use the just use x and y in parent map, then in
-{{0, 1}, {1, 0}}
-the values of row and col will overlap, and it will give answer 1,
-but ans is 0, as no stone can be removed.
-
-*/
-unordered_map<int, int> par;
-int count = 0;
-int find(int u)
-{
-    // if not present in map, then add to map and increase set count
-    if (par.find(u) == par.end())
-    {
-        count++;
-        return par[u] = u;
-    }
-
-    if (par[u] == u)
-        return u;
-
-    return par[u] = find(par[u]);
-}
-int removeStones(vector<vector<int>> &stones)
-{
-    int n = stones.size();
-
-    for (vector<int> &coords : stones)
-    {
-        int u = coords[0];
-        int v = ~coords[1];
-
-        //find parents of both row and col
-        int p1 = find(u);
-        int p2 = find(v);
-
-        // merge two sets, decrease count
-        if (p1 != p2)
-        {
-            par[p1] = p2;
-            count--;
-        }
-    }
-
-    return n - count;
-}
-
 // 463. Island Perimeter
 /*
 Approach:
@@ -307,7 +53,6 @@ int islandPerimeter(vector<vector<int>> &grid)
     return res;
 }
 
-// PP List Questions================================================================
 // 200. Number of Islands
 void dfs(vector<vector<char>> &grid, int sr, int sc)
 {
@@ -361,8 +106,8 @@ For Eg:
 0 0 0 1 1
 0 0 0 0 1
 
-Here you will get two distinct islands: R$B$$ and RB$$
-Without adding $ you will get RB for both
+Here you will get two distinct islands: R$D$$ and RD$$
+Without adding $ you will get RD for both
 
 */
 void dfs(vector<vector<int>> &grid, int sr, int sc, string &path)
@@ -388,7 +133,7 @@ void dfs(vector<vector<int>> &grid, int sr, int sc, string &path)
 }
 int numberofDistinctIslands(vector<vector<int>> &grid)
 {
-    set<string> islands;
+    unordered_set<string> islands;
 
     for (int i = 0; i < grid.size(); i++)
     {
@@ -409,7 +154,7 @@ int numberofDistinctIslands(vector<vector<int>> &grid)
 // 1020. Number of Enclaves
 /*
 Approach:
-For all 1s on the edges mark their islands.
+For all 1s on the edges mark their islands as 0.
 Then count the remaining 1s in the grid.
 */
 void dfs(vector<vector<int>> &grid, int sr, int sc)
@@ -603,6 +348,7 @@ bool isBipartite(vector<vector<int>> &graph, int src, vector<int> &vis)
 
         for (int v : graph[u])
         {
+            // if already visited
             if (vis[v] != -1)
             {
                 if (vis[v] == color)
@@ -635,6 +381,13 @@ bool isBipartite(vector<vector<int>> &graph)
 }
 
 // MST - Minimum Spanning Tree (Prims Algorithm) (SPOJ)
+/*
+Approach: O(ElogV)
+We mark visited when we pop from PQ, and not when adding to PQ
+because we might find another edge to insert that vertex with smaller weight
+So, only mark visited when it is removed from PQ, because then from PQ we get the 
+min edge only.
+*/
 long long primsAlgo(vector<vector<pair>> &graph)
 {
     long long ans = 0;
@@ -686,6 +439,13 @@ void mst()
 }
 
 // 1584. Min Cost to Connect All Points
+/*
+Approach: MST
+We can connect every point to every point
+So, it is complete graph, and so we use Prims to find MST
+And for each vertex, every point is its neighbor and distance is weight, 
+so add them all to PQ.
+*/
 int minCostConnectPoints(vector<vector<int>> &points)
 {
     int count = points.size();
@@ -732,6 +492,19 @@ int minCostConnectPoints(vector<vector<int>> &points)
 }
 
 // 778. Swim in Rising Water
+/*
+Approach: MST
+We basically have to form an MST with lowest max weight
+So, we use Prims Algo, and instead of finding total weight of graph
+we need the max weight.
+Because it does not matter what the length of path from start to end is.
+We only need to find path with min cost.
+So, starting from {0,0} add its 4 unvisited neighbors into PQ
+PQ contains {max weight till now, i, j}
+Also, here we mark visited while adding to PQ
+as the weight to the vertex is grid[i][j]
+So, the weight remains same for all its edges.
+*/
 int swimInWater(vector<vector<int>> &grid)
 {
     int n = grid.size();
@@ -889,7 +662,12 @@ int maxDistance(vector<vector<int>> &grid)
 // Negative weight cycle (GFG) (Bellman Ford Algo)
 /*
 Approach:
-Bellman Ford algo
+Bellman Ford algo (Single Source Shortest Path)
+Time Complexity: O(E*V)
+-ve, +ve edges allowed
+
+If -ve cycle is present, then it will find it and return false
+
 */
 int isNegativeWeightCycle(int n, vector<vector<int>> edges)
 {
@@ -933,6 +711,9 @@ int isNegativeWeightCycle(int n, vector<vector<int>> edges)
 }
 
 // Strongly Connected Components (Kosaraju's Algo) (GFG)
+/*
+Approach: O(V + E)
+*/
 stack<int> st;
 void dfs(vector<vector<int>> &graph, int src, vector<bool> &vis)
 {
@@ -961,12 +742,14 @@ int kosaraju(int V, vector<int> adj[])
         }
     }
 
+    // 1. perform DFS make the stack
     for (int i = 0; i < n; i++)
     {
         if (!vis[i])
             dfs(graph, i, vis);
     }
 
+    // 2. make the reverse graph
     vector<vector<int>> revGraph(n);
     vector<bool> nVis(n);
     for (int i = 0; i < n; i++)
@@ -977,6 +760,7 @@ int kosaraju(int V, vector<int> adj[])
         }
     }
 
+    // perform DFS using stack
     int count = 0;
     while (st.size() > 0)
     {
@@ -997,8 +781,17 @@ int kosaraju(int V, vector<int> adj[])
 /*
 Approach:
 1. Use Step 1 of Kosaraju Algo to build the stack
-2. Now the top element of stack can be the mother vertex or their is no mother vertex
+2. Now the top element of stack can be the mother vertex or there is no mother vertex
 3. Verify if top element is mother vertex
+
+There can be more than 1 mother vertex, but the top of stack will definately be 
+one of them, if it is not a mother vertex, then there are no mother vertex
+
+This is because element is added to stack after it has done the DFS for all its children.
+So, top of stack must have finished at the end because its neighbors were connected to 
+max number of nodes and so they processed all nodes in the graph before they were all processed.
+So, the vertex which can reach all other vertices will definetely finish last as it will
+first process all nodes in the graph before all its work is done.
 */
 stack<int> st;
 int count = 0;
@@ -1033,6 +826,7 @@ int findMotherVertex(int V, vector<int> adj[])
     vis.assign(V, false);
     dfs(adj, vtx, vis);
 
+    // if count == number of vertices, then all were visited, so it is the mother vertex
     return count == V ? vtx : -1;
 }
 
@@ -1124,10 +918,16 @@ void dfs(vector<vector<int>> &grid, int sr, int sc)
         int x = sr + dir[d][0];
         int y = sc + dir[d][1];
 
-        if (x >= 0 && y >= 0 && x < n && y < m && grid[x][y] == 1)
+        if (x >= 0 && y >= 0 && x < n && y < m)
         {
-            dfs(grid, x, y);
-            count++;
+            if (grid[x][y] == 2)
+                count++;
+
+            if (grid[x][y] == 1)
+            {
+                dfs(grid, x, y);
+                count++;
+            }
         }
     }
 
@@ -1199,6 +999,12 @@ int shortestBridge(vector<vector<int>> &grid)
 }
 
 // Topological sort (Kahn's Algo) (GFG)
+/*
+Approach: Kahn Algo, O(V+E)
+Kahn Algo can also be used to detect cycle
+If the size of result array is not equal to number of vertices,
+then cycle is present
+*/
 vector<int> topoSort(int V, vector<int> adj[])
 {
     int n = V;
@@ -1351,14 +1157,6 @@ string alienOrder(vector<string> &words)
     int n = words.size();
 
     unordered_map<char, unordered_set<char>> graph;
-    unordered_map<char, int> indegree;
-
-    // initialize indegree for all nodes
-    for (int i = 0; i < n; i++)
-    {
-        for (char ch : words[i])
-            indegree[ch] = 0;
-    }
 
     // build the graph
     for (int i = 0; i < n - 1; i++)
@@ -1368,16 +1166,13 @@ string alienOrder(vector<string> &words)
 
         int len = min(word1.size(), word2.size());
         int idx = 0;
-        bool flag = false;
         while (idx < len)
         {
             char u = word1[idx];
             char v = word2[idx];
             if (u != v)
             {
-                indegree[v]++;
                 graph[u].insert(v);
-                flag = true;
                 break;
             }
 
@@ -1390,12 +1185,28 @@ string alienOrder(vector<string> &words)
             return "";
     }
 
+    // find indegree
+    unordered_map<char, int> indegree;
+
+    // initialize indegree for all nodes
+    for (int i = 0; i < n; i++)
+    {
+        for (char ch : words[i])
+            indegree[ch] = 0;
+    }
+
+    for (auto e : graph)
+    {
+        for (auto v : e.second)
+            indegree[v]++;
+    }
+
     //Kahn's Algo to find answer
 
     // Lintcode wants the lexicographically smaller answer from possible answers
     // So, PQ is used, otherwise normal queue can be used
 
-    priority_queue<char, vector<char>, greater<int>> que;
+    priority_queue<char, vector<char>, greater<char>> que;
     string res = "";
     for (auto node : indegree)
     {
@@ -1414,12 +1225,9 @@ string alienOrder(vector<string> &words)
 
         for (char v : graph[rnode])
         {
-            if (indegree[v] > 0)
-            {
-                indegree[v]--;
-                if (indegree[v] == 0)
-                    que.push(v);
-            }
+            indegree[v]--;
+            if (indegree[v] == 0)
+                que.push(v);
         }
     }
 
@@ -1429,6 +1237,11 @@ string alienOrder(vector<string> &words)
 }
 
 // Disjoint Set Union (DSU)
+/*
+find() takes O(n) in worst case without the union/merge
+merge() will take O(1)
+Using merge, find takes O(logn)
+*/
 vector<int> par;
 vector<int> size;
 
@@ -1931,6 +1744,7 @@ vector<int> findRedundantConnection(vector<vector<int>> &edges)
         {
             res[0] = u;
             res[1] = v;
+            break;
         }
         else
             merge(p1, p2);
@@ -2181,7 +1995,7 @@ void optimizeWater(vector<int> &wells, vector<int> &pipes)
 // Articulation Points(Nodes) and Bridges(Edges)
 // https://www.spoj.com/problems/SUBMERGE/ (SPOJ)
 /*
-Approach: Articulation Points
+Approach: Articulation Points, O(V+E) as it is a DFS
 */
 vector<int> par;
 vector<int> disc;
@@ -2197,6 +2011,14 @@ void dfs(vector<vector<int>> &graph, int src)
     vis[src] = true;
 
     discTime++;
+
+    if (par[src] == 0) // current node's parent is the root
+    {
+        srcCount++;
+        // if root has been reached more than 1 time, then it is also an Articulation point
+        if (srcCount >= 2)
+            ap[src] = true;
+    }
 
     for (int v : graph[src])
     {
@@ -2215,15 +2037,8 @@ void dfs(vector<vector<int>> &graph, int src)
             // call for it
             dfs(graph, v);
 
-            if (par[src] == 0) // actual source
-            {
-                srcCount++;
-                // if source has been reached more than 1 time, then it is also an Articulation point
-                if (srcCount >= 2)
-                    ap[src] = true;
-            }
             // check if current node is an Articulation Point
-            else if (low[v] >= disc[src])
+            if (low[v] >= disc[src])
                 ap[src] = true;
 
             low[src] = min(low[src], low[v]);
@@ -2274,13 +2089,29 @@ void solve()
             }
         }
 
-        cout << res << endl;
+        cout << res - 1 << endl;
     }
 }
 
 // 1192. Critical Connections in a Network
 /*
 Approach: Articulation Bridges
+Same as Articulation Points
+We just dont need to check seperately for root, and the condition
+
+// check if current node is an Articulation Point
+if (low[v] >= disc[src])
+    ap[src] = true;
+
+Changes to:
+
+// check if this edge is Articulation Bridge
+if (low[v] > disc[src])
+    res.push_back({src, v});
+
+Because we are removing the edge so just check if lowest the neighbor can visit is after
+the current edge
+
 */
 vector<int> par;
 vector<int> disc;
@@ -2348,7 +2179,7 @@ vector<vector<int>> criticalConnections(int n, vector<vector<int>> &connections)
 
 // Job Sequencing Problem
 /*
-Approach 1:
+Approach 1: Greedy, O(n^2)
 Sort the jobs in decreasing order of profit
 Now for each job find the last available day and assign it to this job
 And include this job in profit
@@ -2892,6 +2723,7 @@ int kSimilarity(string s1, string s2)
             if (s == s1)
                 return k;
 
+            // find the index of first element not in its correct position
             while (idx < s.size() && s[idx] == s1[idx])
                 idx++;
 
@@ -2951,7 +2783,7 @@ int solve(int N, int M, vector<vector<int>> Edges)
 /*
 Approach:
 For a Euler Path in undirected Graph:
-1. Either all nodes have even degrees (Euler Circuit)
+1. Either allx nodes have even degrees (Euler Circuit)
 OR
 2. N-2 Nodes have even Degrees, 2 nodes have odd degrees
 */
@@ -3019,6 +2851,11 @@ int isPossible(vector<vector<int>> paths)
 // 332. Reconstruct Itinerary (Euler Path)
 /*
 Approach: Find the Euler Path
+To find eulerian path, start from source, and do a normal DFS
+And in backtracking add current node to answer.
+This is the path in reverse so reverse it at the end
+Also to get the lexicographical order, build the adjacency as a map
+{node : min PQ of neighbors}
 */
 // Using Min PQ to maintain the lexicographical order
 vector<string> path;
@@ -3111,6 +2948,18 @@ void shortest_distance(vector<vector<int>> &matrix)
 }
 
 // 1579. Remove Max Number of Edges to Keep Graph Fully Traversable
+/*
+Approach: DSU
+We use DSU to build 2 graphs, one for alice, and one for bob
+So, for each edge we add it to one of the graphs or both graphs depending on its color
+
+From the 3 edge types 3 is most favorable, as it can be added to both graphs
+Then edge 1 is added to alice's graph, 2 is added to bob's graph
+
+Using DSU, if the two vertices are already connected, then this edge can be removed
+And at the end the set count for both graphs should be 1, i.e. there should be one
+component in both alice's and bob's graph
+*/
 vector<int> par1;
 vector<int> par2;
 int count1, count2;
@@ -3151,6 +3000,7 @@ int maxNumEdgesToRemove(int n, vector<vector<int>> &edges)
 {
     int totalEdges = edges.size();
 
+    // sort to bring edge 3 first, so that they are processed first
     sort(edges.begin(), edges.end(), greater<vector<int>>());
 
     for (int i = 0; i <= n; i++)
@@ -3238,7 +3088,7 @@ int findCheapestPrice(int n, vector<vector<int>> &flights, int src, int dst, int
     vector<int> cost(n, INT_MAX);
     vector<int> stops(n, n);
 
-    pq.push({0, src, 0}); //{ price, node, k}
+    pq.push({0, src, 0}); //{ price, node, number of stops}
 
     while (pq.size() > 0)
     {
@@ -3691,15 +3541,33 @@ We a visited to store, if current node is:
     a. Safe
     b. Unsafe
 
+We keep a visited array in which we mark:
+0: unvisited
+1: visited and safe
+2: visited and unsafe
+
+For the current node, we initialise it as unsafe
+Then we call dfs for all its neighbors
+If all neighbors are marked safe, then only we mark this node as safe
+Also in base case, check if this node has been visited before:
+1. It was marked unsafe, then return false
+2. It was marked safe, then return true
+
+If there is a cycle and this node is visited again by a neighbor, then it
+would still have been marked unsafe, and so it will directly return unsafe
+
 For each node if it is visited in the DFS again, then it is part of a cycle
-Then is it is unsafe.
+Then it is unsafe.
+
+At the end iterate over visited array and push all nodes marked 1, into result
+as they are safe.
 */
 bool isSafe(vector<vector<int>> &graph, int src, vector<int> &vis)
 {
     // if already visited
-    if (vis[src] == 1)
+    if (vis[src] == 1)  // was marked safe
         return true;
-    if (vis[src] == 2)
+    if (vis[src] == 2)  // was marked unsafe
         return false;
 
     // else initialise current node as unsafe
@@ -3861,6 +3729,7 @@ int networkDelayTime(vector<vector<int>> &times, int n, int k)
     int res = 0;
     for (int i = 1; i <= n; i++)
     {
+        // if any node is unvisited, then return -1
         if (cost[i] == INT_MAX)
             return -1;
 
@@ -4461,6 +4330,259 @@ int maximalNetworkRank(int n, vector<vector<int>> &roads)
     }
 
     return maxRank;
+}
+
+// 997. Find the Town Judge
+/*
+Approach: 
+Find the indegree and outdegree of each node
+The node with indegree == n-1 && outdegree == 0 is the answer
+
+We dont need outdegree seperately, we can just +1 and -1 in indegree itself
+*/
+int findJudge(int n, vector<vector<int>> &trust)
+{
+    vector<int> indegree(n + 1);
+
+    for (vector<int> &e : trust)
+    {
+        indegree[e[1]]++;
+        indegree[e[0]]--;
+    }
+
+    for (int i = 1; i <= n; i++)
+    {
+        if (indegree[i] == n - 1)
+            return i;
+    }
+
+    return -1;
+}
+
+// 1557. Minimum Number of Vertices to Reach All Nodes
+/*
+Approach:
+We have to find nodes with indegree = 0
+Because they cannot be reached from any other node. So, they must be in the answer
+Other nodes with >0 indegree means, they can all be reached from other nodes
+*/
+vector<int> findSmallestSetOfVertices(int n, vector<vector<int>> &edges)
+{
+    vector<int> indegree(n);
+    vector<int> res;
+
+    for (vector<int> &e : edges)
+    {
+        indegree[e[1]]++;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (indegree[i] == 0)
+            res.push_back(i);
+    }
+
+    return res;
+}
+
+// 1319. Number of Operations to Make Network Connected
+/*
+Approach: DSU
+Count the number of connected components, redundant edges in graph
+Ans = number of components - 1
+
+Eg: To connect 3 different components of a graph you need 3 - 1 = 2 edges
+
+So, redundant edges gives the extra available edges, and if
+reduntantEdgeCount >= componentCount - 1
+*/
+vector<int> par;
+int find(int u)
+{
+    if (par[u] == u)
+        return u;
+    return par[u] = find(par[u]);
+}
+int makeConnected(int n, vector<vector<int>> &connections)
+{
+    par.resize(n);
+
+    // Initially componentCount = no. of nodes
+    int redundantEdgeCount = 0, componentCount = n;
+
+    for (int i = 0; i < n; i++)
+        par[i] = i;
+
+    for (vector<int> &e : connections)
+    {
+        int u = e[0];
+        int v = e[1];
+
+        int p1 = find(e[0]);
+        int p2 = find(e[1]);
+
+        // increase redundant edge count
+        if (p1 == p2)
+        {
+            redundantEdgeCount++;
+        }
+        // merge two sets, reduce component count
+        else
+        {
+            par[p1] = p2;
+            componentCount--;
+        }
+    }
+
+    if (redundantEdgeCount >= componentCount - 1)
+        return componentCount - 1;
+    else
+        return -1;
+}
+
+// 1514. Path with Maximum Probability
+/*
+Approach: Dijsktra's Algo
+*/
+double maxProbability(int n, vector<vector<int>> &edges, vector<double> &succProb, int start, int end)
+{
+    vector<double> res(n);
+    vector<vector<vector<double>>> graph(n);
+    vector<bool> vis(n);
+
+    for (int i = 0; i < edges.size(); i++)
+    {
+        double u = edges[i][0];
+        double v = edges[i][1];
+        double w = succProb[i];
+
+        graph[u].push_back({v, w});
+        graph[v].push_back({u, w});
+    }
+
+    priority_queue<vector<double>, vector<vector<double>>> pq;
+    pq.push({1.0, start * 1.0});
+
+    while (pq.size() > 0)
+    {
+        vector<double> rnode = pq.top();
+        pq.pop();
+
+        double u = rnode[1];
+        double p = rnode[0];
+
+        res[u] = max(res[u], p);
+        vis[u] = true;
+
+        for (vector<double> &e : graph[u])
+        {
+            if (!vis[e[0]])
+            {
+                pq.push({e[1] * p, e[0]});
+            }
+        }
+    }
+
+    return res[end];
+}
+
+// 1466. Reorder Routes to Make All Paths Lead to the City Zero
+/*
+Approach: DFS
+Make a adjacency list, and mark the direction for each edge
+0-> towards node ,1-> away from node
+Now since we have to make each path reach 0, and the graph is a tree
+So, just consider 0 as root, and in dfs from 0 
+count all edges where the edge points away from parent towards child
+*/
+int count = 0;
+void dfs(vector<vector<pair>> &graph, int src, vector<bool> &vis)
+{
+    vis[src] = true;
+
+    for (pair &e : graph[src])
+    {
+        int v = e.first;
+        int dir = e.second;
+        if (!vis[v])
+        {
+            if (dir == 1)
+                count++;
+
+            dfs(graph, v, vis);
+        }
+    }
+}
+int minReorder(int n, vector<vector<int>> &connections)
+{
+    vector<vector<pair>> graph(n);
+    vector<bool> vis(n);
+
+    for (vector<int> &e : connections)
+    {
+        int u = e[0];
+        int v = e[1];
+
+        graph[u].push_back({v, 1});
+        graph[v].push_back({u, 0});
+    }
+
+    dfs(graph, 0, vis);
+
+    return count;
+}
+
+// 947. Most Stones Removed with Same Row or Column
+/*
+Approach : Union Find
+Use the coords x, y as two different nodes, and use union find
+To avoid overlap between equal values of row, col like {0, 1}, and {1, 0}
+use x and ~y
+
+If we use the just use x and y in parent map, then in
+{{0, 1}, {1, 0}}
+the values of row and col will overlap, and it will give answer 1,
+but ans is 0, as no stone can be removed.
+
+*/
+unordered_map<int, int> par;
+int count = 0;
+int find(int u)
+{
+    // if not present in map, then add to map and increase set count
+    if (par.find(u) == par.end())
+    {
+        count++;
+        return par[u] = u;
+    }
+
+    if (par[u] == u)
+        return u;
+
+    return par[u] = find(par[u]);
+}
+int removeStones(vector<vector<int>> &stones)
+{
+    int n = stones.size();
+
+    for (vector<int> &coords : stones)
+    {
+        int u = coords[0];
+        int v = ~coords[1];
+
+        //find parents of both row and col
+        int p1 = find(u);
+        int p2 = find(v);
+
+        // merge two sets, decrease count
+        if (p1 != p2)
+        {
+            par[p1] = p2;
+            count--;
+        }
+    }
+
+    return n - count;
 }
 
 int main()

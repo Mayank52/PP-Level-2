@@ -1124,7 +1124,7 @@ class Trees {
         return root;
     }
 
-    // 117. Populating Next Right Pointers in Each Node II (Not Completed)
+    // 117. Populating Next Right Pointers in Each Node II (Done in C++)
    
 
     // Image Multiplication (GFG)

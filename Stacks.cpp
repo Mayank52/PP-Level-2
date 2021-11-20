@@ -97,6 +97,10 @@ Using same approach as previous question
 For each rectangle,
 height = its height
 width = NSR - NSL + 1 - 2 = NSR - NSL - 1
+
+(width of i,j = j - i + 1
+And here we dont need i, j as they are the NSR, NSL and not part of rectangle so = j - i + 1 - 2)
+
 area = height * width
 
 We store index in stack
@@ -206,6 +210,82 @@ int maximalRectangle(vector<vector<char>> &matrix)
     }
 
     return res;
+}
+
+// 42. Trapping Rain Water
+int trap(vector<int> &height)
+{
+    if (height.size() == 0)
+        return 0;
+
+    int n = height.size();
+    int i = 0, j = n - 1;
+    int leftMax = height[0], rightMax = height[n - 1], totalWater = 0;
+    while (i < j)
+    {
+        leftMax = max(leftMax, height[i]);
+        rightMax = max(rightMax, height[j]);
+
+        if (leftMax < rightMax)
+            totalWater += leftMax - height[i++];
+        else
+            totalWater += rightMax - height[j--];
+    }
+
+    return totalWater;
+}
+
+// 407. Trapping Rain Water II
+int trapRainWater(vector<vector<int>> &heightMap)
+{
+    int n = heightMap.size();
+    int m = heightMap[0].size();
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+    vector<vector<bool>> vis(n, vector<bool>(m, false));
+
+    //push first and last row into priority queue
+    for (int i = 0; i < m; i++)
+    {
+        pq.push({heightMap[0][i], 0, i});
+        pq.push({heightMap[n - 1][i], n - 1, i});
+        vis[0][i] = true;
+        vis[n - 1][i] = true;
+    }
+    //push first and last column into priority queue
+    for (int i = 0; i < n; i++)
+    {
+        pq.push({heightMap[i][0], i, 0});
+        pq.push({heightMap[i][m - 1], i, m - 1});
+        vis[i][0] = true;
+        vis[i][m - 1] = true;
+    }
+
+    int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+    int totalWater = 0, maxTillNow = 0;
+    while (pq.size() != 0)
+    {
+        int h = pq.top()[0];
+        int i = pq.top()[1];
+        int j = pq.top()[2];
+        pq.pop();
+
+        maxTillNow = max(maxTillNow, h);
+
+        for (int d = 0; d < 4; d++)
+        {
+            int x = i + dir[d][0];
+            int y = j + dir[d][1];
+
+            if (x >= 0 && y >= 0 && x < n && y < m && !vis[x][y])
+            {
+                vis[x][y] = true;
+                totalWater += max(0, maxTillNow - heightMap[x][y]);
+                pq.push({heightMap[x][y], x, y});
+            }
+        }
+    }
+
+    return totalWater;
 }
 
 // 20. Valid Parentheses
@@ -540,6 +620,12 @@ So, using this idea, we use a stack and for each element
 While the top element > current element and k > 0, pop it
 
 Then at the end the stack contains the answer
+Also, remove leading 0s
+For Eg: 10001, k = 1
+Then stack will have
+0 0 0 1
+So, result would be = 0001
+And we need to return just 1, after removing leading 0s
 */
 string removeKdigits(string num, int k)
 {
@@ -590,7 +676,7 @@ Approach: O(n)
 Similar to remove K digits,
 Since we need the lexicographically smallest, we maintain a increasing stack
 So, for each element we pop from stack until the top is > the current element
-Here we the condition for removing elements is that we can remove duplicates
+Here the condition for removing elements is that we can remove duplicates
 So, first we find the frequency all elements
 Then when we have to pop we will only remove the top if its freq > 0
 Also, we will not push an element into the stack if it already contains that element

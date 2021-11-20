@@ -243,7 +243,7 @@ If it is not present:
        So, remove the last node of list, and remove it from the hashmap as well.
     2. Then we make a new node, and add it to the end of list, and put it in the hashmap
 
-In the code, I have made a dummy head and tail for the doubly linked list to avoid all edge cases
+In the code, we have made a dummy head and tail for the doubly linked list to avoid all edge cases
 while adding and removing nodes. So, the actual first node is the head->next node and the actual 
 last node is tail->prev node. We never change the dummy head and tail.
 */
