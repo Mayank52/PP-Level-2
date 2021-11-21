@@ -156,6 +156,16 @@ Eg:
 Here longest seq = 4 5 6 7
 So, if we all elements except these
 
+Here the arrray contains all of first n natural numbers
+So, the sorted array will have all these numbers in sequence.
+So, the numbers that dont need to be moved i.e. LIS, will be a sequence of consecutive integers
+like in above eg it was 4 5 6 7
+So, instead of using DP to find LIS, we can do it in O(n)
+we use a hashmap: {the ending node of subsequence: length of subsequence with this end node}
+
+So, for i = 0, we have 4, so we check the length of subsequence ending with 3, and put 4 at end of it
+So, length of subequence ending at 4 = mp[arr[i] - 1] + 1 = mp[3] + 1
+We do for all elements, and update the max length at each step.
 */
 int sortingCost(int N, int arr[])
 {
@@ -557,6 +567,11 @@ So, rem1 = rem2 + k
 
 So, for -ve remainders we do (rem+k) and update that in map
 
+If we have sum = 21, and k = 5, then we can do -1 or +4 to make it divisible by 5
+To do this we remove a subarray with remainder +1(Case 1) or -4(Case 2)
+Also, -4 + 5 = 1, so the -ve remainder + k = +ve remainder
+So, we dont need to check for second case seperately, just do (rem + k) for all remainders
+
 So, we update the count of remainder of each prefix sum in map
 To handle -ve remainders, we do
 rem = ((sum % k) + k) % k
@@ -797,6 +812,19 @@ Algorithm:
     So, we push the currrent x coord, top() height of PQ, into result and update the
     previous height = pq.top();
 
+So, basically maintain, the buildings that have not ended yet in the PQ
+So, in the PQ, we have the height of all overlapping buildings right now
+and as it is Max PQ, so we can know from all these overlapping buildings which height will 
+be the visible.
+And then in the array, sorted it according to x coordinates and marked which point
+is start and which is end, so whenever a building starts, we add it to PQ
+and when it ends, we remove it from PQ, so that the PQ only has the currenlty overlapping buidlings
+And then we check if the max heigth till now has changed after adding or removing the
+current building. If it has, that means that this building was part of the boundary line, and its
+coordinate will be visible. So, we add to the result the {current x coordinate, max height in PQ}
+because that after height change at the current end point, now the new max height is visible at this
+x coordinate
+
 Complexity is O(n ^ 2) because the remove operation in Java is O(n)
 But in C++, multiset, has O(logn) for insertion, removal, find operations
 So, complexity will be O(nlogn)
@@ -838,7 +866,7 @@ vector<vector<int>> getSkyline(vector<vector<int>> &buildings)
     multiset<int> pq;
     pq.insert(0);
 
-    int prevHeight = 0;
+    int prevVisibleHeight = 0;
     for (pair<int, int> &building : arr)
     {
         int x = building.first;
@@ -851,10 +879,10 @@ vector<vector<int>> getSkyline(vector<vector<int>> &buildings)
         else
             pq.erase(pq.find(h));
 
-        if (prevHeight != *pq.rbegin())
+        if (prevVisibleHeight != *pq.rbegin())
         {
             res.push_back({x, *pq.rbegin()});
-            prevHeight = *pq.rbegin();
+            prevVisibleHeight = *pq.rbegin();
         }
     }
 
@@ -966,7 +994,23 @@ int largestSubarray(vector<int> &arr)
 
 // 767. Reorganize String
 /*
-Approach: O(nlogn) Priority Queue
+Approach 1: O(n), Hashmap
+Make a frequency map for all characters
+The max frequency a character should be <= (str.size() + 1) / 2
+Like for even size like 6, character can have max frequency as (6 + 1)/2 = 3
+And for odd size like 5, max frequency can be (5+1)/2 = 3
+Eg: 'aaabb' can be made 'ababa'
+and 'aabb' can be made 'abab'
+
+Now the idea is to fill all even spaces first then odd spaces, thus making sure no character is equal to adjacent element
+So, first take the element with max frequency and put it at positon 0,2,4,6...
+Then for the remaining elements, first fill the remaining even positions, then start filling the odd positions
+Eg: 'aaabb'
+a _ a _ a
+then a b a b a
+
+Approach 2: O(nlogn) Priority Queue
+This is more generic approach and works for k consecutive now equal.
 Make a frequency map of each character in the given string
 Push all the elements of map into a Max PQ as {freq, char}
 Also keep a queue for blacklist characters
@@ -982,6 +1026,62 @@ else return the ans
 This method can be used even if K number of elements cannot be consecutive
 We just keep the blacklist as a queue of size K
 */
+// Approach 1: O(n)
+string reorganizeString(string s)
+{
+    vector<int> freq(26);
+    int maxFreq = 0, letterWithMaxFreq;
+
+    // make frequency map
+    for (char ch : s)
+    {
+        freq[ch - 'a']++;
+
+        // update max frequency
+        if (freq[ch - 'a'] > maxFreq)
+        {
+            maxFreq = freq[ch - 'a'];
+            letterWithMaxFreq = ch - 'a';
+        }
+    }
+
+    // if answer is not possible
+    if (maxFreq > (s.size() + 1) / 2)
+        return "";
+
+    vector<char> res(s.size());
+    int idx = 0;
+    // put max frequency element at even places
+    while (freq[letterWithMaxFreq] > 0)
+    {
+        res[idx] = letterWithMaxFreq + 'a';
+        idx += 2;
+        freq[letterWithMaxFreq]--;
+    }
+
+    // place remaining at first the remaining even places, then odd places
+    for (int i = 0; i < 26; i++)
+    {
+        while (freq[i] > 0)
+        {
+            if (idx >= res.size())
+                idx = 1;
+
+            res[idx] = i + 'a';
+            freq[i]--;
+
+            idx += 2;
+        }
+    }
+
+    // add it to answer
+    string answer = "";
+    for (char ch : res)
+        answer += ch;
+
+    return answer;
+}
+// Approach 2: O(nlogn)
 string reorganizeString(string s)
 {
     string res = "";
@@ -1090,10 +1190,7 @@ bool sameFreq(string s)
 
     // the difference between frequence with more than 1 characters - smaller should be 1 (aaabbbcccc)
     // or the smaller character frequency should be 1 (aaaabaaa)
-    if (count[freq1] >= count[freq2])
-        return freq2 - freq1 == 1 || freq2 == 1;
-    else
-        return freq1 - freq2 == 1 || freq1 == 1;
+    return abs(freq2 - freq1) == 1 || min(freq1, freq2) == 1;
 }
 
 // Mode of Frequencies (https://www.codechef.com/LTIME87B/problems/MODEFREQ/)

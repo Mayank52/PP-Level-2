@@ -134,7 +134,7 @@ int findNumberOfLIS(vector<int> &nums)
             res = dp[i].first;
             count = dp[i].second;
         }
-        // else if the lenght is same, then this count to the previous count to get the total count of this length
+        // else if the length is same, then this count to the previous count to get the total count of this length
         else if (dp[i].first == res)
             count += dp[i].second;
     }
@@ -149,6 +149,10 @@ Store both arrays in a single nx2 array
 Then sort this array with respect to one bridge points i.e 0th index or 1st index
 Then for the other bridge points find the LIS
 This LIS is the answer
+Also, we need non decreasing sequencehere,
+instead of strictly increasing like in LIS above.
+So, here in binary search, look for element just greater than target and
+not equal to target
 */
 void buildingBridges()
 {
@@ -178,7 +182,7 @@ void buildingBridges()
             while (lo < hi)
             {
                 int mid = lo + (hi - lo) / 2;
-                if (arr[i][1] < dp[mid])
+                if (arr[i][1] < dp[mid]) // take non decreasing
                     hi = mid;
                 else
                     lo = mid + 1;
@@ -382,6 +386,7 @@ int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &pro
         dp[i] = arr[i][2];
         for (int j = i - 1; j >= 0; j--)
         {
+            // if start time of current job is >= end time of previous job
             if (arr[i][0] >= arr[j][1])
                 dp[i] = max(dp[i], dp[j] + arr[i][2]);
         }
@@ -405,7 +410,6 @@ int lower_bound(vector<vector<int>> &arr, int lo, int x)
     }
     return lo;
 }
-
 int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &profit)
 {
     int n = startTime.size();
@@ -441,7 +445,7 @@ Approach: O(nlogn)
 In LIS DP for each index i we have, longest increasing subsequence ending at i
 In LDS DP for each index i we have, longest decreasing subsequence starting at i
 
-Now iterate over these 2, and for each index find the longest bitonice subsequence
+Now iterate over these 2, and for each index find the longest bitonic subsequence
 longestBitonicSubsequence = lis[i] + lds[i] - 1
 lis[i] will give the increasing till i, lds[i] will give the longest decreasing from i,
 in this ith index is counted twice, so we take lis[i] + lds[i] - 1
@@ -589,7 +593,7 @@ int minimumMountainRemovals(vector<int> &nums)
 Approach: O(n)
 Keep 2 counts: 
 1. Number of ways to paint 2 fences with same color
-2. Number of ways to paint 2 fences with different colkor
+2. Number of ways to paint 2 fences with different color
 
 Number of ways to paint current fence:
 1. Same as last fence: ways to paint last fence different color than its previous fence
@@ -597,7 +601,7 @@ As more than 2 fences cannot have same color. So, if we paint this fence same as
 last fence different than its previous fence.
 
 2. Different than last fence: total ways to paint last fence * (k - 1)
-To color, this fence different we can color it with k - 1  colors, i.e. every color except the one last
+To color this fence different we can color it with k - 1  colors, i.e. every color except the one last
 fence was painted with.
 So, the count for this is the total ways to paint last fence * (k - 1)
 
@@ -841,12 +845,39 @@ int findCatalan(int n)
 
 // 96. Unique Binary Search Trees
 /*
-Approach: Catalan Number
+Approach 2: Catalan Number
 Number of Unique BSTs with n keys = nth Catalan Number
 Also, Number of Binary Trees with n keys = no. of unique BSTs * n!
 Because the structure of all Binary Trees will be the same as the BSTs
 But in each of those BSTs we can have n! permutations of keys to get a different binary tree
 */
+// Approach 1: DP, Memoization
+int numTrees(int n, vector<int> &dp)
+{
+    if (n == 0 || n == 1)
+    {
+        return 1;
+    }
+
+    if (dp[n] != -1)
+        return dp[n];
+
+    // make every node as root, and get count of left subtrees(0....i-1), 
+    // and right subtrees (i....n)
+    int sum = 0;
+    for (int i = 1; i <= n; ++i)
+    {
+        sum += numTrees(i - 1, dp) * numTrees(n - i, dp);
+    }
+
+    return dp[n] = sum;
+}
+int numTrees(int n)
+{
+    vector<int> dp(n + 1, -1);
+    return numTrees(n, dp);
+}
+// Approach 2: Catalan Numbers
 int numTrees(int n)
 {
     vector<int> cat(n + 1, 0);
@@ -1524,6 +1555,11 @@ Similarly for the cut at end
 If we have to find the number of triangulations, it is given by Catalan number
 Number of triangultions for n vertices is (n - 2)th Catalan Number
 
+In this cut type method, the i = 0, j = gap, represent the base of the polygon
+And the cut is the 3rd vertex to form a triangle
+Then dp[i][cut] is polygon left of cut and 
+dp[cut][j] is polygon to right of cut
+
 */
 int minScoreTriangulation(vector<int> &nums)
 {
@@ -1714,8 +1750,10 @@ vector<int> minAndMax(string expression)
 Approach: O(n^3)
 Same as previous question
 At each cell in DP we keep an array of all possible values of the expression for that cell
-Then for current cell, we get
-All left Values * All right Values
+Then for current cell, we apply the operator to all
+[...leftValues] X [...rightValues]
+i.e. for every possible left value for left of cut we find its answer with all possible
+right values
 */
 vector<int> diffWaysToCompute(string expression)
 {
@@ -1851,7 +1889,7 @@ Using cut approach
 We make a cut at each index from left + 1 to right - 1
 leftCost = dp[i][cut]
 rightCost = dp[cut][j]
-myCost = right - left
+myCost = length of stick = right - left
 
 When making the cut just check if we can make a cut at that index
 
@@ -1862,9 +1900,7 @@ Instead of checking for the whole length of rod,
 We check for the cuts array
 Add 0, n into the cuts array so that it has the correct left and right
 Then sort the cuts array
-Now use the same method using the cuts array
-So, here 
-leftCost = 
+Now use the same method using the cuts array.
 */
 // Approach 1: O(n^3), O(n^2) (TLE)
 int minCost(int n, vector<int> &cuts)
@@ -2239,8 +2275,8 @@ To check the palindrome, keep checking the left and right of the character if it
 Eg: aabaa
 First Loop:
 i = 0
-Palindrome: a (Count=1)
-Palindrome: aa (Count=2)
+Odd Length Palindrome: a (Count=1)
+Even Length Palindrome: aa (Count=2)
 
 Second Loop:
 i = 1
@@ -2323,8 +2359,6 @@ int countSubstrings(string s)
                 dp[i][j] = dp[i + 1][j] + dp[i][j - 1] - dp[i + 1][j - 1];
         }
     }
-
-    display(dp);
 
     return dp[0][n - 1];
 }
@@ -2573,6 +2607,9 @@ s[i] == s[j] changes:
 1. There are no occurences of s[i] in the middle string C
     In this case, as ith index is the first time this character has occured, so adding s[i] to 
     (i+1, j-1) string wont give any new palindromes, same with adding s[j] to the middle.
+    Eg: bcdcb
+    When we add b to either end, then since cdc does not have a b, so adding b to either its left
+    or right wont form a palindrome, so the number of palindromes in bcdc = cdc = cdcb
     So, the number of palindromes in A, B are equal to C because of this reason.
     So, the relation = (A + B - C) + C + 1 = A + B + 1
     changes to = C + C + 2
@@ -3470,7 +3507,10 @@ Approach:
 if s[i] == p[j] => n-1, m-1
 if s[i] != p[j]{
     if '?' => n-1, m-1
-    if '* => n-1,m and n-1,m-1 and n,m-1(for "" string)
+    if '* => n-1,m(* matches current character as well as can match later characters) 
+    and n-1,m-1 (* only substitutes for current charactet)
+    and n,m-1(* becomes "" empty string)
+
     also in '* wildcard, can be subtituted for empty "" string in begin and end
 }
 */
