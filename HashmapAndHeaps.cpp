@@ -1510,6 +1510,10 @@ map:
 7 : -1
 8 : -1
 2 : 4
+
+We can also actually swap the values with their replacement, but to do that
+we will need to store them in seperate vector, but using above method we dont need a
+seperate vector as in this question we are given that all values 1 to n are present
 */
 class Solution
 {
@@ -1727,6 +1731,7 @@ We can also just store the index of that group in map in value
 instead of array of strings in that group
 Then directly push into that index in the result.
 */
+// Approach 1:
 vector<vector<string>> groupAnagrams(vector<string> &strs)
 {
     map<vector<int>, vector<string>> map;
@@ -1750,6 +1755,7 @@ vector<vector<string>> groupAnagrams(vector<string> &strs)
 
     return res;
 }
+// Approach 2:
 vector<vector<string>> groupAnagrams(vector<string> &strs)
 {
     unordered_map<string, int> map;
@@ -1858,7 +1864,6 @@ i.e. (end - start + 1) should be smaller
 */
 vector<int> smallestSubsegment(int a[], int n)
 {
-    // Complete the function
     unordered_map<int, vector<int>> map; // {val : freq, start index, end index}
     int maxFreq = 0, val;                // max frequency, element with max frequency
 
@@ -1964,6 +1969,7 @@ string fractionToDecimal(int numerator, int denominator)
     string decimal = "";
 
     num = num % den;
+    // while the remainder is not 0, and it has not occured before i.e. it is not recurring
     while (num != 0 && mp.find(num) == mp.end())
     {
         // put the current remainder in map with its index
@@ -1975,8 +1981,10 @@ string fractionToDecimal(int numerator, int denominator)
         num = num % den;
     }
 
+    // non recurring decimal
     if (num == 0)
         return res + "." + decimal;
+    // recurring decimal
     else
     {
         int recIdx = mp[num];
@@ -1988,7 +1996,7 @@ string fractionToDecimal(int numerator, int denominator)
 // 850 · Employee Free Time
 /*
 Approach 1: o(nlogn)
-Add the given times into an array okf intervals
+Add the given times into an array of intervals
 Then sort the intervals in increasing order of start times
 
 Now iterate over the sorted intervals, keep a max end time till now
@@ -2264,12 +2272,28 @@ int minBuildTime(vector<int> &blocks, int split)
 }
 
 // 295. Find Median from Data Stream
+/*
+Approach: PQ
+Maintain 2 Priority Queue -> Min and Max
+The max PQ keeps the left half elements of sorted order
+and min PQ keeps right half elements of sorted order
+We maintain them such that at all times either size of left PQ == size of right PQ
+Or, left PQ has 1 more element than right PQ
+So, then if size is equal then total elements are even, and median is (left.top() + right.top()) / 2
+And if left has 1 extra, then size is odd and median is left.top()
+
+When adding elements, if left is empty or element is smaller than its top, add it to left
+else add it to right
+Then check if size is maintianed, i.e.
+if size of left > right + 1, then move top of left to right
+And if size of right > left, then move top of right to left
+*/
 class MedianFinder
 {
 public:
     /** initialize your data structure here. */
-    priority_queue<int> leftHalf;
-    priority_queue<int, vector<int>, greater<int>> rightHalf;
+    priority_queue<int> leftHalf;   // Left is Max PQ
+    priority_queue<int, vector<int>, greater<int>> rightHalf;   // Right is Min PQ
 
     MedianFinder()
     {
@@ -2753,16 +2777,20 @@ bool checkInclusion(string s1, string s2)
 
 // 632. Smallest Range Covering Elements from K Lists
 /*
-Approach: O(nlogk)
-Similar to Merge K sorted Lists
-Push the first element of each list into a Min PQ
-Also, find the max element of these first elements
+Approach : O(nlogm) (n=total elements in all lists, m=number of lists)
+The approach is similar to Merge K Sorted lists
 
-Now, that max element is the max of current range, and top of PQ is min of current range
-So, at every step, pop the top element, that is min of current range, and max we 
-already have, using this update the overall shortest range
-Then push the next element of that list into the PQ.
-Also, while pushing the next element update the current max.
+Use a min pq, to store 1 element from each list at a time
+We add the first element of each list into pq
+Then we pop the first element and add next element of that list into pq
+
+When we pop we get the min element, this is the start of range
+When we push into pq, we update the end of range with max
+And each step we, calculate the current range, and update the min range before we push into pq
+
+At a time the pq always contains 1 element from each list.
+So getting the top element gives the min of range, and the overall max has the max of range
+This helps to find the range and update the answer
 */
 vector<int> smallestRange(vector<vector<int>> &nums)
 {

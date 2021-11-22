@@ -323,7 +323,7 @@ int shipWithinDays(vector<int> &weights, int days)
 // 875. Koko Eating Bananas
 /*
 Approach: O(n * log(max pile size))
-We perform Binary Search to find the minimum pile size
+We perform Binary Search to find the minimum pile size such that hours <= k
 lo = 1, hi = max pile size
 */
 int minEatingSpeed(vector<int> &piles, int h)
@@ -332,7 +332,6 @@ int minEatingSpeed(vector<int> &piles, int h)
 
     for (int val : piles)
     {
-        lo = min(lo, val);
         hi = max(hi, val);
     }
 
@@ -523,6 +522,18 @@ This means the max of that group is the kth smallest prime fraction
 If our count > k, then we need to increase the allowed value, so check in right side
 Else left side
 
+So, at each step of binary search, find the number of fractions < mid, and the
+max among those fractions and accordingly move lo and hi.
+We can find the count and max fraction in O(n+m) using the Staircase method
+If we put the fractions in a matrix sorted rowwise and column wise, then we start from 0th row
+and start a pointer j from its end, and move back in that row until fraction > k
+This way we will eliminate all > k fractions in current row, and we have j number of fractions
+<= k. 
+Then for next row we will start checking from same column j, as everything after j is 
+definately > k, as matrix is sorted row and column wise, doing this we will finish 
+current row and move to next row until no columns are left and max time will be O(n + m).
+And the traversal we do in this method looks like a reverse staircase.
+
 Eg:
 [1,2,3,5,7,13]
 
@@ -539,8 +550,6 @@ We take all fractions <= 0.5
 2/7 2/5
 3/7
 
-If we take this fractions in sorted form
-1
 */
 vector<int> kthSmallestPrimeFraction(vector<int> &arr, int k)
 {
@@ -555,7 +564,7 @@ vector<int> kthSmallestPrimeFraction(vector<int> &arr, int k)
         int j = n - 1;
         int num = 0, den = 1, count = 0;
 
-        // find the count of fractions < mid
+        // find the count of fractions < mid, as well as the max fraction in this group
         for (int i = 0; i < n - 1; i++)
         {
             while (j > 0 && arr[i] > mid * arr[n - j])
@@ -585,6 +594,13 @@ vector<int> kthSmallestPrimeFraction(vector<int> &arr, int k)
 
 // 378. Kth Smallest Element in a Sorted Matrix
 /*
+Wrong Approach: 
+If we try exactly the above approach it wont work as the matrix can have duplicates
+Eg: [[1,2],[1,3]], K = 1
+Here the answer should be 1, but when it counts element <= 1, then it will get count = 2
+so, it will move on to next answer and we will never get count = 1 for the first two 1s
+So, we have to change the above approach a little
+
 Approach: O(nlog(max - min))
 Use Binary Search to find the answer
 The range is min value in matrix to max value in matrix

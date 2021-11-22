@@ -18,6 +18,12 @@ To be Long Pressed:
 - The typed should have the same characters in the same order
 - only the freq may be more than the name string but in the correct order
 
+So, at each index, we have 2 cases:
+1. name[i] == typed[i], they are equal, so move forward
+2. name[i] != typed[i], 
+    1. If typed[i] == typed[i-1], then previous character was long pressed, so move ahead
+    2. Else return false
+
 So, you can only type the character more than required times in the correct order
 
 Eg: 
@@ -75,6 +81,22 @@ bool isLongPressedName(string name, string typed)
 /*
 Approach: 2 Pointer
 Time: O(n)
+Here you dont have to find how much water it can hold.
+Instead you are given the boundaries, and you have to choose 2 boundaries which 
+can hold the max water
+
+So, keep a pointer at index 0, and one at n - 1
+Then for the current container i....j
+the length = (j - i)
+height = min(height[i], height[j])
+
+So, its area is length * height
+
+Then whichever height is smaller move that forward
+Because if we move the larger one forward, then the min height will remain the same
+and the length will decrease, so the area will definatelty decrease.
+
+This way find area of all containers and take max of them.
 */
 int maxArea(vector<int> &height)
 {
@@ -158,6 +180,29 @@ int majorityElement(vector<int> &nums)
 }
 
 // 229. Majority Element II
+/*
+Approach: Boyer Moore Algo
+We can generalise Boyer Moore Algo for k candidates
+We can understand it as, 
+Lets say at from the given array, we pick k distinct elements at a time and remove them
+Then we keep doing this until we dont have k distinct left anymore
+Then the ones remaining obviously have majority over others
+Eg: Lets say we need to find elements that have more than n/3 duplicates
+And the size of array = n = 10
+So, majority element has lets say 4 occurences which is > 10/3
+Then, if at each step we remove 3 distinct elements, then that means for all occurences of the
+majority element to be removed, they would all have to paired with 2 other elements
+Then to remove 4 occurences of it we would need 4*2 = 8 other elements atleast.
+Which would mean size of array = 4+8 = 12 which is not true.
+So, if we pick k distinct at a time and remove them, then the elements at the end are the
+candidates for being majority element. 
+Then we just need to verify if their actual frequency is more than n/3
+
+The candidate left at end are not definetely the majority. Like in
+[1,2,3,4,5], here no element has majority.
+So, we need to verify.
+*/
+// Approach 1: Boyer Moore for n/3
 vector<int> majorityElement(vector<int> &nums)
 {
     int n = nums.size();
@@ -204,6 +249,53 @@ vector<int> majorityElement(vector<int> &nums)
         res.push_back(cand2);
 
     return res;
+}
+// Approach 2: Generalised Boyer Moore for n/k elements
+vector<int> boyerMooreForKCandidates(vector<int> &nums, int k)
+{
+    int n = nums.size();
+    unordered_map<int, int> candidates; //{candidate: count}
+
+    for (int i = 0; i < nums.size(); i++)
+    {
+        candidates[nums[i]]++;
+
+        if (candidates.size() == k)
+        {
+            // reduce count by 1 for all candidates
+            for (auto itr = candidates.begin(); itr != candidates.end();)
+            {
+                itr->second--;
+                // erase returns the iterator for next element after the erased element
+                if (itr->second == 0)
+                    itr = candidates.erase(itr);
+                // else move the iterator to next element
+                else
+                    itr++;
+            }
+        }
+    }
+
+    vector<int> res;
+    unordered_map<int, int> actualFreq;
+    for (int num : nums)
+    {
+        if (candidates.find(num) != candidates.end())
+            actualFreq[num]++;
+    }
+    for (auto cand : actualFreq)
+    {
+        if (cand.second > n / k)
+            res.push_back(cand.first);
+    }
+
+    return res;
+}
+vector<int> majorityElement(vector<int> &nums)
+{
+    int n = nums.size();
+
+    return boyerMooreForKCandidates(nums, 3);
 }
 
 // 556. Next Greater Element III
@@ -268,6 +360,18 @@ Sort the array
 Max will be:
 1. Last 3 (All positive)
 2. First Two(-ve * -ve) * Last(+ve)
+
+To 
+
+Approach 1: O(n)
+Find the 3 largest numbers, and 2 smallest numbers
+in O(n) using 3 variables for 3 largest, and 2 variables for 2 smallest
+
+Approach 2: 
+Sort the array
+
+Approach 3:
+Use PQ to find 3 largest and 2 smallest
 */
 int maximumProduct(vector<int> &nums)
 {
@@ -277,7 +381,7 @@ int maximumProduct(vector<int> &nums)
     return max(nums[nums.size() - 1] * nums[nums.size() - 2] * nums[nums.size() - 3], nums[0] * nums[1] * nums[nums.size() - 1]);
 }
 
-// Max Chunks To Make Sorted
+// 769. Max Chunks To Make Sorted
 /*
 Approach: 
 It will form a chunk if max till now from left is equal to i
@@ -726,7 +830,7 @@ Approach 2: O(10*n) = O(n), O(10) = O(1)
 Store all last occurences of each number in an array (first occurence from right)
 So, make 10 size array for digits 0-9
 number:     9 9 8 8 8 5 3 4 2 7
-lastt idx:  0 1 2 3 4 5 6 7 8 9
+last idx:   0 1 2 3 4 5 6 7 8 9
 
 Last occurence array :
 Idx(Number):  0  1  2 3 4 5  6 7 8 9
@@ -774,7 +878,7 @@ int maximumSwap(int num)
 
     vector<int> lastIdx(10, -1);
 
-    //make the lastIdx array
+    //make the lastIdx array (first occurence from right)
     for (int i = str.size() - 1; i >= 0; i--)
     {
         int n = str[i] - '0';
@@ -913,8 +1017,9 @@ Space: O(n)
 
 Time Complexity:
 = N/2 + N/3 + N/5 + .......
-= N(1/2 + 1/3 1/5 + ......)
+= N(1/2 + 1/3 + 1/5 + ......)
 = N(loglogn)
+because 1/2 + 1/3 + 1/5.... can be proved to be log(logn).
 
 It is only valid for n<=10^8
 Because we cannot make an array greater than 10^8.
@@ -1477,106 +1582,6 @@ int maxSumTwoNoOverlap(vector<int> &A, int L, int M)
     return res;
 }
 
-// 42. Trapping Rain Water
-//Approach 1 : Time: O(3n), Time: O(2n)
-int trap(vector<int> &height)
-{
-    if (height.size() == 0)
-        return 0;
-
-    int n = height.size();
-    vector<int> prefixMax(n), suffixMax(n);
-
-    prefixMax[0] = height[0];
-    for (int i = 1; i < n; i++)
-        prefixMax[i] = max(height[i], prefixMax[i - 1]);
-
-    suffixMax[n - 1] = height[n - 1];
-    for (int i = n - 2; i >= 0; i--)
-        suffixMax[i] = max(height[i], suffixMax[i + 1]);
-
-    int totalWater = 0;
-    for (int i = 1; i < n - 1; i++)
-        totalWater += min(prefixMax[i], suffixMax[i]) - height[i];
-
-    return totalWater;
-}
-//Approach 2: O(n), O(1)
-int trap(vector<int> &height)
-{
-    if (height.size() == 0)
-        return 0;
-
-    int n = height.size();
-    int i = 0, j = n - 1;
-    int leftMax = height[0], rightMax = height[n - 1], totalWater = 0;
-    while (i < j)
-    {
-        leftMax = max(leftMax, height[i]);
-        rightMax = max(rightMax, height[j]);
-
-        if (leftMax < rightMax)
-            totalWater += leftMax - height[i++];
-        else
-            totalWater += rightMax - height[j--];
-    }
-
-    return totalWater;
-}
-
-// 407. Trapping Rain Water II
-int trapRainWater(vector<vector<int>> &heightMap)
-{
-    int n = heightMap.size();
-    int m = heightMap[0].size();
-    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
-    vector<vector<bool>> vis(n, vector<bool>(m, false));
-
-    //push first and last row into priority queue
-    for (int i = 0; i < m; i++)
-    {
-        pq.push({heightMap[0][i], 0, i});
-        pq.push({heightMap[n - 1][i], n - 1, i});
-        vis[0][i] = true;
-        vis[n - 1][i] = true;
-    }
-    //push first and last column into priority queue
-    for (int i = 0; i < n; i++)
-    {
-        pq.push({heightMap[i][0], i, 0});
-        pq.push({heightMap[i][m - 1], i, m - 1});
-        vis[i][0] = true;
-        vis[i][m - 1] = true;
-    }
-
-    int dir[4][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
-    int totalWater = 0, maxTillNow = 0;
-    while (pq.size() != 0)
-    {
-        int h = pq.top()[0];
-        int i = pq.top()[1];
-        int j = pq.top()[2];
-        pq.pop();
-
-        maxTillNow = max(maxTillNow, h);
-
-        for (int d = 0; d < 4; d++)
-        {
-            int x = i + dir[d][0];
-            int y = j + dir[d][1];
-
-            if (x >= 0 && y >= 0 && x < n && y < m && !vis[x][y])
-            {
-                vis[x][y] = true;
-                totalWater += max(0, maxTillNow - heightMap[x][y]);
-                pq.push({heightMap[x][y], x, y});
-            }
-        }
-    }
-
-    return totalWater;
-}
-
 // 239. Sliding Window Maximum
 /*
 Approach 1: O(3n), O(2n)
@@ -1685,9 +1690,9 @@ vector<vector<int>> merge(vector<vector<int>> &intervals)
     vector<vector<int>> res;
     sort(intervals.begin(), intervals.end());
     res.push_back(intervals[0]);
-    int j = 0;
     for (int i = 1; i < intervals.size(); i++)
     {
+        int j = res.size() - 1;
         //if the start point of current interval is less than end point of previous interval, then merge with previous
         if (intervals[i][0] <= res[j][1])
         {
@@ -1698,7 +1703,6 @@ vector<vector<int>> merge(vector<vector<int>> &intervals)
         else
         {
             res.push_back(intervals[i]);
-            j++;
         }
     }
 
@@ -1714,7 +1718,8 @@ Two Intervals overlap in two cases:
     |______|  OR  |______|          2
 
 They will overlap only when
-start2 <= end1 && start1 <= end2 
+start2 <= end1 && start1 <= end2
+So, basically they intersect if both of them start before either of them ends 
 interval: [max(start1, start2), min(end1, end2)]
 
 Because we may get (8,12)  and (13, 15) here start1<end2 but they dont overlap
@@ -1805,7 +1810,15 @@ So ans is index 4 i.e. station with gas=12
 Approach 2: O(n) (Discuss Section approach)
 If From Station A, you can only reach station B
 Then from any station between A, B, you can never go beyond B
+Because when you go from A to any station between A and B then you will
+reach their with either 0 fuel or some > 0 fuel.
+Now if you reach their with 0 fuel, it is same as starting from that station
+And if you reach if > 0, then you basically started from that station with some extra fuel
+And if even with the extra fuel you cannot go beyond B, then you cannot go beyond B if you start from 
+there either. 
+So, no station b/w A and B can go beyond B.
 So, we dont need to check for those
+
 */
 //Approach 1:
 int canCompleteCircuit(vector<int> &gas, vector<int> &cost)
@@ -1902,6 +1915,8 @@ So,we do
 
 Number of subsequence it is max in = Subseq with elements on its left = 2^(i-1)
 Number of subsequence it is min in = Subseq with elements on its right = 2^(n-i-1)
+So, we get the count of subsequences it is a part of and then count * number gives the 
+sum it will contribute.
 */
 //Approach 1:
 int modPow(long x, long n, long M)
@@ -2204,71 +2219,22 @@ long long pairWithMaxSum(long long arr[], long long N)
     return res;
 }
 
-// 632. Smallest Range Covering Elements from K Lists
-/*
-Approach : O(nlogm) (n=total elements in all lists, m=number of lists)
-The approach is similar to Merge K Sorted lists
-
-Use a min pq, to store 1 element from each list at a time
-We add the first element of each list into pq
-Then we pop the first element and add next element of that list into pq
-
-When we pop we get the min element, this is the start of range
-When we push into pq, we update the end of range with max
-And each step we, calculate the current range, and update the min range before we push into pq
-
-At a time the pq always contains 1 element from each list.
-So getting the top element gives the min of range, and the overall max has the max of range
-This helps to find the range and update the answer
-*/
-vector<int> smallestRange(vector<vector<int>> &nums)
-{
-    int n = nums.size();
-    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
-
-    int currMax = INT_MIN, range = INT_MAX, ansStart, ansEnd;
-
-    //push the first elements of all lists into pq
-    for (int i = 0; i < n; i++)
-    {
-        //find the max while adding to pq
-        currMax = max(currMax, nums[i][0]);
-        pq.push({nums[i][0], i, 0});
-    }
-
-    while (pq.size() > 0)
-    {
-        //get the min element from pq
-        vector<int> rtop = pq.top();
-        int ele = rtop[0];
-        int i = rtop[1];
-        int j = rtop[2];
-        pq.pop();
-
-        //if the current range is smaller, then update the answer
-        if (currMax - ele + 1 < range)
-        {
-            range = currMax - ele + 1;
-            ansStart = ele;
-            ansEnd = currMax;
-        }
-
-        //push the next element of the list, whose element we got from pq
-        if (j < nums[i].size() - 1)
-        {
-            //before adding to pq, update the current max
-            currMax = max(currMax, nums[i][j + 1]);
-            pq.push({nums[i][j + 1], i, j + 1});
-        }
-        //if list has ended, then break;
-        else
-            break;
-    }
-
-    return {ansStart, ansEnd};
-}
-
 // 1679. Max Number of K-Sum Pairs
+/*
+Approach 1: 2 Pointers, O(nlogn), O(1)
+Sort the array, then use the meet in the middle approach like in pair sum in sorted array
+
+Approach 2: Hashmap, O(n), O(n)
+Make a map of {element: list of its indexes}
+And keep a visited array
+Then for each element remove its current index from map, 
+then search for its k - current element in map, 
+and remove that element's index from map as well and increase count by 1
+
+Start iterating elements from end, so that when removing indexes from map
+we remove the last index in O(1)
+*/
+// Approach 1: Time: O(nlogn), Space: O(1)
 int maxOperations(vector<int> &nums, int k)
 {
     sort(nums.begin(), nums.end());
@@ -2285,6 +2251,36 @@ int maxOperations(vector<int> &nums, int k)
             count++;
             i++;
             j--;
+        }
+    }
+
+    return count;
+}
+// Approach 2: Time: O(n), Space: O(1)
+int maxOperations(vector<int> &nums, int k)
+{
+    int n = nums.size();
+
+    unordered_map<int, vector<int>> mp;
+    vector<bool> vis(n);
+    int count = 0;
+
+    for (int i = 0; i < nums.size(); i++)
+        mp[nums[i]].push_back(i);
+
+    for (int i = nums.size() - 1; i >= 0; i--)
+    {
+        if(vis[i]) continue;
+        
+        mp[nums[i]].pop_back();
+        vis[i] = true;
+
+        if (mp.find(k - nums[i]) != mp.end() && mp[k - nums[i]].size() > 0)
+        {
+            int idx = mp[k - nums[i]][mp[k - nums[i]].size() - 1];
+            vis[idx] = true;
+            mp[k - nums[i]].pop_back();
+            count++;
         }
     }
 
@@ -2419,6 +2415,75 @@ void dilucAndKaeya()
         cout << endl;
     }
 }
+
+// 287. Find the Duplicate Number
+/*
+Approach 1: Floyd Cycle Detection Algo
+All elements in array are in range [1,n] where n = size of array - 1
+But that does not mean that all elements in that range are present.
+This is also possible:
+Array: [2,2,2,2]
+
+So, basically, every number is present once, except one number
+And that one number can be present any number of times.
+But the number will definately be in range [1, n - 1]
+
+Method:
+If there is no duplicate in the array, we can map each indexes to each numbers in this array. 
+In other words, we can have a mapping function f(index) = number
+For example, let's assume
+nums = [2,1,3], then the mapping function is 0->2, 1->1, 2->3.
+If we start from index = 0, we can get a value according to this mapping function, 
+and then we use this value as a new index and, again, we can get the other new value
+according to this new index. We repeat this process until the index exceeds the array. 
+Actually, by doing so, we can get a sequence. Using the above example again, 
+the sequence we get is 0->2->3. (Because index=3 exceeds the array's size, the sequence terminates!)
+
+However, if there is duplicate in the array, the mapping function is many-to-one.
+For example, let's assume
+nums = [2,1,3,1], then the mapping function is 0->2, {1,3}->1, 2->3. 
+Then the sequence we get definitely has a cycle. 0->2->3->1->1->1->1->1->........ 
+The starting point of this cycle is the duplicate number.
+
+So, basically if at index 0, we have 2, then we go to index 2, and there we find 3, so we go to 3
+and there we find 1, so we go to 1, and then we enter the cycle as at 1 also there is 1
+So, we need to find the start point of cycle
+*/
+int findDuplicate(vector<int> &nums)
+{
+    // if size <= 1, then there cannot be duplicates
+    if (nums.size() > 1)
+    {
+        int slow = nums[0];
+        int fast = nums[nums[0]];
+        while (slow != fast)
+        {
+            slow = nums[slow];
+            fast = nums[nums[fast]];
+        }
+
+        fast = 0;
+        while (fast != slow)
+        {
+            fast = nums[fast];
+            slow = nums[slow];
+        }
+        return slow;
+    }
+
+    return -1;
+}
+
+// Shortest distance b/w two points in 2D matrix
+/*
+Not a question, just something you should know.
+If you are given 2 points A(x1, y1), B(x2, y2)
+Then the shortest distance b/w them is:
+1. You are allowed to move in 4 directions Up/Down, left/right
+    Shortest Distance = Manhattan Distance = |x2 - x1| + |y2 - y1|
+2. You are allowed to move in 8 directions i.e. Up/Down, left/right and both diagonals
+    Shortest Distance = Euclidean Distance = sqrt((x2 - x1)^2 + (y2 - y1)^2)
+*/
 
 int main()
 {
