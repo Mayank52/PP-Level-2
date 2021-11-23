@@ -409,7 +409,7 @@ private:
         node->next = nullptr;
         node->prev = nullptr;
     }
-    
+
 public:
     LFUCache(int capacity)
     {
@@ -439,7 +439,7 @@ public:
 
         // if that list is now empty
         if (freqMap[node->freq].first->next == freqMap[node->freq].second)
-        {   
+        {
             // remove it from map
             freqMap.erase(node->freq);
 
@@ -516,6 +516,255 @@ public:
         }
     }
 };
+
+// 23. Merge k Sorted Lists
+/*
+Approach 1: Min PQ, Time: O(n*k*logk), Space: O(k), k = number of lists
+Put heads of all k lists in a Min PQ
+At each step get the top of PQ, add it to sorted list,
+And add the next node of removed node into the PQ
+As size of PQ, is always k, so time: O(n*k*logk) = O(Nlogk)
+As each list has n nodes, and there are k lists, so total nodes = N = n*k
+
+
+Approach 2: Divide and Conquer, Time: O(n*k*logk), Space: O(1)
+k = number of lists = size of array
+n = average number of nodes in a list
+Same as Merge Sort.
+The height of recursion will be log(lenght of array) = log(k)
+
+On the merges step, we are considering that each list has an average size of n
+So, we merge 2 lists of n size into a 2n size list in O(2n)
+Then in next step we will merge that 2n size list with another 2n size list
+making it 4n
+So, the merge step for k lists takes: 
+2n + 4n + 6n...kn = n(2 + 4 + 6 + ..... + k) = n*k
+As there are k lists of size n each. So, total nodes = n*k
+And for k lists, as we divide it into 2 halves at each step so the tree height
+will go logk.
+So, Time: O(n*k*logk) = O(Nlogk)
+Also, in merge sort O(NlogN), the N is the total number of elements in array
+And here total number of elements = n*k
+So, same complexity here as well.
+
+And We dont use any extra space, space: O(1)
+The recursion stack can take O(logk)
+
+*/
+// Approach 1:
+struct compare
+{
+    bool operator()(ListNode *l1, ListNode *l2)
+    {
+        return l1->val > l2->val; // comparator for Min PQ
+    }
+};
+ListNode *mergeKLists(vector<ListNode *> &lists)
+{
+    priority_queue<ListNode *, vector<ListNode *>, compare> pq;
+
+    for (int i = 0; i < lists.size(); i++)
+    {
+        if (lists[i] != nullptr)
+            pq.push(lists[i]);
+    }
+
+    ListNode *sortedListHead = new ListNode(-1);
+    ListNode *curr = sortedListHead;
+
+    while (pq.size() > 0)
+    {
+        ListNode *rnode = pq.top();
+        pq.pop();
+
+        curr->next = rnode;
+        curr = curr->next;
+
+        if (rnode->next != nullptr)
+        {
+            pq.push(rnode->next);
+        }
+    }
+
+    return sortedListHead->next;
+}
+// Approach 2:
+ListNode *mergeTwoSortedLists(ListNode *l1, ListNode *l2)
+{
+    if (l1 == nullptr || l2 == nullptr)
+        return l1 == nullptr ? l2 : l1;
+
+    ListNode *sortedListHead = new ListNode(-1);
+    ListNode *curr = sortedListHead;
+
+    while (l1 != nullptr && l2 != nullptr)
+    {
+        if (l1->val < l2->val)
+        {
+            curr->next = l1;
+            l1 = l1->next;
+        }
+        else
+        {
+            curr->next = l2;
+            l2 = l2->next;
+        }
+
+        curr = curr->next;
+    }
+
+    while (l1 != nullptr)
+    {
+        curr->next = l1;
+        l1 = l1->next;
+        curr = curr->next;
+    }
+    while (l2 != nullptr)
+    {
+        curr->next = l2;
+        l2 = l2->next;
+        curr = curr->next;
+    }
+
+    return sortedListHead->next;
+}
+ListNode *mergeKLists(vector<ListNode *> &lists, int lo, int hi)
+{
+    if (lo > hi)
+        return nullptr;
+
+    if (lo == hi)
+        return lists[lo];
+
+    int mid = lo + (hi - lo) / 2;
+
+    ListNode *l1 = mergeKLists(lists, lo, mid);
+    ListNode *l2 = mergeKLists(lists, mid + 1, hi);
+
+    return mergeTwoSortedLists(l1, l2);
+}
+ListNode *mergeKLists(vector<ListNode *> &lists)
+{
+    return mergeKLists(lists, 0, lists.size() - 1);
+}
+
+// 25. Reverse Nodes in k-Group
+/*
+Approach: O(n)
+https://leetcode.com/problems/reverse-nodes-in-k-group/discuss/183356/Java-O(n)-solution-with-super-detailed-explanation-and-illustration
+
+This problem can be split into several steps:
+
+Since we need to reverse the linked-list every k nodes, we need to check whether the 
+number of list nodes are enough to reverse. Otherwise, there is no need to reverse.
+
+If we need to reverse the k nodes, how to do that? Following is my idea:
+
+If the structure of the linkedlist is like this:
+
+ 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
+Then there will always be a pointer, which points to the node AHEAD of the first node to reverse. 
+The pointer will help to link the linkedlist after.
+
+At first, we will add a dummy node in front of the linked list to act as the first pointer. 
+After we add the pointer, the linked list will look like this:
+
+    0 (pointer) -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
+Suppose that there are enough nodes to be reversed, we just use the "reverse linked list" trick to 
+reverse the k nodes.
+
+if k = 3, we can reverse 1 to 3 first using the following code:
+
+  ListNode prev = null, curr = pointer.next, next = null;
+  for (int i = 0; i < k; i++) {
+		next = curr.next;
+		curr.next = prev;
+		prev = curr;
+		curr = next;
+  }
+This is the illustartion of the first 3 steps:
+
+    step1: 0 (pointer) -> 1      2 -> 3 -> 4 -> 5 -> 6 -> 7
+	step2: 0 (pointer) -> 1 <- 2      3 -> 4 -> 5 -> 6 -> 7
+	step3: 0 (pointer) -> 1 <- 2 <- 3      4 -> 5 -> 6 -> 7
+This is an easy and general algorithm to reverse a linked list. 
+However, if you are careful enough, you will find that after the for-loop, 
+the link from 3 to 4 will be cut (as shown in step3).
+
+Now we need to reconstruct the linked list and fix the issue. 
+You will figure out that at step3, the 3 is the prev node, 4 is the curr node.
+
+	step3: 0 (pointer) -> 1 <- 2 <- 3 (prev)    4 (curr) -> 5 -> 6 -> 7
+We can fix the sequence based on the following codes. 
+The basic idea is to link the pointer to 3 and link 1 to 4:
+
+	ListNode tail = pointer.next;
+	tail.next = curr; 
+	pointer.next = prev;
+	pointer = tail;
+Then the result is:
+
+	after first line:   0 (pointer) -> 1 (tail) <- 2 <- 3 (prev)    4 (curr) -> 5 -> 6 -> 7
+	after second line:  0 (pointer) -> 1 (tail) <- 2 <- 3 (prev)    4 (curr) -> 5 -> 6 -> 7
+								       |____________________________↑
+	after third line:   
+								|-----------------------↓
+						0 (pointer)    1 (tail) <- 2 <- 3 (prev)    4 (curr) -> 5 -> 6 -> 7
+									   |____________________________↑
+									   
+	after forth line:	0 -> 3 -> 2 -> 1 (pointer) -> 4 -> 5 -> 6 -> 7
+Now we get the new pointer, and we can repeat the process. Note that to retrieve the head, 
+we need to record the first dummy node (0).
+
+*/
+ListNode *reverseKGroup(ListNode *head, int k)
+{
+    ListNode *dummyNode = new ListNode(-1);
+    dummyNode->next = head;
+
+    ListNode *newHead = dummyNode;
+
+    while (dummyNode != nullptr)
+    {
+        ListNode *curr = dummyNode->next;
+        // find the node of current group
+        int nodeCount = 0;
+        while (curr != nullptr && nodeCount != k)
+        {
+            nodeCount++;
+            curr = curr->next;
+        }
+
+        // if current group has count < k, then break
+        if (nodeCount < k)
+            break;
+
+        // reverse the current k group
+        curr = dummyNode->next;
+        ListNode *prev = nullptr;
+        while (nodeCount-- > 0)
+        {
+            ListNode *next = curr->next;
+            curr->next = prev;
+            prev = curr;
+            curr = next;
+        }
+
+        // the first node of current group becomes the tail after reversing
+        ListNode *currentTail = dummyNode->next;
+
+        // connect the tail to the head of next group
+        currentTail->next = curr;
+
+        // prev is at the new head of the reversed group
+        dummyNode->next = prev;
+
+        // move the dummy node just before the next group
+        dummyNode = currentTail;
+    }
+
+    return newHead->next;
+}
 
 int main()
 {

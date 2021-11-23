@@ -397,43 +397,47 @@ int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &pro
     return res;
 }
 // Approach 2: O(nlogn)
-int lower_bound(vector<vector<int>> &arr, int lo, int x)
+int lower_bound(vector<vector<int>> &arr, int lo, int currEndTime)
 {
     int hi = arr.size() - 1;
+
     while (lo <= hi)
     {
         int mid = lo + (hi - lo) / 2;
-        if (arr[mid][0] >= x)
+
+        if (arr[mid][0] >= currEndTime)
             hi = mid - 1;
         else
             lo = mid + 1;
     }
+
     return lo;
 }
 int jobScheduling(vector<int> &startTime, vector<int> &endTime, vector<int> &profit)
 {
     int n = startTime.size();
-    vector<int> dp(n, 0);
 
-    vector<vector<int>> arr(n); //{start, end, profit}
+    vector<vector<int>> arr;
     for (int i = 0; i < n; i++)
-        arr[i] = {startTime[i], endTime[i], profit[i]};
+    {
+        arr.push_back({startTime[i], endTime[i], profit[i]});
+    }
 
     sort(arr.begin(), arr.end());
 
-    int maxprofit = 0;
+    vector<int> dp(n);
+    int maxProfit = 0;
+
     for (int i = n - 1; i >= 0; i--)
     {
-        int j = lower_bound(arr, i + 1, arr[i][1]);
+        int idx = lower_bound(arr, i + 1, arr[i][1]);
 
-        int lb = j == n ? 0 : dp[j];
+        int maxProfitAfterMe = idx == n ? 0 : dp[idx];
 
-        dp[i] = max(arr[i][2] + lb, maxprofit);
-
-        maxprofit = max(maxprofit, dp[i]);
+        dp[i] = max(arr[i][2] + maxProfitAfterMe, i < n - 1 ? dp[i + 1] : 0);
     }
 
-    return maxprofit;
+    return dp[0];
 }
 
 // Longest Bitonic Subsequence
@@ -862,7 +866,7 @@ int numTrees(int n, vector<int> &dp)
     if (dp[n] != -1)
         return dp[n];
 
-    // make every node as root, and get count of left subtrees(0....i-1), 
+    // make every node as root, and get count of left subtrees(0....i-1),
     // and right subtrees (i....n)
     int sum = 0;
     for (int i = 1; i <= n; ++i)
@@ -2608,7 +2612,7 @@ s[i] == s[j] changes:
     In this case, as ith index is the first time this character has occured, so adding s[i] to 
     (i+1, j-1) string wont give any new palindromes, same with adding s[j] to the middle.
     Eg: bcdcb
-    When we add b to either end, then since cdc does not have a b, so adding b to either its left
+    When we add b to either end, then since cdc does not have a 'b', so adding b to either its left
     or right wont form a palindrome, so the number of palindromes in bcdc = cdc = cdcb
     So, the number of palindromes in A, B are equal to C because of this reason.
     So, the relation = (A + B - C) + C + 1 = A + B + 1
@@ -3080,7 +3084,30 @@ double fractionalKnapsack(int W, Item arr[], int n)
 
 // 518. Coin Change 2 (Coin Change Combination)
 /*
-Approach: O(n^2), O(n^2)
+Approach 1: O(n^2), O(n^2)
+This is the intuitive memoization approach
+
+Approach 2: O(n^2), O(n)
+We only need 1D DP to find the count of combination
+Basically for each coin, we check for tar = coin to Target
+Eg: 
+Coins: 2,4,5,7, Target = 10
+Now suppose we are checking for coin 2
+Then for this coin, we will find the for each target till Target, that in 
+how many ways this coin can be used to reach that target
+Like we want to reach 6 using coin 2
+Then the number of ways to reach 6, using 2 = 
+number of ways to reach 6 - 2 = 4, using 2
+So we basically check if we can get 4, using 2 and then we can just put 2 infront
+of all thos combinations and it will form 6.
+This is the general idea for to do it in 1D DP
+We do for each coin, check each target, for each target, 
+we do 
+dp[tar] += dp[tar - coin]
+
+And if we move the inner for loop outside i.e.
+for each target, we check each coin, then it gives us permutation countjob
+
 */
 // Approach 1: Time: O(n^2), Space: O(n^2)
 int combinations(vector<int> &coins, int tar, int idx, vector<vector<int>> &dp)

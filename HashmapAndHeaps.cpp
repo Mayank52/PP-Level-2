@@ -2292,8 +2292,8 @@ class MedianFinder
 {
 public:
     /** initialize your data structure here. */
-    priority_queue<int> leftHalf;   // Left is Max PQ
-    priority_queue<int, vector<int>, greater<int>> rightHalf;   // Right is Min PQ
+    priority_queue<int> leftHalf;                             // Left is Max PQ
+    priority_queue<int, vector<int>, greater<int>> rightHalf; // Right is Min PQ
 
     MedianFinder()
     {
@@ -3073,10 +3073,185 @@ public:
     }
 };
 
+// Min and Max Heap Implementation
+/*
+Time Complexity:
+Construction using a given array: O(n)
+Push: O(logn)
+Pop: O(logn)
+Top: O(1)
+Space Complexity: O(n)
+
+Only Difference b/w min and max heap implementation is that the comparison is reversed
+> in Max Heap becomes < and vice versa.
+Rest Everything is same
+*/
+class MaxHeap
+{
+private:
+    vector<int> heap;
+
+    void downHeapify(int parentIdx)
+    {
+        int leftChildIdx = 2 * parentIdx + 1;
+        int rightChildIdx = 2 * parentIdx + 2;
+        int maxIdx = parentIdx;
+
+        if (leftChildIdx < heap.size() && heap[maxIdx] < heap[leftChildIdx])
+            maxIdx = leftChildIdx;
+        if (rightChildIdx < heap.size() && heap[maxIdx] < heap[rightChildIdx])
+            maxIdx = rightChildIdx;
+
+        if (maxIdx != parentIdx)
+        {
+            swap(heap[maxIdx], heap[parentIdx]);
+            downHeapify(maxIdx);
+        }
+    }
+
+    void upHeapify(int idx)
+    {
+        int parentIdx = (idx - 1) / 2;
+        int maxIdx = idx;
+
+        if (parentIdx >= 0 && heap[parentIdx] < heap[idx])
+        {
+            swap(heap[parentIdx], heap[idx]);
+            upHeapify(parentIdx);
+        }
+    }
+
+public:
+    MaxHeap(vector<int> arr)
+    {
+        for (int val : arr)
+            heap.push_back(val);
+
+        for (int i = heap.size() - 1; i >= 0; i--)
+        {
+            downHeapify(i);
+        }
+    }
+
+    void push(int val)
+    {
+        heap.push_back(val);
+        upHeapify(heap.size() - 1);
+    }
+
+    int pop()
+    {
+        if (heap.size() == 0)
+        {
+            return -1;
+        }
+
+        int rVal = heap[0];
+        swap(heap[0], heap[heap.size() - 1]);
+        heap.pop_back();
+
+        downHeapify(0);
+
+        return rVal;
+    }
+
+    int top()
+    {
+        return heap[0];
+    }
+
+    int size()
+    {
+        return heap.size();
+    }
+};
+
+class MinHeap
+{
+private:
+    vector<int> heap;
+
+    void downHeapify(int parentIdx)
+    {
+        int leftChildIdx = 2 * parentIdx + 1;
+        int rightChildIdx = 2 * parentIdx + 2;
+        int minIdx = parentIdx;
+
+        if (leftChildIdx < heap.size() && heap[minIdx] > heap[leftChildIdx])
+            minIdx = leftChildIdx;
+        if (rightChildIdx < heap.size() && heap[minIdx] > heap[rightChildIdx])
+            minIdx = rightChildIdx;
+
+        if (minIdx != parentIdx)
+        {
+            swap(heap[minIdx], heap[parentIdx]);
+            downHeapify(minIdx);
+        }
+    }
+
+    void upHeapify(int idx)
+    {
+        int parentIdx = (idx - 1) / 2;
+
+        if (parentIdx >= 0 && heap[parentIdx] > heap[idx])
+        {
+            swap(heap[parentIdx], heap[idx]);
+            upHeapify(parentIdx);
+        }
+    }
+
+public:
+    MinHeap()
+    {
+    }
+
+    void push(int val)
+    {
+        heap.push_back(val);
+        upHeapify(heap.size() - 1);
+    }
+
+    int pop()
+    {
+        if (heap.size() == 0)
+        {
+            return -1;
+        }
+
+        int rVal = heap[0];
+        swap(heap[0], heap[heap.size() - 1]);
+        heap.pop_back();
+
+        downHeapify(0);
+
+        return rVal;
+    }
+
+    int top()
+    {
+        return heap[0];
+    }
+
+    int size()
+    {
+        return heap.size();
+    }
+};
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
+
+    vector<int> arr{3, 1, 4, 5, 1, 3, 5, 7, 3, 233};
+    MaxHeap *heap = new MaxHeap(arr);
+
+    while (heap->size() > 0)
+    {
+        int rVal = heap->pop();
+
+        cout << rVal;
+    }
 
     return 0;
 }

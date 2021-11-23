@@ -2184,7 +2184,7 @@ Sort the jobs in decreasing order of profit
 Now for each job find the last available day and assign it to this job
 And include this job in profit
 
-Approach 2: DSU
+Approach 2: DSU, O(nlogn)
 We dont use the complete DSU. We only use the find() method and path compression
 to get the last available day faster and merge with the parent of previous day always.
 Use the parent array to store the last day.

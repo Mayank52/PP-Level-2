@@ -1122,6 +1122,32 @@ long long findMinDiff(vector<long long> arr, long long n, long long m)
 }
 
 // Counting Sort (https://practice.geeksforgeeks.org/problems/largest-even-number3821/1)
+/*
+Approach: O(n)
+First find the min and max element in array to find the range for counting
+The the size of frequency array is max - min + 1
+Then find frequency of each element
+Now we have to put them back in stable sort order
+i.e. for equal elements there relative order should be same as in original array
+To do this convert the frequency array into prefix sum array.
+Eg: 
+Frequency: 2 3 4 1 5 2
+Index:     0 1 3 4 5 6
+So, lets say our range is 0-6
+Then number 0 has 2 frequency so, it will go in indexes 0,1
+Then 1 will go in 2,3,4 
+and so on
+If we convert this into prefix sum array, then we get each
+element's last index + 1
+Prefix Sum: 2 5 9 10 15 17
+So, 0 goes 0,1, then 1 goes 2-4, then 2 goes 5-8
+So, now for every element we can find their last index in sorted order by doing
+freq[num] - 1
+
+Then iterate over original array, in reverse order as we have the last index stored in
+prefix array, and for each element place it at that last index and reduce the last index 
+by 1. This way it gets sorted in stable order.
+*/
 void countSort(vector<int> &nums)
 {
     // find the min and max element of array
@@ -1196,6 +1222,17 @@ void radixSort(vector<int> &nums)
 int partition(vector<int> &nums, int lo, int hi, int pivot)
 {
     int i = lo, j = lo;
+
+    /*
+    We choose the last element as pivot, then take 2 pointers
+    j = pointer at index where next < pivot element should be
+    i = current pointer
+
+    Now as we have chosen the last element as pivot, so by the time i reaches the 
+    pivot element all the smaller elements will be on the left of pivot's 
+    correct position, and then we just put the pivot in its position and we
+    are done.
+    */
 
     // partition everything < pivot to its left, and > pivot to its right
     while (i <= hi)

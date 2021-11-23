@@ -3,7 +3,7 @@ using namespace std;
 
 // Modular Arithematic: https://discuss.codechef.com/t/guide-to-modular-arithmetic-plus-tricks-codechef-edition-there-is-no-other-edition/67424
 
-//GCD : Euclid's Algorithm
+//GCD : Euclid's Algorithm: O(log(max(a,b)))
 int gcd(int a, int b)
 {
     if (b == 0)
