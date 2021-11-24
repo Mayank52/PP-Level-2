@@ -3565,9 +3565,9 @@ as they are safe.
 bool isSafe(vector<vector<int>> &graph, int src, vector<int> &vis)
 {
     // if already visited
-    if (vis[src] == 1)  // was marked safe
+    if (vis[src] == 1) // was marked safe
         return true;
-    if (vis[src] == 2)  // was marked unsafe
+    if (vis[src] == 2) // was marked unsafe
         return false;
 
     // else initialise current node as unsafe
@@ -4583,6 +4583,42 @@ int removeStones(vector<vector<int>> &stones)
     }
 
     return n - count;
+}
+
+// Minimum Cash Flow Problem(Not Complete)
+void getMinAmount(vector<int> &amounts)
+{
+    int minAmount = amount[0], minAmountIdx = 0;
+
+    for(int i = 1; i < amounts.size(); i++){
+        if(amounts[i] < minAmount){
+            minAmount = amounts[i];
+            minAmountIdx = i
+        }
+    }
+
+    return minAmountIdx;
+}
+void getMinTransactions(vector<int> &amounts)
+{
+    int personWhoGivesTheMaxAmount = minAmount(amounts);
+    int personWhoTakesTheMaxAmount = maxAmount(amounts);
+
+    int minAmountExchanged = min(personWhoGivesTheMaxAmount, personWhoTakesTheMaxAmount);
+}
+int minNumberofTransactions(vector<vector<int>> &adjMatrix)
+{
+    int n = adjMatrix.size();
+
+    vector<int> amounts(n);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            amounts[j] += adjMatrix[i][j];
+            amounts[i] -= adjMatrix[i][j];
+        }
+    }
 }
 
 int main()
